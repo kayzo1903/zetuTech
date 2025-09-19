@@ -2,7 +2,7 @@
 
 export default function HeroPromo() {
   return (
-    <div className="lg:w-1/4">
+    <div className="hidden md:block lg:w-1/4">
       <div className="bg-gray-800 rounded-lg p-5 text-white h-full">
         <h3 className="font-bold text-lg mb-3">Tech Support Included</h3>
         <p className="text-sm text-gray-200 mb-4">

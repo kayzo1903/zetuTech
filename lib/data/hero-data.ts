@@ -1,11 +1,11 @@
 // data/heroData.ts
 
 export const categories = [
-  { id: 1, name: "Gaming Laptops", icon: "🎮" },
-  { id: 2, name: "Business Laptops", icon: "💼" },
-  { id: 3, name: "Student Laptops", icon: "🎓" },
-  { id: 4, name: "Desktop PCs", icon: "🖥️" },
-  { id: 5, name: "Accessories", icon: "⌨️" },
+  { id: 1, name: "Gaming Laptops", icon: "🎮" , url : "gaming" },
+  { id: 2, name: "Business Laptops", icon: "💼" , url : "business"},
+  { id: 3, name: "Student Laptops", icon: "🎓"  , url: "student-laptops"},
+  { id: 4, name: "Desktop PCs", icon: "🖥️" , url: "desktops"},
+  { id: 5, name: "Accessories", icon: "⌨️"  , url : "accessories"},
 ];
 
 export const featuredDeals = [

@@ -47,7 +47,7 @@ export default function HorizontalCategories() {
         {categories.map((category) => (
           <Link
             key={category.id}
-            href={`/category/${category.name.toLowerCase().replace(/\s+/g, "-")}`}
+            href={`/categories/${category.url.toLowerCase().replace(/\s+/g, "-")}`}
             className="flex-shrink-0 w-48 bg-gray-100 dark:bg-gray-800 rounded-lg p-4 hover:shadow-md transition-shadow snap-start"
           >
             <div className="text-2xl mb-2">{category.icon}</div>

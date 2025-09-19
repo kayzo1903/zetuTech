@@ -10,11 +10,12 @@ interface Category {
   id: number | string;
   name: string;
   icon: string;
+  url: string
 }
 
 export default function HeroCategories() {
   return (
-    <div className="lg:w-1/4 bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+    <div className="hidden md:block lg:w-1/4 bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
       <h2 className="font-bold text-lg mb-4 text-gray-900 dark:text-white">
         Shop by Category
       </h2>
@@ -23,7 +24,7 @@ export default function HeroCategories() {
         {categories.map((category: Category) => (
           <Link
             key={category.id}
-            href={`/category/${category.name
+            href={`/categories/${category.url
               .toLowerCase()
               .replace(/\s+/g, "-")}`}
             className="flex items-center py-2 px-3 rounded-md hover:bg-white dark:hover:bg-gray-700 transition-colors"
