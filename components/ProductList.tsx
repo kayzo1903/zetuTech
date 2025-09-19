@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Filter, Grid, List, Star, ChevronDown, Search } from "lucide-react";
+import { Filter, Star, ChevronDown, Search } from "lucide-react";
 
 // Mock product data
 const products = [
@@ -92,7 +92,6 @@ const categories = ["All", "Premium", "Gaming", "Business", "Budget", "Apple", "
 const sortOptions = ["Recommended", "Price: Low to High", "Price: High to Low", "Newest", "Rating"];
 
 export default function ProductsList() {
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sortBy, setSortBy] = useState("Recommended");
   const [showFilters, setShowFilters] = useState(false);
@@ -193,22 +192,6 @@ export default function ProductsList() {
               </select>
               <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
             </div>
-
-            {/* View toggle */}
-            <div className="flex border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden">
-              <button
-                onClick={() => setViewMode("grid")}
-                className={`p-2 ${viewMode === "grid" ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400" : "bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400"}`}
-              >
-                <Grid className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => setViewMode("list")}
-                className={`p-2 ${viewMode === "list" ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400" : "bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400"}`}
-              >
-                <List className="h-4 w-4" />
-              </button>
-            </div>
           </div>
         </div>
 
@@ -218,22 +201,17 @@ export default function ProductsList() {
             <p className="text-gray-500 dark:text-gray-400">No products found. Try a different search or filter.</p>
           </div>
         ) : (
-          <div className={viewMode === "grid" 
-            ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" 
-            : "space-y-6"
-          }>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProducts.map((product, index) => (
               <motion.div
                 key={product.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.1 }}
-                className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 border border-gray-100 dark:border-gray-700 ${
-                  viewMode === "list" && "flex"
-                }`}
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 border border-gray-100 dark:border-gray-700"
               >
                 <Link href={`/products/${product.id}`} className="block">
-                  <div className={`relative ${viewMode === "list" ? "w-1/3 h-48" : "h-48 w-full"}`}>
+                  <div className="relative h-48 w-full">
                     <Image
                       src={product.image}
                       alt={product.name}
@@ -252,7 +230,7 @@ export default function ProductsList() {
                     )}
                   </div>
 
-                  <div className={`p-5 ${viewMode === "list" ? "w-2/3" : ""}`}>
+                  <div className="p-5">
                     <div className="flex justify-between items-start mb-3">
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-1">
                         {product.name}
