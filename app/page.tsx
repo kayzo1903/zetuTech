@@ -9,10 +9,10 @@ export default function Home() {
     <div className="w-full bg-gray-50 dark:bg-gray-900">
       <main>
         <Hero />
+        <NewArrivals />
         <WhyBuy />
         <FeaturedProduct />
         <HowItWorks />
-        <NewArrivals />
       </main>
     </div>
   );
