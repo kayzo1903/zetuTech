@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import {  Grid, List, Star, ChevronDown, Monitor, Laptop, Gamepad, Briefcase, DollarSign, Apple } from "lucide-react";
+import { Star, ChevronDown, Monitor, Laptop, Gamepad, Briefcase, DollarSign, Apple } from "lucide-react";
 
 // Mock category data
 const categories = [
@@ -94,11 +94,7 @@ const featuredProducts = {
 
 export default function Categories() {
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState("popular");
-  const [priceRange, setPriceRange] = useState([0, 5000000]);
-  console.log(priceRange , setPriceRange);
-  
 
   const filteredCategories = selectedCategory === "all" 
     ? categories 
@@ -163,42 +159,21 @@ export default function Categories() {
               </select>
               <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
             </div>
-
-            {/* View toggle */}
-            <div className="flex border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden">
-              <button
-                onClick={() => setViewMode("grid")}
-                className={`p-2 ${viewMode === "grid" ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400" : "bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400"}`}
-              >
-                <Grid className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => setViewMode("list")}
-                className={`p-2 ${viewMode === "list" ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400" : "bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400"}`}
-              >
-                <List className="h-4 w-4" />
-              </button>
-            </div>
           </div>
         </div>
 
         {/* Categories Grid */}
-        <div className={viewMode === "grid" 
-          ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" 
-          : "space-y-6"
-        }>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCategories.map((category, index) => (
             <motion.div
               key={category.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: index * 0.1 }}
-              className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 border border-gray-100 dark:border-gray-700 ${
-                viewMode === "list" && "flex"
-              }`}
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 border border-gray-100 dark:border-gray-700"
             >
               <Link href={`/categories/${category.id}`} className="block">
-                <div className={`relative ${viewMode === "list" ? "w-1/3 h-48" : "h-48 w-full"}`}>
+                <div className="relative h-48 w-full">
                   <Image
                     src={category.image}
                     alt={category.name}
@@ -212,7 +187,7 @@ export default function Categories() {
                   </div>
                 </div>
 
-                <div className={`p-5 ${viewMode === "list" ? "w-2/3" : ""}`}>
+                <div className="p-5">
                   <p className="text-gray-600 dark:text-gray-400 mb-4">
                     {category.description}
                   </p>
