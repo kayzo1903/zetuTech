@@ -6,7 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
-  Star, ChevronDown, Shield, Truck, Zap, DollarSign, Home, ChevronRight
+  Star, Shield, Truck, Zap, DollarSign, Home, ChevronRight
 } from "lucide-react";
 
 import type { LucideProps } from "lucide-react";

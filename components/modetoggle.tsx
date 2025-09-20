@@ -13,7 +13,7 @@ export function ModeToggle() {
 
   if (!mounted) {
     return (
-      <div className="w-14 h-8 rounded-full bg-gray-300 dark:bg-gray-600 opacity-50 transition-colors duration-300" />
+      <div className="w-16 h-8 rounded-full bg-gray-200 dark:bg-gray-700 opacity-50 transition-colors duration-300" />
     )
   }
 
@@ -23,22 +23,44 @@ export function ModeToggle() {
     <button
       onClick={() => setTheme(isDark ? "light" : "dark")}
       aria-label={`Switch to ${isDark ? "light" : "dark"} mode`}
-      className={`relative w-14 h-8 rounded-full p-1 transition-colors duration-500 ease-in-out ${
-        isDark ? "bg-gray-700" : "bg-gray-300"
-      }`}
+      className={`relative w-16 h-8 rounded-full p-1 transition-all duration-500 ease-out ${
+        isDark 
+          ? "bg-gradient-to-r from-indigo-700 to-purple-700" 
+          : "bg-gradient-to-r from-blue-400 to-cyan-400"
+      } shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
     >
-      {/* Knob */}
+      {/* Track with subtle gradient */}
+      <div className={`absolute inset-0 rounded-full transition-opacity duration-500 ${
+        isDark ? "opacity-100" : "opacity-0"
+      } bg-gradient-to-r from-indigo-700 to-purple-700`} />
+      
+      <div className={`absolute inset-0 rounded-full transition-opacity duration-500 ${
+        isDark ? "opacity-0" : "opacity-100"
+      } bg-gradient-to-r from-blue-400 to-cyan-400`} />
+      
+      {/* Knob with floating effect */}
       <span
-        className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center transform transition-transform duration-500 ease-in-out ${
-          isDark ? "translate-x-6" : "translate-x-0"
+        className={`relative z-10 flex items-center justify-center w-6 h-6 rounded-full bg-white shadow-lg transform transition-all duration-500 ease-in-out ${
+          isDark 
+            ? "translate-x-8 rotate-360" 
+            : "translate-x-0 rotate-0"
         }`}
       >
         {isDark ? (
-          <Moon className="h-4 w-4 text-blue-600 transition-transform duration-500" />
+          <Moon className="h-3.5 w-3.5 text-indigo-700 transition-all duration-500" />
         ) : (
-          <Sun className="h-4 w-4 text-amber-500 transition-transform duration-500" />
+          <Sun className="h-3.5 w-3.5 text-amber-500 transition-all duration-500" />
         )}
       </span>
+      
+      {/* Optional: Add stars for dark mode and sun rays for light mode */}
+      <div className={`absolute inset-0 flex items-center justify-between px-2 transition-opacity duration-500 ${
+        isDark ? "opacity-100" : "opacity-0"
+      }`}>
+        {[0, 1, 2].map(i => (
+          <div key={i} className="w-1 h-1 rounded-full bg-white/70" />
+        ))}
+      </div>
     </button>
   )
 }

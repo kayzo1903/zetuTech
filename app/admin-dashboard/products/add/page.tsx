@@ -1,7 +1,9 @@
+import AddProductForm from "@/components/admin/addProduct";
+
 export default function AddProductsPage(){
     return (
-        <div>
-            add-products
+        <div className="container mx-auto py-4">
+            <AddProductForm />
         </div>
     )
 }

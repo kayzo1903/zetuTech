@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Laptop, Store, Plus, Star, MessageSquare, ShoppingCart, Settings, LogOut, Users, BarChart3 } from "lucide-react"
+import { Laptop, Store , Star, MessageSquare, ShoppingCart, Settings, LogOut, Users, BarChart3 } from "lucide-react"
 
 import {
   Sidebar,

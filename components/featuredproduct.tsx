@@ -6,7 +6,7 @@ import { motion } from "framer-motion"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Heart, Zap, Shield, Clock, CheckCircle, Star } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 
 // Dummy product data (later, fetch from DB)
 const featuredProduct = {
