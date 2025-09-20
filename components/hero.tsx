@@ -11,8 +11,8 @@ export default function Hero() {
     <div className="bg-white dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex flex-col lg:flex-row gap-6">
-          <FeaturedDeal />
           <HeroCategories />
+          <FeaturedDeal />
           <HeroPromo />
         </div>
         <HorizontalCategories />
