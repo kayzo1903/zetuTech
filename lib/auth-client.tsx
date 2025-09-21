@@ -1,13 +1,15 @@
-import { createAuthClient } from "better-auth/react"
+import { createAuthClient } from "better-auth/react";
 
 export const authClient = createAuthClient({
-    /** The base URL of the server (optional if you're using the same domain) */
-    baseURL: "http://localhost:3000"
-})
+  /** The base URL of the server (optional if you're using the same domain) */
+  baseURL : process.env.NODE_ENV === "production"
+    ? "https://zetutech.vercel.app"
+    : "http://localhost:3000",
+});
 
-export const { signIn, signUp, signOut, useSession } = authClient
+export const { signIn, signUp, signOut, useSession } = authClient;
 
-export type Session = typeof authClient.$Infer.Session
+export type Session = typeof authClient.$Infer.Session;
 
 // Extend the user type to include role
 export interface UserWithRole {
