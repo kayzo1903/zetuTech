@@ -14,16 +14,23 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { authClient, useSession } from "@/lib/auth-client";
-import { useRole } from "@/hooks/use-role";
+import { authClient } from "@/lib/auth-client";
 
-export default function Header() {
+interface HeaderProps {
+  session: {
+    user?: {
+      name?: string;
+      image?: string;
+      role?: string;
+    };
+  } | null;
+  isAdmin: boolean;
+}
+
+export default function Header({ session, isAdmin }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
-
-  const { data: session } = useSession();
-  const { isAdmin } = useRole();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +41,7 @@ export default function Header() {
     await authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
-          router.push("/"); // redirect to login page
+          router.push("/"); // redirect to home after sign out
         },
       },
     });
@@ -43,7 +50,7 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white dark:bg-gray-900 shadow-sm">
       <div className="container mx-auto flex items-center justify-between px-4 py-3">
-        {/* Logo / Brand */}
+        {/* Logo */}
         <Link
           href="/"
           className="text-2xl font-bold text-gray-800 dark:text-white flex-shrink-0"
@@ -53,28 +60,16 @@ export default function Header() {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex space-x-8 text-gray-700 dark:text-gray-300">
-          <Link
-            href="/"
-            className="hover:text-blue-600 dark:hover:text-blue-400 transition"
-          >
+          <Link href="/" className="hover:text-blue-600 dark:hover:text-blue-400 transition">
             Home
           </Link>
-          <Link
-            href="/products"
-            className="hover:text-blue-600 dark:hover:text-blue-400 transition"
-          >
+          <Link href="/products" className="hover:text-blue-600 dark:hover:text-blue-400 transition">
             Products
           </Link>
-          <Link
-            href="/categories"
-            className="hover:text-blue-600 dark:hover:text-blue-400 transition"
-          >
+          <Link href="/categories" className="hover:text-blue-600 dark:hover:text-blue-400 transition">
             Categories
           </Link>
-          <Link
-            href="/about"
-            className="hover:text-blue-600 dark:hover:text-blue-400 transition"
-          >
+          <Link href="/about" className="hover:text-blue-600 dark:hover:text-blue-400 transition">
             About
           </Link>
         </nav>
@@ -98,7 +93,7 @@ export default function Header() {
           </form>
         </div>
 
-        {/* Right Side Section */}
+        {/* Right Side */}
         <div className="flex items-center space-x-4">
           {/* Theme Toggle */}
           <ModeToggle />
@@ -106,13 +101,12 @@ export default function Header() {
           {/* Cart Icon */}
           <Link href="/cart" className="relative">
             <ShoppingCart className="w-6 h-6 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition" />
-            {/* Cart badge */}
             <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
               2
             </span>
           </Link>
 
-          {/* Auth Section */}
+          {/* Authentication */}
           {!session ? (
             <Link
               href="/auth/sign-in"
@@ -134,20 +128,22 @@ export default function Header() {
                 <DropdownMenuLabel>
                   {session.user?.name || "User"}
                   <div className="text-xs text-gray-500 capitalize">
-                    {(session.user as { role?: string })?.role || "buyer"}
+                    {session.user?.role || "buyer"}
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer">
-                  <Link href="/order">My Orders</Link>
+                <DropdownMenuItem asChild>
+                  <Link href="/orders">My Orders</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 {isAdmin && (
-                  <DropdownMenuItem className="cursor-pointer">
-                    <Link href="/admin-dashboard">Admin Dashboard</Link>
-                  </DropdownMenuItem>
+                  <>
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin-dashboard">Admin Dashboard</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </>
                 )}
-                <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="cursor-pointer text-red-600 hover:text-red-700"
                   onClick={handleSignOut}
@@ -164,20 +160,16 @@ export default function Header() {
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle menu"
           >
-            {mobileMenuOpen ? (
-              <X className="w-6 h-6" />
-            ) : (
-              <Menu className="w-6 h-6" />
-            )}
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu Drawer */}
+      {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-white dark:bg-gray-900 border-t dark:border-gray-700 shadow-lg">
           <div className="p-4 space-y-4">
-            {/* Mobile Search Bar */}
+            {/* Mobile Search */}
             <form onSubmit={handleSearch} className="relative">
               <input
                 type="text"
@@ -194,41 +186,41 @@ export default function Header() {
               </button>
             </form>
 
-            {/* Mobile Navigation */}
+            {/* Mobile Nav */}
             <nav className="flex flex-col space-y-4">
               <Link
                 href="/"
-                className="hover:text-blue-600 dark:hover:text-blue-400 transition text-gray-700 dark:text-gray-300"
                 onClick={() => setMobileMenuOpen(false)}
+                className="hover:text-blue-600 dark:hover:text-blue-400 transition text-gray-700 dark:text-gray-300"
               >
                 Home
               </Link>
               <Link
                 href="/products"
-                className="hover:text-blue-600 dark:hover:text-blue-400 transition text-gray-700 dark:text-gray-300"
                 onClick={() => setMobileMenuOpen(false)}
+                className="hover:text-blue-600 dark:hover:text-blue-400 transition text-gray-700 dark:text-gray-300"
               >
                 Products
               </Link>
               <Link
                 href="/categories"
-                className="hover:text-blue-600 dark:hover:text-blue-400 transition text-gray-700 dark:text-gray-300"
                 onClick={() => setMobileMenuOpen(false)}
+                className="hover:text-blue-600 dark:hover:text-blue-400 transition text-gray-700 dark:text-gray-300"
               >
                 Categories
               </Link>
               <Link
                 href="/about"
-                className="hover:text-blue-600 dark:hover:text-blue-400 transition text-gray-700 dark:text-gray-300"
                 onClick={() => setMobileMenuOpen(false)}
+                className="hover:text-blue-600 dark:hover:text-blue-400 transition text-gray-700 dark:text-gray-300"
               >
                 About
               </Link>
 
-              {/* Auth Buttons for Mobile */}
+              {/* Auth Section */}
               {!session ? (
                 <Link
-                  href="/signin"
+                  href="/auth/sign-in"
                   onClick={() => setMobileMenuOpen(false)}
                   className="px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition text-center"
                 >
