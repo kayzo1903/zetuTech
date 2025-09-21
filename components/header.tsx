@@ -1,39 +1,80 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { useState } from "react"
-import { ShoppingCart, Menu, X, Search } from "lucide-react"
-import { ModeToggle } from "./modetoggle"
+import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { ShoppingCart, Menu, X, Search, LogOut, User } from "lucide-react";
+import { ModeToggle } from "./modetoggle";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { authClient, useSession } from "@/lib/auth-client";
+import { useRole } from "@/hooks/use-role";
 
 export default function Header() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState("")
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const router = useRouter();
+
+  const { data: session } = useSession();
+  const { isAdmin } = useRole();
 
   const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    console.log("Searching for:", searchQuery)
-  }
+    e.preventDefault();
+    console.log("Searching for:", searchQuery);
+  };
+
+  const handleSignOut = async () => {
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          router.push("/"); // redirect to login page
+        },
+      },
+    });
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white dark:bg-gray-900 shadow-sm">
       <div className="container mx-auto flex items-center justify-between px-4 py-3">
         {/* Logo / Brand */}
-        <Link href="/" className="text-2xl font-bold text-gray-800 dark:text-white">
+        <Link
+          href="/"
+          className="text-2xl font-bold text-gray-800 dark:text-white flex-shrink-0"
+        >
           zetu<span className="text-blue-600 dark:text-blue-400">Tech</span>
         </Link>
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex space-x-8 text-gray-700 dark:text-gray-300">
-          <Link href="/" className="hover:text-blue-600 dark:hover:text-blue-400 transition">
+          <Link
+            href="/"
+            className="hover:text-blue-600 dark:hover:text-blue-400 transition"
+          >
             Home
           </Link>
-          <Link href="/products" className="hover:text-blue-600 dark:hover:text-blue-400 transition">
+          <Link
+            href="/products"
+            className="hover:text-blue-600 dark:hover:text-blue-400 transition"
+          >
             Products
           </Link>
-          <Link href="/categories" className="hover:text-blue-600 dark:hover:text-blue-400 transition">
+          <Link
+            href="/categories"
+            className="hover:text-blue-600 dark:hover:text-blue-400 transition"
+          >
             Categories
           </Link>
-          <Link href="/about" className="hover:text-blue-600 dark:hover:text-blue-400 transition">
+          <Link
+            href="/about"
+            className="hover:text-blue-600 dark:hover:text-blue-400 transition"
+          >
             About
           </Link>
         </nav>
@@ -57,6 +98,7 @@ export default function Header() {
           </form>
         </div>
 
+        {/* Right Side Section */}
         <div className="flex items-center space-x-4">
           {/* Theme Toggle */}
           <ModeToggle />
@@ -70,13 +112,63 @@ export default function Header() {
             </span>
           </Link>
 
+          {/* Auth Section */}
+          {!session ? (
+            <Link
+              href="/auth/sign-in"
+              className="px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition hidden md:inline-block"
+            >
+              Sign In
+            </Link>
+          ) : (
+            <DropdownMenu>
+              <DropdownMenuTrigger>
+                <Avatar className="cursor-pointer">
+                  <AvatarImage src={session.user?.image || ""} />
+                  <AvatarFallback>
+                    {session.user?.name?.charAt(0) || <User size={18} />}
+                  </AvatarFallback>
+                </Avatar>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel>
+                  {session.user?.name || "User"}
+                  <div className="text-xs text-gray-500 capitalize">
+                    {(session.user as { role?: string })?.role || "buyer"}
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="cursor-pointer">
+                  <Link href="/order">My Orders</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {isAdmin && (
+                  <DropdownMenuItem className="cursor-pointer">
+                    <Link href="/admin-dashboard">Admin Dashboard</Link>
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="cursor-pointer text-red-600 hover:text-red-700"
+                  onClick={handleSignOut}
+                >
+                  <LogOut className="mr-2 h-4 w-4" /> Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
           {/* Mobile Menu Toggle */}
           <button
             className="md:hidden text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle menu"
           >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {mobileMenuOpen ? (
+              <X className="w-6 h-6" />
+            ) : (
+              <Menu className="w-6 h-6" />
+            )}
           </button>
         </div>
       </div>
@@ -84,9 +176,9 @@ export default function Header() {
       {/* Mobile Menu Drawer */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-white dark:bg-gray-900 border-t dark:border-gray-700 shadow-lg">
-          <div className="p-4">
+          <div className="p-4 space-y-4">
             {/* Mobile Search Bar */}
-            <form onSubmit={handleSearch} className="relative mb-4">
+            <form onSubmit={handleSearch} className="relative">
               <input
                 type="text"
                 placeholder="Search products..."
@@ -101,7 +193,7 @@ export default function Header() {
                 <Search size={20} />
               </button>
             </form>
-            
+
             {/* Mobile Navigation */}
             <nav className="flex flex-col space-y-4">
               <Link
@@ -132,10 +224,40 @@ export default function Header() {
               >
                 About
               </Link>
+
+              {/* Auth Buttons for Mobile */}
+              {!session ? (
+                <Link
+                  href="/signin"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition text-center"
+                >
+                  Sign In
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    href="/orders"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="hover:text-blue-600 dark:hover:text-blue-400 transition text-gray-700 dark:text-gray-300"
+                  >
+                    My Orders
+                  </Link>
+                  <button
+                    onClick={async () => {
+                      await handleSignOut();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="px-4 py-2 rounded-lg text-sm font-medium bg-red-600 text-white hover:bg-red-700 transition w-full text-center"
+                  >
+                    Sign Out
+                  </button>
+                </>
+              )}
             </nav>
           </div>
         </div>
       )}
     </header>
-  )
+  );
 }
