@@ -17,6 +17,9 @@ import { Label } from "@/components/ui/label";
 import { PRODUCT_CATEGORIES, PRODUCT_STATUS, PRODUCT_TYPES } from "@/lib/validation-schemas/product-type";
 import { productSchema } from "@/lib/validation-schemas/products-schema";
 import { z } from "zod";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+
 
 type ProductTypeKey = keyof typeof PRODUCT_CATEGORIES;
 
@@ -39,6 +42,8 @@ export default function ProductForm() {
     description: "",
     status: "Draft"
   });
+
+  const router = useRouter();
 
   // When product type changes, load relevant categories
   const handleProductTypeChange = (type: string) => {
@@ -117,13 +122,71 @@ export default function ProductForm() {
   };
 
   // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (validateForm()) {
-      console.log("Form is valid, submitting...");
-      // Add your form submission logic here
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  
+  // First validate the form
+  if (!validateForm()) {
+    return;
+  }
+
+  try {
+    // Create FormData object for file uploads
+    const formDataToSend = new FormData();
+    
+    // Append all form data
+    formDataToSend.append('productType', productType);
+    formDataToSend.append('name', formData.name);
+    formDataToSend.append('brand', formData.brand);
+    formDataToSend.append('stock', formData.stock);
+    formDataToSend.append('categories', JSON.stringify(selectedCategories));
+    formDataToSend.append('status', formData.status);
+    formDataToSend.append('description', formData.description);
+    formDataToSend.append('hasDiscount', hasDiscount.toString());
+    formDataToSend.append('originalPrice', formData.originalPrice);
+    formDataToSend.append('hasWarranty', hasWarranty.toString());
+    
+    if (hasDiscount) {
+      formDataToSend.append('salePrice', formData.salePrice);
     }
-  };
+    
+    if (hasWarranty) {
+      formDataToSend.append('warrantyPeriod', formData.warrantyPeriod);
+      formDataToSend.append('warrantyDetails', formData.warrantyDetails);
+    }
+    
+    // Append image files
+    images.forEach((image) => {
+      formDataToSend.append('images', image.file);
+    });
+
+    const res = await fetch("/api/products", {
+      method: "POST",
+      body: formDataToSend, // Send as FormData, not JSON
+      // Don't set Content-Type header - browser will set it automatically with boundary
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      toast.error(data.error || "Failed to create product");
+      return;
+    }
+
+   // Show success toast
+    toast(
+      "Success",{
+      description: "Product created successfully!",
+    });
+
+    // Redirect after a short delay (e.g., 1.5 seconds)
+    setTimeout(() => {
+      router.push("/dashboard/products"); // Redirect to product listing
+    }, 1500);
+
+  } catch  {
+    toast.error("An unexpected error occurred");
+  }
+};
 
   return (
     <form onSubmit={handleSubmit} className="max-w-5xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 md:p-10 space-y-8">
