@@ -5,7 +5,10 @@ export const authClient = createAuthClient({
   baseURL : process.env.NODE_ENV === "production"
     ? "https://zetutech.vercel.app"
     : "http://localhost:3000",
+
+      trustedOrigins: ["http://localhost:3000", "https://zetutech.vercel.app"],
 });
+
 
 export const { signIn, signUp, signOut, useSession } = authClient;
 

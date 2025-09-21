@@ -7,10 +7,10 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
-
 import { signIn } from "@/lib/auth-client";
 import { useState } from "react";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 export default function SignIn() {
   const [loading, setLoading] = useState(false);
@@ -36,85 +36,145 @@ export default function SignIn() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 transition-colors">
-      <Card className="w-full max-w-md p-6 shadow-2xl rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-        {/* ================= Header ================= */}
-        <CardHeader className="text-center space-y-4">
-          {/* ZetuTech Logo */}
-          <div className="flex justify-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-20 h-20 text-blue-700 dark:text-blue-400"
-              viewBox="0 0 24 24"
-              fill="currentColor"
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-all duration-500 p-4">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200 dark:bg-blue-900 rounded-full opacity-20 blur-3xl animate-pulse-slow"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-200 dark:bg-purple-900 rounded-full opacity-20 blur-3xl animate-pulse-slow delay-1000"></div>
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="relative z-10"
+      >
+        <Card className="w-full max-w-md p-8 shadow-2xl rounded-3xl bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50">
+          {/* ================= Header ================= */}
+          <CardHeader className="text-center space-y-6 pb-8">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.5 }}
+              className="space-y-2"
             >
-              <path d="M12 2L2 7l10 5 10-5-10-5zm0 7l-10 5 10 5 10-5-10-5zm0 7l-10 5 10 5 10-5-10-5z" />
-            </svg>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
-            Welcome to zetu <span className="bg-blue-700">Tech</span>
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300 text-sm">
-            Sign in to continue to your account
-          </p>
-        </CardHeader>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+                Welcome to zetu<span className="text-blue-600">Tech</span>
+              </h1>
+              <p className="text-gray-600 dark:text-gray-300 text-sm font-light">
+                Sign in to access your personalized dashboard
+              </p>
+            </motion.div>
+          </CardHeader>
 
-        {/* ================= Google Sign-In ================= */}
-        <CardContent className="mt-6">
-          <Button
-            onClick={handleGoogleSignIn}
-            disabled={loading}
-            variant="outline"
-            className="w-full h-12 text-gray-800 dark:text-gray-100 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
-          >
-            <div className="flex items-center justify-center gap-3">
-              {/* Inline Google SVG */}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-5 h-5"
-                viewBox="0 0 488 512"
+          {/* ================= Google Sign-In ================= */}
+          <CardContent className="pb-8">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6, duration: 0.5 }}
+            >
+              <Button
+                onClick={handleGoogleSignIn}
+                disabled={loading}
+                className="w-full h-14 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
               >
-                <path
-                  fill="#EA4335"
-                  d="M488 261.8c0-17.4-1.4-34-4-50.2H249v95.1h135.7c-5.8 31-23.3 57.2-49.6 74.6v61.9h80.3c46.9-43.2 73.6-107 73.6-181.4z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M249 492c66.7 0 122.7-22 163.6-59.8l-80.3-61.9c-22.3 15-50.9 24.1-83.3 24.1-64 0-118.2-43.2-137.7-101.1H28.2v63.5C68.9 429.4 152.8 492 249 492z"
-                />
-                <path
-                  fill="#4A90E2"
-                  d="M111.3 293.2c-4.6-13.9-7.2-28.8-7.2-44.2s2.6-30.3 7.2-44.2V141.3H28.2C10.2 180.3 0 218.8 0 249c0 30.2 10.2 68.7 28.2 107.7l83.1-63.5z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M249 98.4c36.3 0 68.7 12.5 94.2 36.7l70.3-70.3C371.7 27.4 315.7 5 249 5 152.8 5 68.9 67.6 28.2 141.3l83.1 63.5c19.5-57.9 73.7-101.1 137.7-101.1z"
-                />
-              </svg>
-              {loading ? "Signing in..." : "Sign in with Google"}
-            </div>
-          </Button>
-        </CardContent>
+                <div className="flex items-center justify-center gap-4">
+                  {/* Modern Google SVG */}
+                  <svg
+                    className="w-6 h-6"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M21.8055 10.0415H21V10H12V14H17.6515C16.827 16.3285 14.6115 18 12 18C8.6865 18 6 15.3135 6 12C6 8.6865 8.6865 6 12 6C13.5295 6 14.921 6.577 15.9805 7.5195L18.809 4.691C17.023 3.0265 14.634 2 12 2C6.4775 2 2 6.4775 2 12C2 17.5225 6.4775 22 12 22C17.5225 22 22 17.5225 22 12C22 11.3295 21.931 10.675 21.8055 10.0415Z"
+                      fill="#FFC107"
+                    />
+                    <path
+                      d="M3.153 7.3455L6.4385 9.755C7.3275 7.554 9.4805 6 12 6C13.5295 6 14.921 6.577 15.9805 7.5195L18.809 4.691C17.023 3.0265 14.634 2 12 2C8.159 2 4.828 4.1685 3.153 7.3455Z"
+                      fill="#FF3D00"
+                    />
+                    <path
+                      d="M12 22C14.583 22 16.93 21.0115 18.7045 19.404L15.6095 16.785C14.6055 17.5455 13.3575 18 12 18C9.399 18 7.1905 16.3415 6.3585 14.027L3.0975 16.5395C4.7525 19.778 8.1135 22 12 22Z"
+                      fill="#4CAF50"
+                    />
+                    <path
+                      d="M21.8055 10.0415H21V10H12V14H17.6515C17.2555 15.1185 16.536 16.083 15.608 16.7855L15.6095 16.7845L18.7045 19.4035C18.4855 19.6025 22 17 22 12C22 11.3295 21.931 10.675 21.8055 10.0415Z"
+                      fill="#1976D2"
+                    />
+                  </svg>
+                  <span className="text-base font-medium">
+                    {loading ? "Signing in..." : "Continue with Google"}
+                  </span>
+                </div>
+              </Button>
+            </motion.div>
 
-        {/* ================= Footer ================= */}
-        <CardFooter className="mt-6 text-center text-gray-500 dark:text-gray-400 text-xs">
-          By signing in, you agree to our{" "}
-          <a
-            href="/terms"
-            className="text-blue-700 dark:text-blue-400 hover:underline"
-          >
-            Terms of Service
-          </a>{" "}
-          and{" "}
-          <a
-            href="/privacy"
-            className="text-blue-700 dark:text-blue-400 hover:underline"
-          >
-            Privacy Policy
-          </a>
-          .
-        </CardFooter>
-      </Card>
+            {/* Or separator */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8, duration: 0.5 }}
+              className="relative flex items-center mt-8"
+            >
+              <div className="flex-grow border-t border-gray-300 dark:border-gray-600"></div>
+              <span className="flex-shrink mx-4 text-gray-400 dark:text-gray-500 text-sm font-light">
+                Secure authentication
+              </span>
+              <div className="flex-grow border-t border-gray-300 dark:border-gray-600"></div>
+            </motion.div>
+          </CardContent>
+
+          {/* ================= Footer ================= */}
+          <CardFooter className="text-center">
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1, duration: 0.5 }}
+              className="text-xs text-gray-500 dark:text-gray-400 font-light"
+            >
+              By continuing, you agree to our{" "}
+              <a
+                href="/terms"
+                className="text-blue-600 dark:text-blue-400 hover:underline transition-colors"
+              >
+                Terms of Service
+              </a>{" "}
+              and{" "}
+              <a
+                href="/privacy"
+                className="text-blue-600 dark:text-blue-400 hover:underline transition-colors"
+              >
+                Privacy Policy
+              </a>
+            </motion.p>
+          </CardFooter>
+        </Card>
+      </motion.div>
+
+      {/* Floating particles */}
+      <div className="absolute inset-0 pointer-events-none">
+        {[...Array(20)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-2 h-2 bg-blue-400 dark:bg-blue-600 rounded-full opacity-20"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              y: [0, -20, 0],
+              opacity: [0.2, 0.4, 0.2],
+            }}
+            transition={{
+              duration: 3 + Math.random() * 2,
+              repeat: Infinity,
+              delay: Math.random() * 2,
+            }}
+          />
+        ))}
+      </div>
     </div>
   );
 }
