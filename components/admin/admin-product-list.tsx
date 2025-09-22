@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/select";
 import { Edit, Trash2, ImageIcon, Loader2 } from "lucide-react";
 import Image from "next/image";
+import { toast } from "sonner";
 
 // Types for the product data from API
 interface Product {
@@ -81,6 +82,9 @@ export default function AllProducts() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [deletingProductId, setDeletingProductId] = useState<string | null>(
+    null
+  ); // NEW
 
   // Fetch products from API
   const fetchProducts = async (
@@ -93,7 +97,7 @@ export default function AllProducts() {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Build query parameters
       const params = new URLSearchParams({
         page: page.toString(),
@@ -104,7 +108,7 @@ export default function AllProducts() {
       if (status !== "all") {
         params.append("status", status);
       }
-      
+
       if (category !== "all") {
         params.append("category", category);
       }
@@ -120,25 +124,28 @@ export default function AllProducts() {
       console.log("Fetching products with params:", params.toString());
 
       const response = await fetch(`/api/products?${params}`);
-  
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Failed to fetch products: ${response.status}`);
+        throw new Error(
+          errorData.error || `Failed to fetch products: ${response.status}`
+        );
       }
 
       const data: ProductsResponse = await response.json();
-      
+
       // Validate the response structure
       if (!data.products || !data.pagination) {
         throw new Error("Invalid response format from server");
       }
-      
+
       setProducts(data.products);
       setTotalPages(data.pagination.totalPages);
       setTotalCount(data.pagination.totalCount);
       setCurrentPage(data.pagination.page);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "An error occurred";
+      const errorMessage =
+        err instanceof Error ? err.message : "An error occurred";
       setError(errorMessage);
       console.error("Error fetching products:", err);
     } finally {
@@ -153,7 +160,13 @@ export default function AllProducts() {
 
   // Handle filter changes
   useEffect(() => {
-    fetchProducts(1, statusFilter, categoryFilter, brandFilter, productTypeFilter);
+    fetchProducts(
+      1,
+      statusFilter,
+      categoryFilter,
+      brandFilter,
+      productTypeFilter
+    );
   }, [statusFilter, categoryFilter, brandFilter, productTypeFilter]);
 
   // Get all unique categories, brands, and product types for filters
@@ -176,15 +189,24 @@ export default function AllProducts() {
         method: "DELETE",
       });
 
+      setDeletingProductId(id); // Show loader for this product
       if (!response.ok) {
         throw new Error("Failed to delete product");
       }
 
       // Refresh the product list
-      fetchProducts(currentPage, statusFilter, categoryFilter, brandFilter, productTypeFilter);
+      fetchProducts(
+        currentPage,
+        statusFilter,
+        categoryFilter,
+        brandFilter,
+        productTypeFilter
+      );
     } catch (err) {
       console.error("Error deleting product:", err);
-      alert("Failed to delete product");
+      toast.error("Failed to delete product");
+    } finally {
+      setDeletingProductId(null); // Reset loader state
     }
   };
 
@@ -263,7 +285,10 @@ export default function AllProducts() {
             </SelectContent>
           </Select>
 
-          <Select value={productTypeFilter} onValueChange={setProductTypeFilter}>
+          <Select
+            value={productTypeFilter}
+            onValueChange={setProductTypeFilter}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Filter by product type" />
             </SelectTrigger>
@@ -298,7 +323,10 @@ export default function AllProducts() {
           <TableBody>
             {products.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-8 text-gray-500">
+                <TableCell
+                  colSpan={9}
+                  className="text-center py-8 text-gray-500"
+                >
                   No products found matching your criteria
                 </TableCell>
               </TableRow>
@@ -374,7 +402,11 @@ export default function AllProducts() {
                   <TableCell>
                     <Badge
                       variant="outline"
-                      className={PRODUCT_STATUS[product.status as keyof typeof PRODUCT_STATUS] || "bg-gray-100 text-gray-800"}
+                      className={
+                        PRODUCT_STATUS[
+                          product.status as keyof typeof PRODUCT_STATUS
+                        ] || "bg-gray-100 text-gray-800"
+                      }
                     >
                       {product.status}
                     </Badge>
@@ -393,24 +425,30 @@ export default function AllProducts() {
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      
+
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button
                             variant="destructive"
                             size="sm"
                             className="h-8 w-8 p-0"
+                            disabled={deletingProductId === product.id} // Disable during delete
                           >
-                            <Trash2 className="h-4 w-4" />
+                            {deletingProductId === product.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
                             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              This action cannot be undone. This will permanently
-                              delete the product &quot;{product.name}&quot; and remove it
-                              from our servers.
+                              This action cannot be undone. This will
+                              permanently delete the product &quot;
+                              {product.name}&quot; and remove it from our
+                              servers.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
@@ -443,7 +481,15 @@ export default function AllProducts() {
             variant="outline"
             size="sm"
             disabled={currentPage === 1}
-            onClick={() => fetchProducts(currentPage - 1, statusFilter, categoryFilter, brandFilter, productTypeFilter)}
+            onClick={() =>
+              fetchProducts(
+                currentPage - 1,
+                statusFilter,
+                categoryFilter,
+                brandFilter,
+                productTypeFilter
+              )
+            }
           >
             Previous
           </Button>
@@ -454,7 +500,15 @@ export default function AllProducts() {
             variant="outline"
             size="sm"
             disabled={currentPage === totalPages}
-            onClick={() => fetchProducts(currentPage + 1, statusFilter, categoryFilter, brandFilter, productTypeFilter)}
+            onClick={() =>
+              fetchProducts(
+                currentPage + 1,
+                statusFilter,
+                categoryFilter,
+                brandFilter,
+                productTypeFilter
+              )
+            }
           >
             Next
           </Button>

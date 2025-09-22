@@ -10,7 +10,7 @@ export default function ProductsPage() {
           <h1 className="text-3xl font-bold">All Products</h1>
           <p className="text-xl">Manage your product inventory</p>
         </div>
-        <Link href="/products/add" className="flex items-center px-4 py-2 bg-gray-100 text-gray-900 rounded hover:bg-blue-300 transition">
+        <Link href="/admin-dashboard/products/add" className="flex items-center px-4 py-2 bg-gray-100 text-gray-900 rounded hover:bg-blue-300 transition">
             <Plus className="w-4 h-4 mr-2" />
             Add New Product
         </Link>

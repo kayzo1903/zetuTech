@@ -10,3 +10,13 @@
 ## search-functionality on adminproductlist page
    we have to implement functionality to return all page on 
    search , aim is to ssimplify stock management 
+
+## implement delete 
+   creating api for delete a product by  admin , only admin
+   can delete a product from stock.
+
+## implementing editing page
+   creating a page for returning edit product
+   fetching product by id from api a product
+   displaying all its details
+   after editing updating product
