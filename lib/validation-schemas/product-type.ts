@@ -64,3 +64,22 @@ export const PRODUCT_STATUS = [
   "Used-Good",
   "Used-Fair",
 ];
+
+export const STOCK_STATUS = [
+  "Archived",
+  "Out of Stock",
+  "In Stock",
+  "Low Stock",
+  "Preorder",
+  "Discontinued",
+  "Backordered",
+  "Limited Stock",
+  "Available Soon",
+  "Temporarily Unavailable",
+  "Coming Soon",
+  "Special Order",
+  "In Transit",
+  "On Hold",
+  "Reserved",
+  "For Parts or Not Working",
+];

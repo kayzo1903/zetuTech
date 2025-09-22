@@ -1,5 +1,20 @@
-import { pgTable, text, timestamp, boolean, integer, decimal, serial, varchar } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import {
+  pgTable,
+  text,
+  timestamp,
+  boolean,
+  integer,
+  decimal,
+  varchar,
+  uuid,
+} from "drizzle-orm/pg-core";
 
+/* ---------------------------
+   Better Auth Tables (NO CHANGE)
+---------------------------- */
+
+// User table - keep as TEXT for Better Auth
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
@@ -14,14 +29,13 @@ export const user = pgTable("user", {
   role: text("role").default("buyer"),
 });
 
+// Session table - keep as TEXT
 export const session = pgTable("session", {
   id: text("id").primaryKey(),
   expiresAt: timestamp("expires_at").notNull(),
   token: text("token").notNull().unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at")
-    .$onUpdate(() => new Date())
-    .notNull(),
+  updatedAt: timestamp("updated_at").$onUpdate(() => new Date()).notNull(),
   ipAddress: text("ip_address"),
   userAgent: text("user_agent"),
   userId: text("user_id")
@@ -29,6 +43,7 @@ export const session = pgTable("session", {
     .references(() => user.id, { onDelete: "cascade" }),
 });
 
+// Account table - keep as TEXT
 export const account = pgTable("account", {
   id: text("id").primaryKey(),
   accountId: text("account_id").notNull(),
@@ -44,31 +59,57 @@ export const account = pgTable("account", {
   scope: text("scope"),
   password: text("password"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at")
-    .$onUpdate(() => new Date())
-    .notNull(),
+  updatedAt: timestamp("updated_at").$onUpdate(() => new Date()).notNull(),
 });
 
+// Verification table - keep as TEXT
 export const verification = pgTable("verification", {
   id: text("id").primaryKey(),
   identifier: text("identifier").notNull(),
   value: text("value").notNull(),
   expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at")
-    .defaultNow()
-    .$onUpdate(() => new Date())
-    .notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()).notNull(),
 });
 
-// Product-related tables
+/* ---------------------------
+   Custom E-commerce Tables
+---------------------------- */
+
+// Stock Status Definitions
+export const STOCK_STATUS = {
+  ARCHIVED: "Archived",
+  OUT_OF_STOCK: "Out of Stock",
+  IN_STOCK: "In Stock",
+  LOW_STOCK: "Low Stock",
+  PREORDER: "Preorder",
+  DISCONTINUED: "Discontinued",
+  BACKORDERED: "Backordered",
+  LIMITED_STOCK: "Limited Stock",
+  AVAILABLE_SOON: "Available Soon",
+  TEMPORARILY_UNAVAILABLE: "Temporarily Unavailable",
+  COMING_SOON: "Coming Soon",
+  SPECIAL_ORDER: "Special Order",
+  IN_TRANSIT: "In Transit",
+  ON_HOLD: "On Hold",
+  RESERVED: "Reserved",
+  FOR_PARTS: "For Parts or Not Working",
+} as const;
+
+export type StockStatus = typeof STOCK_STATUS[keyof typeof STOCK_STATUS];
+
+/* ----------- Products ----------- */
 export const product = pgTable("product", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description").notNull(),
+  shortDescription: text("short_description"),
   brand: varchar("brand", { length: 100 }).notNull(),
   productType: varchar("product_type", { length: 50 }).notNull(),
-  status: varchar("status", { length: 20 }).default('Draft').notNull(),
+  status: varchar("status", { length: 20 }).default("Draft").notNull(),
+  stockStatus: varchar("stock_status", { length: 50 })
+    .default(STOCK_STATUS.IN_STOCK)
+    .notNull(),
   originalPrice: decimal("original_price", { precision: 10, scale: 2 }).notNull(),
   salePrice: decimal("sale_price", { precision: 10, scale: 2 }),
   hasDiscount: boolean("has_discount").default(false).notNull(),
@@ -76,98 +117,139 @@ export const product = pgTable("product", {
   hasWarranty: boolean("has_warranty").default(false).notNull(),
   warrantyPeriod: integer("warranty_period"),
   warrantyDetails: text("warranty_details"),
+  slug: varchar("slug", { length: 300 }).notNull().unique(),
+  metaTitle: varchar("meta_title", { length: 300 }),
+  metaDescription: text("meta_description"),
+  keywords: text("keywords"),
+  structuredData: text("structured_data"),
+  sku: varchar("sku", { length: 100 }).unique(),
+  upc: varchar("upc", { length: 50 }),
+  // FK to Better Auth user table
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at")
-    .defaultNow()
-    .$onUpdate(() => new Date())
-    .notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()).notNull(),
 });
 
+/* ----------- Product Category ----------- */
 export const productCategory = pgTable("product_category", {
-  id: serial("id").primaryKey(),
-  productId: integer("product_id")
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  productId: uuid("product_id")
     .notNull()
     .references(() => product.id, { onDelete: "cascade" }),
   category: varchar("category", { length: 100 }).notNull(),
+  slug: varchar("slug", { length: 300 }),
+  description: text("description"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+/* ----------- Product Image ----------- */
 export const productImage = pgTable("product_image", {
-  id: serial("id").primaryKey(),
-  productId: integer("product_id")
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  productId: uuid("product_id")
     .notNull()
     .references(() => product.id, { onDelete: "cascade" }),
   url: text("url").notNull(),
   alt: text("alt"),
+  title: text("title"),
   order: integer("order").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+/* ----------- Product Review ----------- */
 export const productReview = pgTable("product_review", {
-  id: serial("id").primaryKey(),
-  productId: integer("product_id")
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  productId: uuid("product_id")
     .notNull()
     .references(() => product.id, { onDelete: "cascade" }),
-  userId: text("user_id")
+  userId: text("user_id") // FK remains text to match Better Auth user
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
   rating: integer("rating").notNull(),
+  title: varchar("title", { length: 200 }),
   comment: text("comment"),
+  helpful: integer("helpful").default(0),
+  verifiedPurchase: boolean("verified_purchase").default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at")
-    .defaultNow()
-    .$onUpdate(() => new Date())
-    .notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()).notNull(),
 });
 
+/* ----------- Product Attribute ----------- */
+export const productAttribute = pgTable("product_attribute", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  productId: uuid("product_id")
+    .notNull()
+    .references(() => product.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 100 }).notNull(),
+  value: text("value").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+/* ----------- Product SEO Click ----------- */
+export const productSeoClick = pgTable("product_seo_click", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  productId: uuid("product_id")
+    .notNull()
+    .references(() => product.id, { onDelete: "cascade" }),
+  query: text("query").notNull(),
+  position: integer("position"),
+  clickedAt: timestamp("clicked_at").defaultNow().notNull(),
+});
+
+/* ----------- Orders ----------- */
 export const order = pgTable("order", {
-  id: serial("id").primaryKey(),
-  userId: text("user_id")
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: text("user_id") // FK remains text to match Better Auth user
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
-  status: varchar("status", { length: 20 })
-    .default('pending')
-    .notNull(),
+  status: varchar("status", { length: 20 }).default("pending").notNull(),
   totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at")
-    .defaultNow()
-    .$onUpdate(() => new Date())
-    .notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()).notNull(),
 });
 
-// Order Status Definitions
 export const ORDER_STATUS = {
-  PENDING: 'pending',           // Order placed but not yet confirmed
-  CONFIRMED: 'confirmed',       // Order confirmed by the system/seller
-  PROCESSING: 'processing',     // Order is being prepared for shipment
-  SHIPPED: 'shipped',           // Order has been shipped to customer
-  DELIVERED: 'delivered',       // Order successfully delivered to customer
-  CANCELLED: 'cancelled',       // Order was cancelled by customer or seller
-  REFUNDED: 'refunded',         // Order was refunded to customer
-  FAILED: 'failed'              // Order failed (payment issue, etc.)
+  PENDING: "pending",
+  CONFIRMED: "confirmed",
+  PROCESSING: "processing",
+  SHIPPED: "shipped",
+  DELIVERED: "delivered",
+  CANCELLED: "cancelled",
+  REFUNDED: "refunded",
+  FAILED: "failed",
 } as const;
 
 export type OrderStatus = typeof ORDER_STATUS[keyof typeof ORDER_STATUS];
 
-// Order Status Flow Explanation:
-// pending → confirmed → processing → shipped → delivered
-// pending → cancelled (at any point before delivery)
-// delivered → refunded (if customer requests refund)
-// pending → failed (if payment fails)
-
+/* ----------- Order Items ----------- */
 export const orderItem = pgTable("order_item", {
-  id: serial("id").primaryKey(),
-  orderId: integer("order_id")
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  orderId: uuid("order_id")
     .notNull()
     .references(() => order.id, { onDelete: "cascade" }),
-  productId: integer("product_id")
+  productId: uuid("product_id")
     .notNull()
     .references(() => product.id, { onDelete: "cascade" }),
   quantity: integer("quantity").notNull(),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+/* ----------- Search Queries ----------- */
+export const searchQuery = pgTable("search_query", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  query: text("query").notNull(),
+  resultCount: integer("result_count").notNull(),
+  userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+/* ----------- Page Views ----------- */
+export const pageView = pgTable("page_view", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  url: text("url").notNull(),
+  referrer: text("referrer"),
+  userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

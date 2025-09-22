@@ -1,12 +1,33 @@
+// lib/validation-schemas/products-schema.ts
 import { z } from "zod";
+
+export const STOCK_STATUS = [
+  "Archived",
+  "Out of Stock",
+  "In Stock",
+  "Low Stock",
+  "Preorder",
+  "Discontinued",
+  "Backordered",
+  "Limited Stock",
+  "Available Soon",
+  "Temporarily Unavailable",
+  "Coming Soon",
+  "Special Order",
+  "In Transit",
+  "On Hold",
+  "Reserved",
+  "For Parts or Not Working",
+] as const;
 
 export const productSchema = z.object({
   productType: z.string().min(1, "Product type is required"),
   name: z.string().min(1, "Product name is required").max(255, "Product name is too long"),
   brand: z.string().min(1, "Brand is required").max(100, "Brand name is too long"),
   stock: z.number().min(0, "Stock cannot be negative").int("Stock must be a whole number"),
+  stockStatus: z.enum(STOCK_STATUS).default("In Stock"),
   categories: z.array(z.string()).min(1, "At least one category is required"),
-  status: z.enum(["Brand New", "Refurbished", "Archived", "Out of Stock"]),
+  status: z.enum(["Brand New", "Refurbished", "Used-like New", "Used-Good" , "Used-Fair"]),
   description: z.string().min(1, "Description is required").max(2000, "Description is too long"),
   images: z.array(z.any()).min(1, "At least one image is required").max(5, "Maximum 5 images allowed"),
   hasDiscount: z.boolean().default(false),
