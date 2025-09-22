@@ -1,22 +1,25 @@
-## Form submition
+## Form submition //done
   short description and keywords must be included in
   product form submition to improve product 
   seo , design system for upc
 
-## returning all products to dashboard (admin-dashboar/products)
+## returning all products to dashboard (admin-dashboar/products) // done 
   we have to create a system to show all product on our stock
   key features we can filter based on product type and category
 
-## search-functionality on adminproductlist page
+## search-functionality on adminproductlist page // need improvememnt
    we have to implement functionality to return all page on 
    search , aim is to ssimplify stock management 
 
-## implement delete 
+## implement delete // done
    creating api for delete a product by  admin , only admin
    can delete a product from stock.
 
-## implementing editing page
+## implementing editing page // done 
    creating a page for returning edit product
    fetching product by id from api a product
    displaying all its details
    after editing updating product
+
+## implement cloudfare image system to store image .
+   we will connect our webapp with cloudfare 3 for image system
