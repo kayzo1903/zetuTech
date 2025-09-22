@@ -32,8 +32,8 @@ export async function POST(request: NextRequest) {
 
     const uploadUrl = await getSignedUrl(s3, putCmd, { expiresIn: 300 });
 
-    // ✅ BEST: Use R2 public domain with clean key
-    const publicUrl = `https://pub-${process.env.CF_ACCOUNT_ID}.r2.dev/${key}`;
+    // ✅ Use the CORRECT public domain from your R2 settings
+    const publicUrl = `https://${process.env.R2_PUBLIC_DOMAIN}/${key}`;
 
     return NextResponse.json({ uploadUrl, publicUrl });
   } catch (error) {
