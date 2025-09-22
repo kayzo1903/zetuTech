@@ -1,7 +1,7 @@
 // app/dashboard/allproducts/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -31,82 +31,37 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Edit, Trash2 , ImageIcon } from "lucide-react";
+import { Search, Edit, Trash2, ImageIcon, Loader2 } from "lucide-react";
 import Image from "next/image";
 
-// Mock product data with images
-const mockProducts = [
-  {
-    id: 1,
-    name: "Dell XPS 13",
-    brand: "Dell",
-    productType: "Laptops",
-    status: "Active",
-    stock: 15,
-    originalPrice: "1500000",
-    salePrice: "1350000",
-    hasDiscount: true,
-    categories: ["Ultrabooks", "Business Laptops"],
-    image: "/api/placeholder/80/80?text=Dell+XPS",
-    createdAt: "2023-10-15",
-  },
-  {
-    id: 2,
-    name: "iPhone 15 Pro",
-    brand: "Apple",
-    productType: "Smartphones",
-    status: "Active",
-    stock: 25,
-    originalPrice: "2200000",
-    salePrice: null,
-    hasDiscount: false,
-    categories: ["Flagship Phones", "iOS"],
-    image: "/api/placeholder/80/80?text=iPhone+15",
-    createdAt: "2023-11-20",
-  },
-  {
-    id: 3,
-    name: "Samsung Galaxy S23",
-    brand: "Samsung",
-    productType: "Smartphones",
-    status: "Out of Stock",
-    stock: 0,
-    originalPrice: "1800000",
-    salePrice: "1600000",
-    hasDiscount: true,
-    categories: ["Android", "Flagship Phones"],
-    image: "/api/placeholder/80/80?text=Galaxy+S23",
-    createdAt: "2023-09-05",
-  },
-  {
-    id: 4,
-    name: "MacBook Air M2",
-    brand: "Apple",
-    productType: "Laptops",
-    status: "Active",
-    stock: 8,
-    originalPrice: "2100000",
-    salePrice: null,
-    hasDiscount: false,
-    categories: ["Ultrabooks", "Apple"],
-    image: "/api/placeholder/80/80?text=MacBook+Air",
-    createdAt: "2023-12-01",
-  },
-  {
-    id: 5,
-    name: "Sony WH-1000XM5",
-    brand: "Sony",
-    productType: "Audio",
-    status: "Draft",
-    stock: 12,
-    originalPrice: "650000",
-    salePrice: "580000",
-    hasDiscount: true,
-    categories: ["Headphones", "Wireless"],
-    image: "/api/placeholder/80/80?text=Sony+Headphones",
-    createdAt: "2023-11-10",
-  },
-];
+// Types for the product data from API
+interface Product {
+  id: string;
+  name: string;
+  brand: string;
+  productType: string; // Changed from product_type
+  status: string;
+  stock: number;
+  originalPrice: string; // Changed from original_price
+  salePrice: string | null;
+  hasDiscount: boolean; // Changed from has_discount
+  categories: string[];
+  images: string[];
+  createdAt: string; // Changed from created_at
+  stockStatus: string; // Changed from stock_status
+}
+
+interface ProductsResponse {
+  products: Product[];
+  pagination: {
+    page: number;
+    limit: number;
+    totalCount: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}
 
 const PRODUCT_STATUS = {
   Draft: "bg-gray-100 text-gray-800",
@@ -116,30 +71,91 @@ const PRODUCT_STATUS = {
 } as const;
 
 export default function AllProducts() {
-  const [products, setProducts] = useState(mockProducts);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
+  // Fetch products from API
+// In your fetchProducts function
+const fetchProducts = async (page: number = 1, search: string = "", status: string = "all", category: string = "all") => {
+  try {
+    setLoading(true);
+    setError(null);
+    
+    // Build query parameters
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: "10",
+      ...(search && { search }),
+      ...(status !== "all" && { status }),
+      ...(category !== "all" && { category }),
+    });
+
+    const response = await fetch(`/api/products?${params}`);
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Failed to fetch products: ${response.status}`);
+    }
+
+    const data: ProductsResponse = await response.json();
+    
+    // Validate the response structure
+    if (!data.products || !data.pagination) {
+      throw new Error("Invalid response format from server");
+    }
+    
+    setProducts(data.products);
+    setTotalPages(data.pagination.totalPages);
+    setTotalCount(data.pagination.totalCount);
+    setCurrentPage(data.pagination.page);
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : "An error occurred";
+    setError(errorMessage);
+    console.error("Error fetching products:", err);
+  } finally {
+    setLoading(false);
+  }
+};
+
+  // Initial fetch
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  // Handle filter changes
+  useEffect(() => {
+    fetchProducts(1, searchTerm, statusFilter, categoryFilter);
+  }, [searchTerm, statusFilter, categoryFilter]);
 
   // Get all unique categories for filter
   const allCategories = Array.from(
-    new Set(products.flatMap((product) => product.categories))
+    new Set(products.flatMap((product) => product.categories || []))
   );
 
-  // Filter products based on search term and filters
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.brand.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === "all" || product.status === statusFilter;
-    const matchesCategory = categoryFilter === "all" || 
-                           product.categories.some(cat => cat === categoryFilter);
-    
-    return matchesSearch && matchesStatus && matchesCategory;
-  });
+  const handleDelete = async (id: string) => {
+    try {
+      // Implement delete API call
+      const response = await fetch(`/api/products/${id}`, {
+        method: "DELETE",
+      });
 
-  const handleDelete = (id: number) => {
-    setProducts(products.filter(product => product.id !== id));
+      if (!response.ok) {
+        throw new Error("Failed to delete product");
+      }
+
+      // Refresh the product list
+      fetchProducts(currentPage, searchTerm, statusFilter, categoryFilter);
+    } catch (err) {
+      console.error("Error deleting product:", err);
+      alert("Failed to delete product");
+    }
   };
 
   const formatPrice = (price: string | null) => {
@@ -147,8 +163,32 @@ export default function AllProducts() {
     return `TZS ${parseInt(price).toLocaleString()}`;
   };
 
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  if (loading) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-96">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+        <span className="ml-2 text-gray-600">Loading products...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 text-center text-red-600">
+        Error: {error}
+        <Button onClick={() => fetchProducts()} className="ml-4">
+          Retry
+        </Button>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-6"> 
+    <div className="p-6">
       {/* Filters and Search */}
       <div className="rounded-lg border p-4 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -208,20 +248,20 @@ export default function AllProducts() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredProducts.length === 0 ? (
+            {products.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={9} className="text-center py-8 text-gray-500">
                   No products found matching your criteria
                 </TableCell>
               </TableRow>
             ) : (
-              filteredProducts.map((product) => (
+              products.map((product) => (
                 <TableRow key={product.id}>
                   <TableCell>
                     <div className="w-16 h-16 relative rounded-md overflow-hidden border">
-                      {product.image ? (
+                      {product.images && product.images.length > 0 ? (
                         <Image
-                          src={product.image}
+                          src={product.images[0]}
                           alt={product.name}
                           fill
                           className="object-cover"
@@ -238,7 +278,7 @@ export default function AllProducts() {
                   <TableCell>{product.brand}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      {product.categories.slice(0, 2).map((category) => (
+                      {product.categories?.slice(0, 2).map((category) => (
                         <Badge
                           key={category}
                           variant="secondary"
@@ -247,7 +287,7 @@ export default function AllProducts() {
                           {category}
                         </Badge>
                       ))}
-                      {product.categories.length > 2 && (
+                      {product.categories && product.categories.length > 2 && (
                         <Badge variant="outline" className="text-xs">
                           +{product.categories.length - 2}
                         </Badge>
@@ -286,12 +326,12 @@ export default function AllProducts() {
                   <TableCell>
                     <Badge
                       variant="outline"
-                      className={PRODUCT_STATUS[product.status as keyof typeof PRODUCT_STATUS]}
+                      className={PRODUCT_STATUS[product.status as keyof typeof PRODUCT_STATUS] || "bg-gray-100 text-gray-800"}
                     >
                       {product.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>{product.createdAt}</TableCell>
+                  <TableCell>{formatDate(product.createdAt)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Button
@@ -300,7 +340,7 @@ export default function AllProducts() {
                         className="h-8 w-8 p-0"
                         onClick={() => {
                           // Handle edit - navigate to edit page
-                          console.log("Edit product:", product.id);
+                          window.location.href = `/admin-dashboard/products/edit-product/${product.id}`;
                         }}
                       >
                         <Edit className="h-4 w-4" />
@@ -345,16 +385,29 @@ export default function AllProducts() {
         </Table>
       </div>
 
-      {/* Pagination (optional) */}
+      {/* Pagination */}
       <div className="flex justify-between items-center mt-6">
         <p className="text-sm text-gray-600">
-          Showing {filteredProducts.length} of {products.length} products
+          Showing {products.length} of {totalCount} products
         </p>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" disabled>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={currentPage === 1}
+            onClick={() => fetchProducts(currentPage - 1, searchTerm, statusFilter, categoryFilter)}
+          >
             Previous
           </Button>
-          <Button variant="outline" size="sm" disabled>
+          <span className="flex items-center text-sm text-gray-600">
+            Page {currentPage} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={currentPage === totalPages}
+            onClick={() => fetchProducts(currentPage + 1, searchTerm, statusFilter, categoryFilter)}
+          >
             Next
           </Button>
         </div>

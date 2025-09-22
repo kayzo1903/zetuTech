@@ -13,6 +13,7 @@ import { dbServer } from "@/db/db-server";
 import { STOCK_STATUS } from "@/lib/validation-schemas/products-schema";
 import { slugify } from "@/lib/slugify";
 import { generateUniqueSKU } from "@/lib/sku-generator";
+import { sql, SQL , desc } from "drizzle-orm";
 
 export async function POST(request: NextRequest) {
   try {
@@ -215,6 +216,7 @@ export async function POST(request: NextRequest) {
 }
 
 // GET endpoint to fetch products
+// GET endpoint to fetch products using Drizzle ORM
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -227,58 +229,68 @@ export async function GET(request: NextRequest) {
     
     const offset = (page - 1) * limit;
     
-    // Build where conditions
-    const whereConditions = [];
+    // Build where conditions using Drizzle SQL
+    const whereConditions: SQL[] = [];
     
     if (category) {
-      whereConditions.push(`pc.category = '${category}'`);
+      whereConditions.push(sql`EXISTS (
+        SELECT 1 FROM ${productCategory} 
+        WHERE ${productCategory.productId} = ${product.id} 
+        AND ${productCategory.category} = ${category}
+      )`);
     }
     
     if (status) {
-      whereConditions.push(`p.status = '${status}'`);
+      whereConditions.push(sql`${product.status} = ${status}`);
     }
     
     if (stockStatus) {
-      whereConditions.push(`p.stockStatus = '${stockStatus}'`);
+      whereConditions.push(sql`${product.stockStatus} = ${stockStatus}`);
     }
     
     if (search) {
-      whereConditions.push(`(p.name ILIKE '%${search}%' OR p.description ILIKE '%${search}%' OR p.brand ILIKE '%${search}%')`);
+      whereConditions.push(sql`(
+        ${product.name} ILIKE ${`%${search}%`} OR 
+        ${product.description} ILIKE ${`%${search}%`} OR 
+        ${product.brand} ILIKE ${`%${search}%`}
+      )`);
     }
     
-    const whereClause = whereConditions.length > 0 
-      ? `WHERE ${whereConditions.join(' AND ')}` 
-      : '';
-    
-    // Get products with categories
-    const products = await dbServer.execute(`
-      SELECT 
-        p.*,
-        json_agg(DISTINCT pc.category) as categories,
-        json_agg(DISTINCT pi.url) as images
-      FROM product p
-      LEFT JOIN product_category pc ON p.id = pc.productId
-      LEFT JOIN product_image pi ON p.id = pi.productId
-      ${whereClause}
-      GROUP BY p.id
-      ORDER BY p.created_at DESC
-      LIMIT ${limit} OFFSET ${offset}
-    `);
-    
+    // Get products with categories and images
+    const productsResult = await dbServer
+      .select({
+        product: product,
+        categories: sql`json_agg(DISTINCT ${productCategory.category})`.as('categories'),
+        images: sql`json_agg(DISTINCT ${productImage.url})`.as('images')
+      })
+      .from(product)
+      .leftJoin(productCategory, sql`${product.id} = ${productCategory.productId}`)
+      .leftJoin(productImage, sql`${product.id} = ${productImage.productId}`)
+      .where(whereConditions.length > 0 ? sql`${sql.join(whereConditions, sql` AND `)}` : undefined)
+      .groupBy(product.id)
+      .orderBy(desc(product.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    // Format the products
+    const formattedProducts = productsResult.map(row => ({
+      ...row.product,
+      categories: row.categories || [],
+      images: row.images || []
+    }));
+
     // Get total count for pagination
-    const totalResult = await dbServer.execute(`
-      SELECT COUNT(DISTINCT p.id) as count
-      FROM product p
-      LEFT JOIN product_category pc ON p.id = pc.productId
-      ${whereClause}
-    `);
-    
-    // Fix the type issue by properly accessing the count value
-    const totalCount = totalResult.rows[0] ? Number(totalResult.rows[0].count) : 0;
+    const countResult = await dbServer
+      .select({ count: sql<number>`COUNT(DISTINCT ${product.id})` })
+      .from(product)
+      .leftJoin(productCategory, sql`${product.id} = ${productCategory.productId}`)
+      .where(whereConditions.length > 0 ? sql`${sql.join(whereConditions, sql` AND `)}` : undefined);
+
+    const totalCount = countResult[0]?.count || 0;
     const totalPages = Math.ceil(totalCount / limit);
     
     return NextResponse.json({
-      products: products.rows,
+      products: formattedProducts,
       pagination: {
         page,
         limit,
