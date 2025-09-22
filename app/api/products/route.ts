@@ -6,14 +6,19 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { uploadImageToStorage } from "@/lib/storage";
 
-import { product, productCategory, productImage, productAttribute } from "@/db/schema";
+import {
+  product,
+  productCategory,
+  productImage,
+  productAttribute,
+} from "@/db/schema";
 import { ZodError } from "zod";
 import { v4 as uuidv4 } from "uuid";
 import { dbServer } from "@/db/db-server";
 import { STOCK_STATUS } from "@/lib/validation-schemas/products-schema";
 import { slugify } from "@/lib/slugify";
 import { generateUniqueSKU } from "@/lib/sku-generator";
-import { sql, SQL , desc } from "drizzle-orm";
+import { sql, SQL, desc } from "drizzle-orm";
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,13 +47,14 @@ export async function POST(request: NextRequest) {
     const name = formData.get("name") as string;
     const brand = formData.get("brand") as string;
     const stock = parseInt(formData.get("stock") as string);
-    const stockStatus = formData.get("stockStatus") as string || STOCK_STATUS[2]; // Default to "In Stock"
+    const stockStatus =
+      (formData.get("stockStatus") as string) || STOCK_STATUS[2]; // Default to "In Stock"
     const categories = JSON.parse(
       formData.get("categories") as string
     ) as string[];
     const status = formData.get("status") as string;
     const description = formData.get("description") as string;
-    const shortDescription = formData.get("shortDescription") as string || "";
+    const shortDescription = (formData.get("shortDescription") as string) || "";
     const hasDiscount = formData.get("hasDiscount") === "true";
     const originalPrice = parseFloat(formData.get("originalPrice") as string);
     const salePrice = hasDiscount
@@ -61,19 +67,21 @@ export async function POST(request: NextRequest) {
     const warrantyDetails = hasWarranty
       ? (formData.get("warrantyDetails") as string)
       : undefined;
-    
+
     // Extract SEO fields
-    const slug = formData.get("slug") as string || slugify(name);
-    const metaTitle = formData.get("metaTitle") as string || name;
-    const metaDescription = formData.get("metaDescription") as string || 
-      (shortDescription || description.substring(0, 160));
-    const keywords = formData.get("keywords") as string || "";
-    const sku = formData.get("sku") as string || generateUniqueSKU();
-    const upc = formData.get("upc") as string || "";
-    
+    const slug = (formData.get("slug") as string) || slugify(name);
+    const metaTitle = (formData.get("metaTitle") as string) || name;
+    const metaDescription =
+      (formData.get("metaDescription") as string) ||
+      shortDescription ||
+      description.substring(0, 160);
+    const keywords = (formData.get("keywords") as string) || "";
+    const sku = (formData.get("sku") as string) || generateUniqueSKU();
+    const upc = (formData.get("upc") as string) || "";
+
     // Extract attributes if provided
-    const attributes = formData.get("attributes") 
-      ? JSON.parse(formData.get("attributes") as string) 
+    const attributes = formData.get("attributes")
+      ? JSON.parse(formData.get("attributes") as string)
       : [];
 
     // Get image files
@@ -162,9 +170,10 @@ export async function POST(request: NextRequest) {
       if (imageUrls.length > 0) {
         await tx.insert(productImage).values(
           imageUrls.map((url, index) => ({
-            id: uuidv4(), // Generate UUID for each image
+            id: uuidv4(),
             productId: productResult.id,
             url,
+            storageKey: url.split("/").slice(-1)[0], // <-- TEMP FIX
             alt: `${validatedData.name} - Image ${index + 1}`,
             title: `${validatedData.name} - Image ${index + 1}`,
             order: index,
@@ -207,9 +216,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    
+
     return NextResponse.json(
-      { error: "Internal server error" }, 
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
@@ -219,15 +228,15 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
 
-    const category = searchParams.get('category');
-    const status = searchParams.get('status');
-    const stockStatus = searchParams.get('stockStatus');
-    const search = searchParams.get('search');
-    const brand = searchParams.get('brand');
-    const productType = searchParams.get('productType');
+    const category = searchParams.get("category");
+    const status = searchParams.get("status");
+    const stockStatus = searchParams.get("stockStatus");
+    const search = searchParams.get("search");
+    const brand = searchParams.get("brand");
+    const productType = searchParams.get("productType");
 
     const offset = (page - 1) * limit;
 
@@ -270,30 +279,46 @@ export async function GET(request: NextRequest) {
     const productsResult = await dbServer
       .select({
         product: product,
-        categories: sql`json_agg(DISTINCT ${productCategory.category})`.as('categories'),
-        images: sql`json_agg(DISTINCT ${productImage.url})`.as('images')
+        categories: sql`json_agg(DISTINCT ${productCategory.category})`.as(
+          "categories"
+        ),
+        images: sql`json_agg(DISTINCT ${productImage.url})`.as("images"),
       })
       .from(product)
-      .leftJoin(productCategory, sql`${product.id} = ${productCategory.productId}`)
+      .leftJoin(
+        productCategory,
+        sql`${product.id} = ${productCategory.productId}`
+      )
       .leftJoin(productImage, sql`${product.id} = ${productImage.productId}`)
-      .where(whereConditions.length > 0 ? sql`${sql.join(whereConditions, sql` AND `)}` : undefined)
+      .where(
+        whereConditions.length > 0
+          ? sql`${sql.join(whereConditions, sql` AND `)}`
+          : undefined
+      )
       .groupBy(product.id)
       .orderBy(desc(product.createdAt))
       .limit(limit)
       .offset(offset);
 
-    const formattedProducts = productsResult.map(row => ({
+    const formattedProducts = productsResult.map((row) => ({
       ...row.product,
       categories: row.categories || [],
-      images: row.images || []
+      images: row.images || [],
     }));
 
     // Get total count
     const countResult = await dbServer
       .select({ count: sql<number>`COUNT(DISTINCT ${product.id})` })
       .from(product)
-      .leftJoin(productCategory, sql`${product.id} = ${productCategory.productId}`)
-      .where(whereConditions.length > 0 ? sql`${sql.join(whereConditions, sql` AND `)}` : undefined);
+      .leftJoin(
+        productCategory,
+        sql`${product.id} = ${productCategory.productId}`
+      )
+      .where(
+        whereConditions.length > 0
+          ? sql`${sql.join(whereConditions, sql` AND `)}`
+          : undefined
+      );
 
     const totalCount = countResult[0]?.count || 0;
     const totalPages = Math.ceil(totalCount / limit);
@@ -309,9 +334,11 @@ export async function GET(request: NextRequest) {
         hasPrev: page > 1,
       },
     });
-
   } catch (error) {
     console.error("Error fetching products:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }

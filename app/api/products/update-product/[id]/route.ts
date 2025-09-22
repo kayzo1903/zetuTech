@@ -1,7 +1,5 @@
-// // app/api/products/update-product/[id]/route.ts
 import { productSchema } from "@/lib/validation-schemas/products-schema";
 import { revalidatePath } from "next/cache";
-import { uploadImageToStorage } from "@/lib/storage";
 import { ZodError } from "zod";
 import { v4 as uuidv4 } from "uuid";
 import { slugify } from "@/lib/slugify";
@@ -11,34 +9,21 @@ import { product, productCategory, productImage } from "@/db/schema";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { eq } from "drizzle-orm";
+import { uploadImageToStorage } from "@/lib/storage";
 
 type Params = Promise<{ id: string }>;
 
+/**
+ * PUT /api/products/update-product/[id]
+ * Updates a product including details, categories, and images.
+ */
 export async function PUT(
   request: NextRequest,
-  props: {
-    params: Params;
-  }
+  props: { params: Params }
 ) {
   try {
     const params = await props.params;
     const productId = params.id;
-    // Check authentication
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-
-    if (!session || !session.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Check user role
-    if (session.user.role !== "admin") {
-      return NextResponse.json(
-        { error: "Only admins can update products" },
-        { status: 403 }
-      );
-    }
 
     if (!productId) {
       return NextResponse.json(
@@ -47,10 +32,24 @@ export async function PUT(
       );
     }
 
-    // Parse form data
-    const formData = await request.formData();
+    // --- AUTHENTICATION ---
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
 
-    // Check if product exists
+    if (!session || !session.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Only admins can update products
+    if (session.user.role !== "admin") {
+      return NextResponse.json(
+        { error: "Only admins can update products" },
+        { status: 403 }
+      );
+    }
+
+    // --- CHECK EXISTING PRODUCT ---
     const existingProduct = await dbServer
       .select()
       .from(product)
@@ -61,15 +60,15 @@ export async function PUT(
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    // Extract form data
+    // --- PARSE FORM DATA ---
+    const formData = await request.formData();
+
     const productType = formData.get("productType") as string;
     const name = formData.get("name") as string;
     const brand = formData.get("brand") as string;
     const stock = parseInt(formData.get("stock") as string);
     const stockStatus = formData.get("stockStatus") as string;
-    const categories = JSON.parse(
-      formData.get("categories") as string
-    ) as string[];
+    const categories = JSON.parse(formData.get("categories") as string) as string[];
     const status = formData.get("status") as string;
     const description = formData.get("description") as string;
     const shortDescription = (formData.get("shortDescription") as string) || "";
@@ -79,14 +78,10 @@ export async function PUT(
       ? parseFloat(formData.get("salePrice") as string)
       : undefined;
     const hasWarranty = formData.get("hasWarranty") === "true";
-    const warrantyPeriod = hasWarranty
-      ? (formData.get("warrantyPeriod") as string)
-      : undefined;
-    const warrantyDetails = hasWarranty
-      ? (formData.get("warrantyDetails") as string)
-      : undefined;
+    const warrantyPeriod = hasWarranty ? (formData.get("warrantyPeriod") as string) : undefined;
+    const warrantyDetails = hasWarranty ? (formData.get("warrantyDetails") as string) : undefined;
 
-    // Extract SEO fields
+    // --- SEO FIELDS ---
     const slug = (formData.get("slug") as string) || slugify(name);
     const metaTitle = (formData.get("metaTitle") as string) || name;
     const metaDescription =
@@ -95,10 +90,10 @@ export async function PUT(
       description.substring(0, 160);
     const keywords = (formData.get("keywords") as string) || "";
 
-    // Get image files
+    // --- IMAGES ---
     const imageFiles = formData.getAll("images") as File[];
 
-    // Validate the data
+    // --- VALIDATE INPUT DATA ---
     const validatedData = productSchema.parse({
       productType,
       name,
@@ -108,7 +103,7 @@ export async function PUT(
       categories,
       status,
       description,
-      images: imageFiles.length > 0 ? imageFiles : [{}], // Allow no new images for updates
+      images: imageFiles, // allow empty array
       hasDiscount,
       originalPrice,
       salePrice,
@@ -117,20 +112,22 @@ export async function PUT(
       warrantyDetails,
     });
 
-    // Upload new images to storage
-    const newImageUrls = await Promise.all(
-      imageFiles.map(async (file) => {
-        const url = await uploadImageToStorage(
-          file,
-          `products/${Date.now()}-${file.name}`
-        );
-        return url;
-      })
-    );
+    // --- UPLOAD IMAGES TO CLOUDFLARE R2 ---
+    let newImages: { url: string; key: string }[] = [];
 
-    // Start a transaction to update product and related records
+    if (imageFiles.length > 0) {
+      newImages = await Promise.all(
+        imageFiles.map(async (file) => {
+          const uniqueKey = `products/${uuidv4()}-${file.name}`;
+          const url = await uploadImageToStorage(file, uniqueKey);
+          return { url, key: uniqueKey };
+        })
+      );
+    }
+
+    // --- UPDATE PRODUCT IN DATABASE ---
     const updatedProduct = await dbServer.transaction(async (tx) => {
-      // Update the product
+      // Update the main product
       const [productResult] = await tx
         .update(product)
         .set({
@@ -151,20 +148,17 @@ export async function PUT(
             : null,
           warrantyDetails: validatedData.warrantyDetails,
           // SEO fields
-          slug: slug,
-          metaTitle: metaTitle,
-          metaDescription: metaDescription,
-          keywords: keywords,
+          slug,
+          metaTitle,
+          metaDescription,
+          keywords,
           updatedAt: new Date(),
         })
         .where(eq(product.id, productId))
         .returning();
 
-      // Update categories - delete existing and add new
-      await tx
-        .delete(productCategory)
-        .where(eq(productCategory.productId, productId));
-
+      // Update categories
+      await tx.delete(productCategory).where(eq(productCategory.productId, productId));
       if (validatedData.categories.length > 0) {
         await tx.insert(productCategory).values(
           validatedData.categories.map((category) => ({
@@ -176,19 +170,15 @@ export async function PUT(
         );
       }
 
-      // Only update images if new images are provided
-      if (newImageUrls.length > 0) {
-        // Delete existing images
-        await tx
-          .delete(productImage)
-          .where(eq(productImage.productId, productId));
-
-        // Add new images
+      // Update images if new ones were uploaded
+      if (newImages.length > 0) {
+        await tx.delete(productImage).where(eq(productImage.productId, productId));
         await tx.insert(productImage).values(
-          newImageUrls.map((url, index) => ({
+          newImages.map((image, index) => ({
             id: uuidv4(),
             productId: productResult.id,
-            url,
+            url: image.url,
+            storageKey: image.key, // store R2 key for future deletion
             alt: `${validatedData.name} - Image ${index + 1}`,
             title: `${validatedData.name} - Image ${index + 1}`,
             order: index,
@@ -199,7 +189,7 @@ export async function PUT(
       return productResult;
     });
 
-    // Revalidate relevant paths
+    // --- REVALIDATE PAGES ---
     revalidatePath("/products");
     revalidatePath("/admin-dashboard/products");
     revalidatePath(`/product/${slug}`);
@@ -214,6 +204,7 @@ export async function PUT(
     );
   } catch (error) {
     console.error("Error updating product:", error);
+
     if (error instanceof ZodError) {
       return NextResponse.json(
         { error: "Validation failed", details: error.issues },
