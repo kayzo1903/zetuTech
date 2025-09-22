@@ -6,3 +6,7 @@
 ## returning all products to dashboard (admin-dashboar/products)
   we have to create a system to show all product on our stock
   key features we can filter based on product type and category
+
+## search-functionality on adminproductlist page
+   we have to implement functionality to return all page on 
+   search , aim is to ssimplify stock management 

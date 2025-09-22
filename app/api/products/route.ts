@@ -215,23 +215,25 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET endpoint to fetch products
 // GET endpoint to fetch products using Drizzle ORM
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
+
     const category = searchParams.get('category');
     const status = searchParams.get('status');
     const stockStatus = searchParams.get('stockStatus');
     const search = searchParams.get('search');
-    
+    const brand = searchParams.get('brand');
+    const productType = searchParams.get('productType');
+
     const offset = (page - 1) * limit;
-    
-    // Build where conditions using Drizzle SQL
+
+    // Build dynamic WHERE conditions
     const whereConditions: SQL[] = [];
-    
+
     if (category) {
       whereConditions.push(sql`EXISTS (
         SELECT 1 FROM ${productCategory} 
@@ -239,15 +241,23 @@ export async function GET(request: NextRequest) {
         AND ${productCategory.category} = ${category}
       )`);
     }
-    
+
     if (status) {
       whereConditions.push(sql`${product.status} = ${status}`);
     }
-    
+
     if (stockStatus) {
       whereConditions.push(sql`${product.stockStatus} = ${stockStatus}`);
     }
-    
+
+    if (brand) {
+      whereConditions.push(sql`${product.brand} = ${brand}`);
+    }
+
+    if (productType) {
+      whereConditions.push(sql`${product.productType} = ${productType}`);
+    }
+
     if (search) {
       whereConditions.push(sql`(
         ${product.name} ILIKE ${`%${search}%`} OR 
@@ -255,8 +265,8 @@ export async function GET(request: NextRequest) {
         ${product.brand} ILIKE ${`%${search}%`}
       )`);
     }
-    
-    // Get products with categories and images
+
+    // Fetch products with filters applied
     const productsResult = await dbServer
       .select({
         product: product,
@@ -272,14 +282,13 @@ export async function GET(request: NextRequest) {
       .limit(limit)
       .offset(offset);
 
-    // Format the products
     const formattedProducts = productsResult.map(row => ({
       ...row.product,
       categories: row.categories || [],
       images: row.images || []
     }));
 
-    // Get total count for pagination
+    // Get total count
     const countResult = await dbServer
       .select({ count: sql<number>`COUNT(DISTINCT ${product.id})` })
       .from(product)
@@ -288,7 +297,7 @@ export async function GET(request: NextRequest) {
 
     const totalCount = countResult[0]?.count || 0;
     const totalPages = Math.ceil(totalCount / limit);
-    
+
     return NextResponse.json({
       products: formattedProducts,
       pagination: {
@@ -298,14 +307,11 @@ export async function GET(request: NextRequest) {
         totalPages,
         hasNext: page < totalPages,
         hasPrev: page > 1,
-      }
+      },
     });
-    
+
   } catch (error) {
     console.error("Error fetching products:", error);
-    return NextResponse.json(
-      { error: "Internal server error" }, 
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

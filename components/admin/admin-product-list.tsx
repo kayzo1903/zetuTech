@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+
 import {
   Select,
   SelectContent,
@@ -31,7 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Edit, Trash2, ImageIcon, Loader2 } from "lucide-react";
+import { Edit, Trash2, ImageIcon, Loader2 } from "lucide-react";
 import Image from "next/image";
 
 // Types for the product data from API
@@ -39,16 +39,16 @@ interface Product {
   id: string;
   name: string;
   brand: string;
-  productType: string; // Changed from product_type
+  productType: string;
   status: string;
   stock: number;
-  originalPrice: string; // Changed from original_price
+  originalPrice: string;
   salePrice: string | null;
-  hasDiscount: boolean; // Changed from has_discount
+  hasDiscount: boolean;
   categories: string[];
   images: string[];
-  createdAt: string; // Changed from created_at
-  stockStatus: string; // Changed from stock_status
+  createdAt: string;
+  stockStatus: string;
 }
 
 interface ProductsResponse {
@@ -74,55 +74,77 @@ export default function AllProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [brandFilter, setBrandFilter] = useState("all");
+  const [productTypeFilter, setProductTypeFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
   // Fetch products from API
-// In your fetchProducts function
-const fetchProducts = async (page: number = 1, search: string = "", status: string = "all", category: string = "all") => {
-  try {
-    setLoading(true);
-    setError(null);
-    
-    // Build query parameters
-    const params = new URLSearchParams({
-      page: page.toString(),
-      limit: "10",
-      ...(search && { search }),
-      ...(status !== "all" && { status }),
-      ...(category !== "all" && { category }),
-    });
+  const fetchProducts = async (
+    page: number = 1,
+    status: string = "all",
+    category: string = "all",
+    brand: string = "all",
+    productType: string = "all"
+  ) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Build query parameters
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: "10",
+      });
 
-    const response = await fetch(`/api/products?${params}`);
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `Failed to fetch products: ${response.status}`);
-    }
+      // Add optional filters only if they're not "all"
+      if (status !== "all") {
+        params.append("status", status);
+      }
+      
+      if (category !== "all") {
+        params.append("category", category);
+      }
 
-    const data: ProductsResponse = await response.json();
-    
-    // Validate the response structure
-    if (!data.products || !data.pagination) {
-      throw new Error("Invalid response format from server");
+      if (brand !== "all") {
+        params.append("brand", brand);
+      }
+
+      if (productType !== "all") {
+        params.append("productType", productType);
+      }
+
+      console.log("Fetching products with params:", params.toString());
+
+      const response = await fetch(`/api/products?${params}`);
+  
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to fetch products: ${response.status}`);
+      }
+
+      const data: ProductsResponse = await response.json();
+      
+      // Validate the response structure
+      if (!data.products || !data.pagination) {
+        throw new Error("Invalid response format from server");
+      }
+      
+      setProducts(data.products);
+      setTotalPages(data.pagination.totalPages);
+      setTotalCount(data.pagination.totalCount);
+      setCurrentPage(data.pagination.page);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "An error occurred";
+      setError(errorMessage);
+      console.error("Error fetching products:", err);
+    } finally {
+      setLoading(false);
     }
-    
-    setProducts(data.products);
-    setTotalPages(data.pagination.totalPages);
-    setTotalCount(data.pagination.totalCount);
-    setCurrentPage(data.pagination.page);
-  } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : "An error occurred";
-    setError(errorMessage);
-    console.error("Error fetching products:", err);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   // Initial fetch
   useEffect(() => {
@@ -131,18 +153,26 @@ const fetchProducts = async (page: number = 1, search: string = "", status: stri
 
   // Handle filter changes
   useEffect(() => {
-    fetchProducts(1, searchTerm, statusFilter, categoryFilter);
-  }, [searchTerm, statusFilter, categoryFilter]);
+    fetchProducts(1, statusFilter, categoryFilter, brandFilter, productTypeFilter);
+  }, [statusFilter, categoryFilter, brandFilter, productTypeFilter]);
 
-  // Get all unique categories for filter
+  // Get all unique categories, brands, and product types for filters
   const allCategories = Array.from(
     new Set(products.flatMap((product) => product.categories || []))
+  );
+
+  const allBrands = Array.from(
+    new Set(products.map((product) => product.brand).filter(Boolean))
+  );
+
+  const allProductTypes = Array.from(
+    new Set(products.map((product) => product.productType).filter(Boolean))
   );
 
   const handleDelete = async (id: string) => {
     try {
       // Implement delete API call
-      const response = await fetch(`/api/products/${id}`, {
+      const response = await fetch(`/api/products/delete/${id}`, {
         method: "DELETE",
       });
 
@@ -151,7 +181,7 @@ const fetchProducts = async (page: number = 1, search: string = "", status: stri
       }
 
       // Refresh the product list
-      fetchProducts(currentPage, searchTerm, statusFilter, categoryFilter);
+      fetchProducts(currentPage, statusFilter, categoryFilter, brandFilter, productTypeFilter);
     } catch (err) {
       console.error("Error deleting product:", err);
       alert("Failed to delete product");
@@ -189,19 +219,9 @@ const fetchProducts = async (page: number = 1, search: string = "", status: stri
 
   return (
     <div className="p-6">
-      {/* Filters and Search */}
+      {/* Filters */}
       <div className="rounded-lg border p-4 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
-            <Input
-              placeholder="Search products..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger>
               <SelectValue placeholder="Filter by status" />
@@ -224,6 +244,34 @@ const fetchProducts = async (page: number = 1, search: string = "", status: stri
               {allCategories.map((category) => (
                 <SelectItem key={category} value={category}>
                   {category}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={brandFilter} onValueChange={setBrandFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Filter by brand" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Brands</SelectItem>
+              {allBrands.map((brand) => (
+                <SelectItem key={brand} value={brand}>
+                  {brand}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={productTypeFilter} onValueChange={setProductTypeFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Filter by product type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Product Types</SelectItem>
+              {allProductTypes.map((type) => (
+                <SelectItem key={type} value={type}>
+                  {type}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -395,7 +443,7 @@ const fetchProducts = async (page: number = 1, search: string = "", status: stri
             variant="outline"
             size="sm"
             disabled={currentPage === 1}
-            onClick={() => fetchProducts(currentPage - 1, searchTerm, statusFilter, categoryFilter)}
+            onClick={() => fetchProducts(currentPage - 1, statusFilter, categoryFilter, brandFilter, productTypeFilter)}
           >
             Previous
           </Button>
@@ -406,7 +454,7 @@ const fetchProducts = async (page: number = 1, search: string = "", status: stri
             variant="outline"
             size="sm"
             disabled={currentPage === totalPages}
-            onClick={() => fetchProducts(currentPage + 1, searchTerm, statusFilter, categoryFilter)}
+            onClick={() => fetchProducts(currentPage + 1, statusFilter, categoryFilter, brandFilter, productTypeFilter)}
           >
             Next
           </Button>
