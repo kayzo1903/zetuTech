@@ -11,6 +11,7 @@ import {
   PRODUCT_TYPES,
 } from "@/lib/validation-schemas/product-type";
 
+
 interface Product {
   id: string;
   name: string;
@@ -407,7 +408,7 @@ export default function ProductsList({
                     transition={{ duration: 0.3, delay: index * 0.1 }}
                     className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 border border-gray-100 dark:border-gray-700"
                   >
-                    <Link href={`/products/${product.slug}`} className="block">
+                    <Link href={`/products/${product.slug}/${product.id}`} className="block">
                       <div className="relative h-48 w-full">
                         {product.images.length > 0 ? (
                           <Image

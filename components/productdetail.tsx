@@ -1,115 +1,115 @@
+// components/productdetail.tsx
 "use client";
 
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Star, Truck, Shield, ArrowLeft, Heart, Share2, Check, ChevronRight } from "lucide-react";
+import {
+  Star,
+  Truck,
+  Shield,
+  ArrowLeft,
+  Heart,
+  Share2,
+  ChevronRight,
+  ShoppingCart,
+} from "lucide-react";
+import { Product } from "@/lib/validation-schemas/product-type";
 
-// Mock product data - in a real app this would come from your data source
-const product = {
-  id: "1",
-  name: "Dell XPS 15",
-  price: "2,450,000 TZS",
-  originalPrice: "2,800,000 TZS",
-  images: ["/laptop1.jpeg", "/laptop2.jpeg", "/laptop3.jpeg"],
-  rating: 4.8,
-  reviews: 42,
-  description: "The Dell XPS 15 is a powerful and sleek laptop designed for professionals and creatives. Featuring a stunning 15.6-inch InfinityEdge display, powerful Intel processors, and dedicated graphics, it's perfect for demanding tasks.",
-  specs: [
-    { name: "Processor", value: "Intel Core i7-11800H" },
-    { name: "RAM", value: "16GB DDR4" },
-    { name: "Storage", value: "512GB NVMe SSD" },
-    { name: "Display", value: '15.6" FHD (1920 x 1080) InfinityEdge' },
-    { name: "Graphics", value: "NVIDIA GeForce RTX 3050 Ti 4GB" },
-    { name: "Battery", value: "86Whr, up to 8 hours" },
-    { name: "Weight", value: "1.8 kg" },
-    { name: "Operating System", value: "Windows 11 Pro" },
-  ],
-  features: [
-    "Premium aluminum chassis",
-    "Backlit keyboard",
-    "Thunderbolt 4 ports",
-    "Wi-Fi 6 compatible",
-    "Fingerprint reader",
-    "Studio-quality speakers"
-  ],
-  stock: 3,
-  category: "Premium",
-  sku: "DLL-XPS15-11800H",
-};
+// components/productdetail.tsx
 
-// Mock similar products data
-const similarProducts = [
-  {
-    id: "2",
-    name: "HP Spectre x360",
-    price: "2,200,000 TZS",
-    originalPrice: "2,500,000 TZS",
-    image: "/laptop1.jpeg",
-    rating: 4.6,
-    reviews: 38,
-    specs: ["Intel i5", "8GB RAM", "256GB SSD", "13.3\" Touch"],
-    category: "2-in-1",
-    stock: 5,
-    isNew: false
-  },
-  {
-    id: "3",
-    name: "Lenovo ThinkPad X1",
-    price: "2,800,000 TZS",
-    originalPrice: "3,200,000 TZS",
-    image: "/laptop1.jpeg",
-    rating: 4.9,
-    reviews: 56,
-    specs: ["Intel i7", "16GB RAM", "1TB SSD", "14\" 4K"],
-    category: "Business",
-    stock: 2,
-    isNew: true
-  },
-  {
-    id: "4",
-    name: "MacBook Pro 14\"",
-    price: "3,500,000 TZS",
-    originalPrice: "4,000,000 TZS",
-    image: "/laptop1.jpeg",
-    rating: 4.7,
-    reviews: 67,
-    specs: ["Apple M1 Pro", "16GB RAM", "512GB SSD", "14.2\" Liquid Retina"],
-    category: "Apple",
-    stock: 4,
-    isNew: false
-  },
-  {
-    id: "5",
-    name: "ASUS ROG Zephyrus",
-    price: "3,200,000 TZS",
-    originalPrice: "3,600,000 TZS",
-    image: "/laptop1.jpeg",
-    rating: 4.5,
-    reviews: 29,
-    specs: ["AMD Ryzen 9", "32GB RAM", "1TB SSD", "RTX 3060"],
-    category: "Gaming",
-    stock: 1,
-    isNew: true
-  }
-];
+interface ProductDetailProps {
+  productData: Product;
+  relatedProducts: Product[];
+}
 
-export default function ProductDetail() {
+export default function ProductDetail({
+  productData,
+  relatedProducts,
+}: ProductDetailProps) {
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   const handleAddToCart = () => {
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2000);
+    // Add your cart logic here
   };
+
+  const toggleFavorite = () => {
+    setIsFavorite(!isFavorite);
+    // Add your favorite logic here
+  };
+
+  // components/productdetail.tsx
+  const shareProduct = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: productData.name,
+        text: productData.shortDescription || productData.description, // Fallback to description if shortDescription is null
+        url: window.location.href,
+      });
+    } else {
+      // Fallback for browsers that don't support Web Share API
+      navigator.clipboard.writeText(window.location.href);
+      alert("Product link copied to clipboard!");
+    }
+  };
+
+  // Format price function - updated to handle null values
+  const formatPrice = (price: string | null) => {
+    if (!price) return "TZS 0";
+
+    const priceNum = parseFloat(price);
+    return priceNum.toLocaleString("en-TZ", {
+      style: "currency",
+      currency: "TZS",
+      minimumFractionDigits: 0,
+    });
+  };
+
+  // Calculate discount percentage
+  const discountPercentage =
+    productData.hasDiscount &&
+    productData.salePrice &&
+    productData.originalPrice
+      ? Math.round(
+          (1 -
+            parseFloat(productData.salePrice) /
+              parseFloat(productData.originalPrice)) *
+            100
+        )
+      : 0;
+
+  // Generate specifications from available data
+  const specifications = [
+    { name: "Brand", value: productData.brand },
+    { name: "Product Type", value: productData.productType },
+    { name: "SKU", value: productData.sku || "N/A" },
+    { name: "Stock Status", value: productData.stockStatus },
+    { name: "In Stock", value: productData.stock.toString() },
+    ...(productData.hasWarranty
+      ? [
+          { name: "Warranty", value: `${productData.warrantyPeriod} years` },
+          {
+            name: "Warranty Details",
+            value: productData.warrantyDetails || "Standard warranty",
+          },
+        ]
+      : []),
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Navigation */}
-        <Link href="/products" className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 mb-6">
+        <Link
+          href="/products"
+          className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 mb-6 transition-colors"
+        >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to products
         </Link>
@@ -118,115 +118,168 @@ export default function ProductDetail() {
           {/* Product Images */}
           <div>
             <div className="relative h-96 w-full rounded-xl overflow-hidden bg-white dark:bg-gray-800 p-4 shadow-md mb-4">
-              <Image
-                src={product.images[selectedImage]}
-                alt={product.name}
-                fill
-                className="object-contain"
-              />
+              {productData.images.length > 0 ? (
+                <Image
+                  src={productData.images[selectedImage]}
+                  alt={productData.name}
+                  fill
+                  className="object-contain"
+                  priority
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                  <ShoppingCart className="h-16 w-16" />
+                </div>
+              )}
             </div>
-            
-            <div className="grid grid-cols-3 gap-4">
-              {product.images.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedImage(index)}
-                  className={`relative h-24 rounded-md overflow-hidden bg-white dark:bg-gray-800 p-2 shadow-sm border-2 ${
-                    selectedImage === index 
-                      ? "border-blue-500 dark:border-blue-400" 
-                      : "border-transparent"
-                  }`}
-                >
-                  <Image
-                    src={image}
-                    alt={`${product.name} view ${index + 1}`}
-                    fill
-                    className="object-contain"
-                  />
-                </button>
-              ))}
-            </div>
+
+            {productData.images.length > 1 && (
+              <div className="grid grid-cols-3 gap-4">
+                {productData.images.map((image, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImage(index)}
+                    className={`relative h-24 rounded-md overflow-hidden bg-white dark:bg-gray-800 p-2 shadow-sm border-2 transition-all ${
+                      selectedImage === index
+                        ? "border-blue-500 dark:border-blue-400 scale-105"
+                        : "border-transparent hover:border-gray-300"
+                    }`}
+                  >
+                    <Image
+                      src={image}
+                      alt={`${productData.name} view ${index + 1}`}
+                      fill
+                      className="object-contain"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Product Info */}
-          <div>
-            <div className="flex justify-between items-start mb-4">
+          <div className="space-y-6">
+            <div className="flex justify-between items-start">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{product.name}</h1>
-                <div className="flex items-center mt-2">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                  {productData.name}
+                </h1>
+                <div className="flex items-center">
                   <div className="flex items-center text-amber-500">
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
-                        className={`h-5 w-5 ${i < Math.floor(product.rating) ? "fill-current" : ""}`}
+                        className={`h-5 w-5 ${
+                          i < Math.floor(productData.averageRating)
+                            ? "fill-current"
+                            : ""
+                        }`}
                       />
                     ))}
                   </div>
                   <span className="ml-2 text-gray-600 dark:text-gray-400">
-                    {product.rating} ({product.reviews} reviews)
+                    {productData.averageRating.toFixed(1)} (
+                    {productData.reviewCount} reviews)
                   </span>
                 </div>
               </div>
-              
+
               <div className="flex space-x-2">
-                <button className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
-                  <Heart className="h-5 w-5" />
+                <button
+                  onClick={toggleFavorite}
+                  className={`p-2 rounded-full transition-colors ${
+                    isFavorite
+                      ? "bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-400"
+                      : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                  }`}
+                >
+                  <Heart
+                    className={`h-5 w-5 ${isFavorite ? "fill-current" : ""}`}
+                  />
                 </button>
-                <button className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                <button
+                  onClick={shareProduct}
+                  className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                >
                   <Share2 className="h-5 w-5" />
                 </button>
               </div>
             </div>
 
             {/* Pricing */}
-            <div className="mb-6">
-              <div className="flex items-center">
-                <span className="text-3xl font-bold text-gray-900 dark:text-white">{product.price}</span>
-                <span className="ml-3 text-lg text-gray-500 dark:text-gray-400 line-through">
-                  {product.originalPrice}
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+              <div className="flex items-center flex-wrap gap-2">
+                <span className="text-3xl font-bold text-gray-900 dark:text-white">
+                  {formatPrice(productData.salePrice)}
                 </span>
-                <span className="ml-3 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 px-2 py-1 rounded-md text-sm font-medium">
-                  Save 12%
-                </span>
+                {productData.hasDiscount && (
+                  <>
+                    <span className="text-lg text-gray-500 dark:text-gray-400 line-through">
+                      {formatPrice(productData.originalPrice)}
+                    </span>
+                    <span className="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 px-2 py-1 rounded-md text-sm font-medium">
+                      Save {discountPercentage}%
+                    </span>
+                  </>
+                )}
               </div>
-              <p className="text-green-600 dark:text-green-400 mt-2">
-                {product.stock > 0 ? `In stock (${product.stock} available)` : "Out of stock"}
+              <p
+                className={`mt-2 text-sm font-medium ${
+                  productData.stock > 0
+                    ? "text-green-600 dark:text-green-400"
+                    : "text-red-600 dark:text-red-400"
+                }`}
+              >
+                {productData.stock > 0
+                  ? `In stock (${productData.stock} available)`
+                  : "Out of stock"}
               </p>
             </div>
 
             {/* Description */}
-            <div className="mb-6">
-              <p className="text-gray-700 dark:text-gray-300">{product.description}</p>
+            <div className="prose dark:prose-invert max-w-none">
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                {productData.description}
+              </p>
             </div>
 
-            {/* Features */}
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Key Features</h3>
-              <ul className="grid grid-cols-2 gap-2">
-                {product.features.map((feature, index) => (
-                  <li key={index} className="flex items-center text-gray-700 dark:text-gray-300">
-                    <Check className="h-4 w-4 text-green-500 mr-2" />
-                    {feature}
-                  </li>
+            {/* Categories */}
+            {productData.categories.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {productData.categories.map((category, index) => (
+                  <span
+                    key={index}
+                    className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm font-medium"
+                  >
+                    {category}
+                  </span>
                 ))}
-              </ul>
-            </div>
+              </div>
+            )}
 
             {/* Quantity and Add to Cart */}
-            <div className="mb-8">
-              <div className="flex items-center mb-4">
-                <span className="mr-3 text-gray-700 dark:text-gray-300">Quantity:</span>
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-gray-700 dark:text-gray-300 font-medium">
+                  Quantity:
+                </span>
                 <div className="flex items-center border border-gray-300 dark:border-gray-700 rounded-md">
-                  <button 
+                  <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="px-3 py-1 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                    className="px-3 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                    disabled={quantity <= 1}
                   >
                     -
                   </button>
-                  <span className="px-4 py-1 text-gray-900 dark:text-white">{quantity}</span>
-                  <button 
-                    onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                    className="px-3 py-1 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                  <span className="px-4 py-2 text-gray-900 dark:text-white min-w-[60px] text-center">
+                    {quantity}
+                  </span>
+                  <button
+                    onClick={() =>
+                      setQuantity(Math.min(productData.stock, quantity + 1))
+                    }
+                    className="px-3 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                    disabled={quantity >= productData.stock}
                   >
                     +
                   </button>
@@ -238,23 +291,23 @@ export default function ProductDetail() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleAddToCart}
-                  disabled={product.stock === 0}
-                  className={`flex-1 py-3 px-6 rounded-lg font-semibold text-white ${
-                    product.stock === 0
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-blue-600 hover:bg-blue-700"
+                  disabled={productData.stock === 0}
+                  className={`flex-1 py-3 px-6 rounded-lg font-semibold transition-colors ${
+                    productData.stock === 0
+                      ? "bg-gray-400 cursor-not-allowed text-white"
+                      : "bg-blue-600 hover:bg-blue-700 text-white"
                   }`}
                 >
-                  {addedToCart ? "Added to Cart!" : "Add to Cart"}
+                  {addedToCart ? "Added to Cart! ✓" : "Add to Cart"}
                 </motion.button>
-                
+
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  disabled={product.stock === 0}
-                  className={`flex-1 py-3 px-6 rounded-lg font-semibold ${
-                    product.stock === 0
-                      ? "bg-gray-400 text-white cursor-not-allowed"
+                  disabled={productData.stock === 0}
+                  className={`flex-1 py-3 px-6 rounded-lg font-semibold transition-colors ${
+                    productData.stock === 0
+                      ? "bg-gray-400 cursor-not-allowed text-white"
                       : "bg-gray-800 hover:bg-gray-900 text-white dark:bg-gray-700 dark:hover:bg-gray-600"
                   }`}
                 >
@@ -263,45 +316,59 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            {/* Shipping and Warranty */}
-            <div className="grid grid-cols-2 gap-4 mb-8">
+            {/* Features */}
+            <div className="grid grid-cols-2 gap-4">
               <div className="flex items-center p-3 bg-gray-100 dark:bg-gray-800 rounded-lg">
                 <Truck className="h-6 w-6 text-blue-500 mr-3" />
                 <div>
-                  <p className="font-medium text-gray-900 dark:text-white">Free Shipping</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Delivery in 2-3 days</p>
+                  <p className="font-medium text-gray-900 dark:text-white">
+                    Free Shipping
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Delivery in 2-3 days
+                  </p>
                 </div>
               </div>
               <div className="flex items-center p-3 bg-gray-100 dark:bg-gray-800 rounded-lg">
                 <Shield className="h-6 w-6 text-blue-500 mr-3" />
                 <div>
-                  <p className="font-medium text-gray-900 dark:text-white">1 Year Warranty</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Free support</p>
+                  <p className="font-medium text-gray-900 dark:text-white">
+                    {productData.hasWarranty
+                      ? `${productData.warrantyPeriod} Year Warranty`
+                      : "1 Year Warranty"}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Free support
+                  </p>
                 </div>
               </div>
-            </div>
-
-            {/* SKU and Category */}
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              <p>SKU: {product.sku}</p>
-              <p>Category: {product.category}</p>
             </div>
           </div>
         </div>
 
         {/* Specifications */}
         <div className="mt-16">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Specifications</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+            Product Details
+          </h2>
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
             <table className="w-full">
               <tbody>
-                {product.specs.map((spec, index) => (
-                  <tr 
-                    key={index} 
-                    className={index % 2 === 0 ? "bg-gray-50 dark:bg-gray-700" : "bg-white dark:bg-gray-800"}
+                {specifications.map((spec, index) => (
+                  <tr
+                    key={index}
+                    className={
+                      index % 2 === 0
+                        ? "bg-gray-50 dark:bg-gray-700"
+                        : "bg-white dark:bg-gray-800"
+                    }
                   >
-                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-white w-1/3">{spec.name}</td>
-                    <td className="px-6 py-4 text-gray-700 dark:text-gray-300">{spec.value}</td>
+                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-white w-1/3">
+                      {spec.name}
+                    </td>
+                    <td className="px-6 py-4 text-gray-700 dark:text-gray-300">
+                      {spec.value}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -309,84 +376,85 @@ export default function ProductDetail() {
           </div>
         </div>
 
-        {/* Similar Products Section */}
-        <div className="mt-16">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Similar Products</h2>
-            <Link 
-              href="/products" 
-              className="flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
-            >
-              View all
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {similarProducts.map((product, index) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.1 }}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 border border-gray-100 dark:border-gray-700"
+        {/* Related Products Section */}
+        {relatedProducts.length > 0 && (
+          <div className="mt-16">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Related Products
+              </h2>
+              <Link
+                href={`/products?productType=${productData.productType}`}
+                className="flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
               >
-                <Link href={`/products/${product.id}`} className="block">
-                  <div className="relative h-48 w-full">
-                    <Image
-                      src={product.image}
-                      alt={product.name}
-                      fill
-                      className="object-cover"
-                    />
-                    {product.isNew && (
-                      <div className="absolute top-3 left-3 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 text-xs font-semibold px-2.5 py-1 rounded-full">
-                        NEW
-                      </div>
-                    )}
-                    {product.stock < 5 && (
-                      <div className="absolute top-3 right-3 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 text-xs font-semibold px-2.5 py-1 rounded-full">
-                        {product.stock} LEFT
-                      </div>
-                    )}
-                  </div>
+                View all {productData.productType}s
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Link>
+            </div>
 
-                  <div className="p-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {relatedProducts.map((product, index) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 border border-gray-100 dark:border-gray-700"
+                >
+                  <Link
+                    href={`/products/${product.slug}/${product.id}`}
+                    className="block"
+                  >
+                    <div className="relative h-48 w-full">
+                      {product.images.length > 0 ? (
+                        <Image
+                          src={product.images[0]}
+                          alt={product.name}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                          <ShoppingCart className="h-8 w-8 text-gray-400" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="p-4">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2 mb-2">
                         {product.name}
                       </h3>
-                      <div className="flex items-center text-sm text-amber-500">
-                        <Star className="w-4 h-4 fill-current" />
-                        <span className="ml-1 text-gray-700 dark:text-gray-300">{product.rating}</span>
+
+                      <div className="flex items-center mb-2">
+                        <div className="flex items-center text-amber-500">
+                          <Star className="w-4 h-4 fill-current" />
+                          <span className="ml-1 text-sm text-gray-700 dark:text-gray-300">
+                            {product.averageRating.toFixed(1)}
+                          </span>
+                        </div>
+                        <span className="mx-2 text-gray-300">•</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          {product.reviewCount} reviews
+                        </span>
+                      </div>
+
+                      <div className="flex items-center">
+                        <span className="text-lg font-bold text-gray-900 dark:text-white">
+                          {formatPrice(product.salePrice)}
+                        </span>
+                        {product.hasDiscount && (
+                          <span className="ml-2 text-sm text-gray-500 dark:text-gray-400 line-through">
+                            {formatPrice(product.originalPrice)}
+                          </span>
+                        )}
                       </div>
                     </div>
-
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {product.specs.slice(0, 2).map((spec, i) => (
-                        <span 
-                          key={i}
-                          className="text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 px-2 py-1 rounded"
-                        >
-                          {spec}
-                        </span>
-                      ))}
-                    </div>
-
-                    <div className="flex items-center">
-                      <span className="text-lg font-bold text-gray-900 dark:text-white">
-                        {product.price}
-                      </span>
-                      <span className="ml-2 text-sm text-gray-500 dark:text-gray-400 line-through">
-                        {product.originalPrice}
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
