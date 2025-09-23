@@ -21,5 +21,8 @@
    displaying all its details
    after editing updating product
 
-## implement cloudfare image system to store image .
+## implement cloudfare image system to store image // done.
    we will connect our webapp with cloudfare 3 for image system
+
+## implementind customer product list with real data
+   we will implemnt real data in puplic product list frontend
