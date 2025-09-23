@@ -6,60 +6,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Star, ChevronDown, X } from "lucide-react";
-import {
-  PRODUCT_CATEGORIES,
-  PRODUCT_TYPES,
-} from "@/lib/validation-schemas/product-type";
-
-
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  shortDescription?: string;
-  brand: string;
-  productType: string;
-  originalPrice: string;
-  salePrice: string;
-  hasDiscount: boolean;
-  stock: number;
-  stockStatus: string;
-  status: string;
-  slug: string;
-  categories: string[];
-  images: string[];
-  createdAt: string;
-}
-
-interface ProductsListProps {
-  initialData: {
-    products: Product[];
-    filters: {
-      brands: string[];
-      productTypes: typeof PRODUCT_TYPES;
-      categories: typeof PRODUCT_CATEGORIES;
-    };
-    pagination: {
-      page: number;
-      limit: number;
-      totalCount: number;
-      totalPages: number;
-      hasNext: boolean;
-      hasPrev: boolean;
-    };
-  };
-  searchParams: {
-    productType?: string;
-    category?: string;
-    brand?: string;
-    status?: string;
-    stockStatus?: string;
-    minPrice?: string;
-    maxPrice?: string;
-    sortBy?: string;
-    page?: string;
-  };
-}
+import { PRODUCT_TYPES } from "@/lib/validation-schemas/product-type";
+import { ProductsListProps } from "@/lib/types/product";
 
 export default function ProductsList({
   initialData,
@@ -70,15 +18,6 @@ export default function ProductsList({
   const [showFilters, setShowFilters] = useState(false);
 
   const currentProductType = searchParams.productType || "all";
-  const currentCategory = searchParams.category || "all";
-
-  // Get available categories for current product type
-  const availableCategories =
-    currentProductType !== "all"
-      ? PRODUCT_CATEGORIES[
-          currentProductType as keyof typeof PRODUCT_CATEGORIES
-        ] || []
-      : [];
 
   const sortOptions = [
     { value: "newest", label: "Newest" },
@@ -90,43 +29,47 @@ export default function ProductsList({
   const updateFilters = async (newParams: Record<string, string>) => {
     setLoading(true);
 
-    // Merge old params with new ones
-    const mergedParams = { ...searchParams, ...newParams, page: "1" };
+    // Always reset page when filters change (unless it's just pagination)
+    const isPageChange = Object.keys(newParams).length === 1 && newParams.page;
+    const mergedParams = {
+      ...searchParams,
+      ...newParams,
+      page: isPageChange ? newParams.page : "1",
+    };
 
-    // Remove empty or "all" values
-    const cleanedParams: Record<string, string> = {};
-    Object.entries(mergedParams).forEach(([key, value]) => {
-      if (value && value !== "all") {
-        cleanedParams[key] = value;
-      }
-    });
+    // Keep "all" so backend knows it's default
+    const cleaned: Record<string, string> = {};
+    for (const [key, value] of Object.entries(mergedParams)) {
+      cleaned[key] = value ?? ""; // keep empty string if unset
+    }
 
-    const queryString = new URLSearchParams(cleanedParams).toString();
+    const queryString = new URLSearchParams(cleaned).toString();
 
     try {
       const res = await fetch(`/api/products/product-list?${queryString}`);
+      if (!res.ok) throw new Error("Failed to fetch");
+
       const newData = await res.json();
       setData(newData);
 
-      // Update URL without full reload
+      // Update URL without reloading
       window.history.pushState({}, "", `/products?${queryString}`);
-    } catch (error) {
-      console.error("Error updating filters:", error);
+    } catch (err) {
+      console.error("Error updating filters:", err);
     } finally {
       setLoading(false);
     }
   };
 
   const clearFilters = () => {
+    // Set productType to "all" explicitly
     updateFilters({
-      productType: "",
-      category: "",
+      productType: "all", // This will trigger the "All Types" radio button
       brand: "",
-      status: "",
-      stockStatus: "",
       minPrice: "",
       maxPrice: "",
       sortBy: "",
+      page: "1",
     });
   };
 
@@ -215,7 +158,8 @@ export default function ProductsList({
                   showFilters ? "block" : "hidden lg:block"
                 }`}
               >
-                {/* Product Type Filter */}
+                {/* Product Type */}
+                {/* Product Type */}
                 <div>
                   <h3 className="font-medium text-gray-900 dark:text-white mb-3">
                     Product Type
@@ -226,7 +170,9 @@ export default function ProductsList({
                         type="radio"
                         name="productType"
                         value="all"
-                        checked={currentProductType === "all"}
+                        checked={
+                          currentProductType === "all" || !currentProductType
+                        }
                         onChange={(e) =>
                           updateFilters({ productType: e.target.value })
                         }
@@ -256,75 +202,28 @@ export default function ProductsList({
                   </div>
                 </div>
 
-                {/* Category Filter */}
-                {availableCategories.length > 0 && (
-                  <div>
-                    <h3 className="font-medium text-gray-900 dark:text-white mb-3">
-                      Category
-                    </h3>
-                    <div className="space-y-2">
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="category"
-                          value="all"
-                          checked={currentCategory === "all"}
-                          onChange={(e) =>
-                            updateFilters({ category: e.target.value })
-                          }
-                          className="text-blue-600 focus:ring-blue-500"
-                        />
-                        <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                          All Categories
-                        </span>
-                      </label>
-                      {availableCategories.map((category) => (
-                        <label key={category} className="flex items-center">
-                          <input
-                            type="radio"
-                            name="category"
-                            value={category}
-                            checked={currentCategory === category}
-                            onChange={(e) =>
-                              updateFilters({ category: e.target.value })
-                            }
-                            className="text-blue-600 focus:ring-blue-500"
-                          />
-                          <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                            {category}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Brand Filter */}
+                {/* Brand */}
                 {data.filters.brands.length > 0 && (
                   <div>
                     <h3 className="font-medium text-gray-900 dark:text-white mb-3">
                       Brand
                     </h3>
-                    <div className="space-y-2">
-                      <select
-                        value={searchParams.brand || "all"}
-                        onChange={(e) =>
-                          updateFilters({ brand: e.target.value })
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-sm"
-                      >
-                        <option value="all">All Brands</option>
-                        {data.filters.brands.map((brand) => (
-                          <option key={brand} value={brand}>
-                            {brand}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                    <select
+                      value={searchParams.brand || "all"}
+                      onChange={(e) => updateFilters({ brand: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-sm"
+                    >
+                      <option value="all">All Brands</option>
+                      {data.filters.brands.map((brand) => (
+                        <option key={brand} value={brand}>
+                          {brand}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 )}
 
-                {/* Price Range */}
+                {/* Price */}
                 <div>
                   <h3 className="font-medium text-gray-900 dark:text-white mb-3">
                     Price Range
@@ -405,10 +304,13 @@ export default function ProductsList({
                     key={product.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                    transition={{ duration: 0.3, delay: index * 0.03 }}
                     className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 border border-gray-100 dark:border-gray-700"
                   >
-                    <Link href={`/products/${product.slug}/${product.id}`} className="block">
+                    <Link
+                      href={`/products/${product.slug}/${product.id}`}
+                      className="block"
+                    >
                       <div className="relative h-48 w-full">
                         {product.images.length > 0 ? (
                           <Image
@@ -450,38 +352,29 @@ export default function ProductsList({
                         </div>
 
                         <div className="flex flex-wrap gap-2 mb-4">
-                          {product.categories.slice(0, 2).map((category, i) => (
+                          {product.categories.slice(0, 2).map((c, i) => (
                             <span
                               key={i}
                               className="text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 px-2 py-1 rounded"
                             >
-                              {category}
+                              {c}
                             </span>
                           ))}
                         </div>
 
                         <div className="flex items-center mb-2">
                           <span className="text-xl font-bold text-gray-900 dark:text-white">
-                            {typeof product.salePrice === "string"
-                              ? parseFloat(product.salePrice).toLocaleString(
-                                  "en-TZ",
-                                  {
-                                    style: "currency",
-                                    currency: "TZS",
-                                  }
-                                )
-                              : product.salePrice}
+                            {parseFloat(product.salePrice).toLocaleString(
+                              "en-TZ",
+                              { style: "currency", currency: "TZS" }
+                            )}
                           </span>
                           {product.hasDiscount && (
                             <span className="ml-2 text-sm text-gray-500 dark:text-gray-400 line-through">
-                              {typeof product.originalPrice === "string"
-                                ? parseFloat(
-                                    product.originalPrice
-                                  ).toLocaleString("en-TZ", {
-                                    style: "currency",
-                                    currency: "TZS",
-                                  })
-                                : product.originalPrice}
+                              {parseFloat(product.originalPrice).toLocaleString(
+                                "en-TZ",
+                                { style: "currency", currency: "TZS" }
+                              )}
                             </span>
                           )}
                         </div>
@@ -516,17 +409,17 @@ export default function ProductsList({
                   {Array.from(
                     { length: data.pagination.totalPages },
                     (_, i) => i + 1
-                  ).map((page) => (
+                  ).map((p) => (
                     <button
-                      key={page}
-                      onClick={() => updateFilters({ page: page.toString() })}
+                      key={p}
+                      onClick={() => updateFilters({ page: p.toString() })}
                       className={`px-4 py-2 rounded-md ${
-                        data.pagination.page === page
+                        data.pagination.page === p
                           ? "bg-blue-600 text-white"
                           : "bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300"
                       }`}
                     >
-                      {page}
+                      {p}
                     </button>
                   ))}
 

@@ -2,7 +2,7 @@
 import { dbServer } from "@/db/db-server";
 import { product, productCategory, productImage, productReview } from "@/db/schema";
 import { safeJsonParse } from "@/utils/parser";
-import { sql } from "drizzle-orm";
+import { sql} from "drizzle-orm";
 import { Product } from "../validation-schemas/product-type";
 
 export async function getProductDetails(productId: string): Promise<Product | null> {

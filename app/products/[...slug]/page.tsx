@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: PageProps) {
   }
 
   return {
-    title: `${productData.name} | Tech Store`,
+    title: `${productData.name} | zetutech`,
     description: productData.shortDescription || productData.description,
     openGraph: {
       title: productData.name,

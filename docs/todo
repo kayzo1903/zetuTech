@@ -27,7 +27,11 @@
 ## implementind customer product list with real data //done
   > we will implemnt real data in puplic product list frontend
 
-## implement customer detailed page // on progress ✅✅✅🔛🔛🟢🟢🟢🟢🕔🕔🕔🕔
-  🔥⚡ customer detailed page with details 🎯  
+## implement customer detailed page // on progress 
+  > customer detailed page with details 🎯  
   > no cart / buy option has to implemented 🔨 
  
+## implement fetch product list in server side // onprogress    09/23 - 09/24
+ > fetching product and rendering 
+ > hybrid rendering for both server side and client side
+ > filtering type based on product type (not completed)
