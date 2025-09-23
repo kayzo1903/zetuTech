@@ -66,9 +66,7 @@ export default function Header({ session, isAdmin }: HeaderProps) {
           <Link href="/products" className="hover:text-blue-600 dark:hover:text-blue-400 transition">
             Products
           </Link>
-          <Link href="/categories" className="hover:text-blue-600 dark:hover:text-blue-400 transition">
-            Categories
-          </Link>
+      
           <Link href="/about" className="hover:text-blue-600 dark:hover:text-blue-400 transition">
             About
           </Link>
@@ -202,13 +200,7 @@ export default function Header({ session, isAdmin }: HeaderProps) {
               >
                 Products
               </Link>
-              <Link
-                href="/categories"
-                onClick={() => setMobileMenuOpen(false)}
-                className="hover:text-blue-600 dark:hover:text-blue-400 transition text-gray-700 dark:text-gray-300"
-              >
-                Categories
-              </Link>
+              
               <Link
                 href="/about"
                 onClick={() => setMobileMenuOpen(false)}

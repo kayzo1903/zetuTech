@@ -27,7 +27,7 @@ export const productSchema = z.object({
   stock: z.number().min(0, "Stock cannot be negative").int("Stock must be a whole number"),
   stockStatus: z.enum(STOCK_STATUS).default("In Stock"),
   categories: z.array(z.string()).min(1, "At least one category is required"),
-  status: z.enum(["Brand New", "Refurbished", "Used-like New", "Used-Good" , "Used-Fair"]),
+  status: z.enum(["Brand New", "Refurbished", "Used-Like New", "Used-Good" , "Used-Fair"]),
   description: z.string().min(1, "Description is required").max(2000, "Description is too long"),
   images: z.array(z.any()).min(1, "At least one image is required").max(5, "Maximum 5 images allowed"),
   hasDiscount: z.boolean().default(false),

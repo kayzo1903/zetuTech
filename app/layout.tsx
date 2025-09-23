@@ -3,6 +3,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import Footer from "@/components/footer";
+import Header from "@/components/header";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,11 +22,17 @@ export const metadata: Metadata = {
   description: "online store for selling tech gadgets and laptops",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+  
+    const isAdmin = session?.user?.role === "admin";
+    
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -35,6 +44,22 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+                  <Header
+          session={
+            session
+              ? {
+                  user: session.user
+                    ? {
+                        name: session.user.name,
+                        image: session.user.image ?? undefined,
+                        role: session.user.role ?? undefined,
+                      }
+                    : undefined,
+                }
+              : null
+          }
+          isAdmin={isAdmin}
+        />
          
           {children}
           <Footer />
