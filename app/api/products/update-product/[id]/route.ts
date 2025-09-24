@@ -1,6 +1,6 @@
 // app/api/products/update-product/[id]/route.ts
 
-import { productSchema, updateProductSchema } from "@/lib/validation-schemas/products-schema";
+import { updateProductSchema } from "@/lib/validation-schemas/products-schema";
 import { revalidatePath } from "next/cache";
 import { ZodError } from "zod";
 import { v4 as uuidv4 } from "uuid";

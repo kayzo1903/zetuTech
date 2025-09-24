@@ -21,7 +21,6 @@ import {
   PRODUCT_TYPES,
 } from "@/lib/validation-schemas/product-type";
 import {
-  productSchema,
   STOCK_STATUS,
   updateProductSchema,
 } from "@/lib/validation-schemas/products-schema";
