@@ -1,9 +1,10 @@
 // components/Hero/Hero.tsx
 
-import FeaturedDeal from "./featuredeal";
+import FeaturedDeal from "../featuredeal";
 import HeroCategories from "./herocategories";
 import HeroPromo from "./HeroPromo";
 import HorizontalCategories from "./horizontalcategories";
+
 
 
 export default function Hero() {

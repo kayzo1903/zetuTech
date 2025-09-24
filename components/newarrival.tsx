@@ -13,12 +13,12 @@ interface NewArrivalsProps {
 export default function NewArrivals({ products }: NewArrivalsProps) {
   return (
     <section className="py-16 bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
-      <div className="max-w-7xl mx-auto sm:px-6">
+      <div className="max-w-7xl px-4 mx-auto sm:px-6">
         {/* Section Header */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8">
           <div className="mb-4 md:mb-0">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-              New Arrivals
+            <h2 className="font-bold text-xl text-gray-900 dark:text-white">
+              New Arrival
             </h2>
             <p className="text-gray-600 dark:text-gray-400 mt-2">
               Freshly added premium products with exclusive discounts
@@ -46,7 +46,10 @@ export default function NewArrivals({ products }: NewArrivalsProps) {
                   whileHover={{ y: -5 }}
                   className="flex-shrink-0 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700"
                 >
-                  <Link href={`/products/${product.slug}/${product.id}`} className="block group">
+                  <Link
+                    href={`/products/${product.slug}/${product.id}`}
+                    className="block group"
+                  >
                     {/* Product Image Container */}
                     <div className="relative h-48 w-full overflow-hidden">
                       <Image
@@ -76,7 +79,10 @@ export default function NewArrivals({ products }: NewArrivalsProps) {
                       {/* Pricing */}
                       <div className="flex items-center mb-4">
                         <span className="text-xl font-bold text-gray-900 dark:text-white">
-                          {Number(product.salePrice || product.originalPrice).toLocaleString()} TZS
+                          {Number(
+                            product.salePrice || product.originalPrice
+                          ).toLocaleString()}{" "}
+                          TZS
                         </span>
                         {product.hasDiscount && (
                           <span className="ml-2 text-sm text-gray-500 dark:text-gray-400 line-through">
@@ -93,7 +99,9 @@ export default function NewArrivals({ products }: NewArrivalsProps) {
                         </div>
                         <div className="flex items-center">
                           <Zap className="w-4 h-4 mr-1 text-amber-500" />
-                          <span>{product.stock > 0 ? "In stock" : "Out of stock"}</span>
+                          <span>
+                            {product.stock > 0 ? "In stock" : "Out of stock"}
+                          </span>
                         </div>
                       </div>
                     </div>

@@ -1,5 +1,5 @@
 import FeaturedProduct from "@/components/featuredproduct";
-import Hero from "@/components/hero";
+import Hero from "@/components/hero/hero";
 import HowItWorks from "@/components/howitwork";
 import NewArrivals from "@/components/newarrival";
 import WhyBuy from "@/components/whybuy";
