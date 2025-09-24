@@ -1,6 +1,6 @@
-import FeaturedProduct from "@/components/featuredproduct";
+import FeaturedProduct from "@/components/landing-page-components/featuredproduct";
 import Hero from "@/components/hero/hero";
-import NewArrivals from "@/components/newarrival";
+import NewArrivals from "@/components/landing-page-components/newarrival";
 import { getFeaturedProduct } from "@/lib/server/get-featuredProduct";
 import { getNewArrivals } from "@/lib/server/get-newArrival";
 

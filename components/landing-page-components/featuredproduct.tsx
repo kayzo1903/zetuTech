@@ -85,7 +85,7 @@ export default function FeaturedProduct({ featuredProduct }: FeaturedProductProp
   }
 
   return (
-    <section className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-16 lg:py-20">
+    <section className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-8 lg:py-16">
       <div className="container mx-auto px-4 sm:px-6">
         {/* Header Section */}
         <motion.div

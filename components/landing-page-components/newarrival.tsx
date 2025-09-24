@@ -12,7 +12,7 @@ interface NewArrivalsProps {
 
 export default function NewArrivals({ products }: NewArrivalsProps) {
   return (
-    <section className="py-16 bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+    <section className="pt-8 bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
       <div className="max-w-7xl px-4 mx-auto sm:px-6">
         {/* Section Header */}
         <div className="flex  flex-row items-start md:items-center justify-between mb-8">
