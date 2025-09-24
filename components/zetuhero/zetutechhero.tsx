@@ -100,62 +100,6 @@ export default function ZetutechHero(): JSX.Element {
         </div>
       </div>
 
-      {/* TOP BRANDS */}
-      <div className="mt-10">
-        {/* Section Header */}
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-xl md:text-2xl font-bold text-gray-900">
-            Top Brands
-          </h2>
-          {/* View All only on desktop */}
-          <Button
-            variant="outline"
-            className="hidden md:flex items-center gap-2 font-medium"
-          >
-            View All
-            <ArrowRight className="w-4 h-4" />
-          </Button>
-        </div>
-
-        {/* Brands Grid */}
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
-          {TOP_BRANDS.map((brand: Brand) => (
-            <Card
-              key={brand.id}
-              className="group border bg-gray-300/90 rounded-lg hover:shadow-md transition-all cursor-pointer"
-            >
-              <CardContent className="p-3 flex flex-col items-center text-center">
-                {/* Brand Logo as background */}
-                <div
-                  className="w-14 h-14 rounded-md flex items-center justify-center mb-2 group-hover:scale-105 transition-transform"
-                  style={{
-                    backgroundImage: `url(${brand.logo})`,
-                    backgroundSize: "contain",
-                    backgroundPosition: "center",
-                    backgroundRepeat: "no-repeat",
-                  }}
-                />
-
-                {/* Brand Name */}
-                <h3 className="text-sm font-medium text-gray-800 truncate">
-                  {brand.name}
-                </h3>
-              </CardContent>
-            </Card>
-          ))}
-
-          {/* View All Card (only on desktop) */}
-          <Card className="bg-transparent items-center justify-center border border-dashed hover:shadow-md transition-all cursor-pointer">
-            <CardContent className="p-4 flex flex-col items-center justify-center text-center">
-              <div className="w-10 h-10 border rounded-full flex items-center justify-center mb-2">
-                <Plus className="w-5 h-5 text-gray-g00" />
-              </div>
-              <p className="text-sm font-medium text-gray-700">Explore All</p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
       {/* TOP CATEGORIES */}
       <div className="mt-8">
         <h2 className="text-lg font-semibold mb-4">Top Categories</h2>
