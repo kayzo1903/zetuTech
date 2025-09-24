@@ -44,8 +44,9 @@
  > product load with page.tsx and pass props to newarrival 
    components (discussion || pass)
 
-## implementing a featured product and system
+## implementing a featured product and system 09/24/25 done 
  > the idea is to get a product to display in featured product
+  its has to be very dynamic
  > we dont have clear criteria of products
  > we have to set those criteria 
  > wemplement its on serve side rendering
@@ -54,3 +55,4 @@
  > create a lip/server/get-featuredProduct.ts for fetching product
   and set agreed criteria
  > We will introdce a table for featured product. Admin can toggle featured product on edit form , it will be insected to the table as a only single product.(system) done
+ 
