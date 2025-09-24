@@ -110,17 +110,6 @@ export default function NewArrivals({ products }: NewArrivalsProps) {
           <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-gray-50 to-transparent dark:from-gray-900 pointer-events-none" />
           <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-50 to-transparent dark:from-gray-900 pointer-events-none" />
         </div>
-
-        {/* View All Button for Mobile */}
-        <div className="mt-8 text-center md:hidden">
-          <Link
-            href="/products"
-            className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition"
-          >
-            View All Products
-            <ArrowRight className="ml-2 w-4 h-4" />
-          </Link>
-        </div>
       </div>
     </section>
   );

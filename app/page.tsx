@@ -3,9 +3,6 @@ import Hero from "@/components/hero/hero";
 import NewArrivals from "@/components/newarrival";
 import { getNewArrivals } from "@/lib/server/get-newArrival";
 
-
-
-
 export default async function Home() {
   // Fetch latest 4 products
   const newArrivalProducts = await getNewArrivals();
