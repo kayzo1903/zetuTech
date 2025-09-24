@@ -23,10 +23,11 @@ import {
 import {
   productSchema,
   STOCK_STATUS,
+  updateProductSchema,
 } from "@/lib/validation-schemas/products-schema";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, Star } from "lucide-react";
 
 type ProductTypeKey = keyof typeof PRODUCT_CATEGORIES;
 
@@ -47,9 +48,10 @@ interface ProductData {
   warrantyDetails?: string;
   categories: string[];
   images: string[];
+  isFeatured: boolean;
 }
 
-export default function EditProduct( { productId }: { productId: string } ) {
+export default function EditProduct({ productId }: { productId: string }) {
   const router = useRouter();
   const [productType, setProductType] = useState<ProductTypeKey | "">("");
   const [categories, setCategories] = useState<string[]>([]);
@@ -61,7 +63,8 @@ export default function EditProduct( { productId }: { productId: string } ) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  
+  const [isFeatured, setIsFeatured] = useState<boolean>(false); // Add this state
+
   const [formData, setFormData] = useState({
     name: "",
     brand: "",
@@ -75,14 +78,14 @@ export default function EditProduct( { productId }: { productId: string } ) {
     status: "Brand New",
   });
 
- // Wrap loadProductData with useCallback
+  // Wrap loadProductData with useCallback
   const loadProductData = useCallback(async () => {
     try {
       setIsLoading(true);
       console.log("Fetching product data for:", productId);
-      
+
       const response = await fetch(`/api/products/get-product/${productId}`);
-      
+
       if (!response.ok) {
         throw new Error("Failed to load product");
       }
@@ -106,16 +109,18 @@ export default function EditProduct( { productId }: { productId: string } ) {
 
       // Set product type and categories
       setProductType(product.productType as ProductTypeKey);
-      setCategories(PRODUCT_CATEGORIES[product.productType as ProductTypeKey] || []);
+      setCategories(
+        PRODUCT_CATEGORIES[product.productType as ProductTypeKey] || []
+      );
       setSelectedCategories(product.categories || []);
 
       // Set switches
       setHasDiscount(product.hasDiscount);
       setHasWarranty(product.hasWarranty);
+      setIsFeatured(product.isFeatured || false); // Set featured status
 
       // Set existing image previews
       setImagePreviews(product.images || []);
-
     } catch (error) {
       toast.error("Failed to load product data");
       console.error("Error loading product:", error);
@@ -130,7 +135,7 @@ export default function EditProduct( { productId }: { productId: string } ) {
     if (productId) {
       loadProductData();
     }
-  }, [productId, loadProductData])
+  }, [productId, loadProductData]);
 
   // When product type changes, load relevant categories
   const handleProductTypeChange = (type: string) => {
@@ -148,7 +153,7 @@ export default function EditProduct( { productId }: { productId: string } ) {
     setImages((prev) => [...prev, ...newImages].slice(0, 5));
 
     // Create previews for new images
-    const newPreviews = newImages.map(file => URL.createObjectURL(file));
+    const newPreviews = newImages.map((file) => URL.createObjectURL(file));
     setImagePreviews((prev) => [...prev, ...newPreviews].slice(0, 5));
 
     setErrors((prev) => ({ ...prev, images: "" }));
@@ -198,7 +203,7 @@ export default function EditProduct( { productId }: { productId: string } ) {
         warrantyDetails: hasWarranty ? formData.warrantyDetails : undefined,
       };
 
-      productSchema.parse(data);
+      updateProductSchema.parse(data);
       setErrors({});
       return true;
     } catch (error) {
@@ -240,6 +245,7 @@ export default function EditProduct( { productId }: { productId: string } ) {
       formDataToSend.append("hasDiscount", hasDiscount.toString());
       formDataToSend.append("originalPrice", formData.originalPrice);
       formDataToSend.append("hasWarranty", hasWarranty.toString());
+      formDataToSend.append("isFeatured", isFeatured.toString()); // Add featured status
 
       if (hasDiscount) {
         formDataToSend.append("salePrice", formData.salePrice);
@@ -268,11 +274,10 @@ export default function EditProduct( { productId }: { productId: string } ) {
       }
 
       toast.success("Product updated successfully!");
-      
+
       setTimeout(() => {
         router.push("/admin-dashboard/products");
       }, 1000);
-
     } catch {
       toast.error("An unexpected error occurred");
       setIsSubmitting(false);
@@ -293,11 +298,7 @@ export default function EditProduct( { productId }: { productId: string } ) {
       <div className="max-w-5xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 md:p-10 space-y-8">
         {/* Header */}
         <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => router.back()}
-          >
+          <Button variant="outline" size="icon" onClick={() => router.back()}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
@@ -313,9 +314,13 @@ export default function EditProduct( { productId }: { productId: string } ) {
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Product Type */}
           <div>
-            <label className="block text-sm font-medium mb-2">Product Type</label>
+            <label className="block text-sm font-medium mb-2">
+              Product Type
+            </label>
             <Select value={productType} onValueChange={handleProductTypeChange}>
-              <SelectTrigger className={errors.productType ? "border-red-500" : ""}>
+              <SelectTrigger
+                className={errors.productType ? "border-red-500" : ""}
+              >
                 <SelectValue placeholder="Select product type" />
               </SelectTrigger>
               <SelectContent>
@@ -334,7 +339,9 @@ export default function EditProduct( { productId }: { productId: string } ) {
           {/* Basic Details */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium mb-2">Product Name</label>
+              <label className="block text-sm font-medium mb-2">
+                Product Name
+              </label>
               <Input
                 name="name"
                 placeholder="e.g. Dell XPS 13"
@@ -379,12 +386,18 @@ export default function EditProduct( { productId }: { productId: string } ) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Stock Status</label>
+              <label className="block text-sm font-medium mb-2">
+                Stock Status
+              </label>
               <Select
                 value={formData.stockStatus}
-                onValueChange={(value) => handleSelectChange("stockStatus", value)}
+                onValueChange={(value) =>
+                  handleSelectChange("stockStatus", value)
+                }
               >
-                <SelectTrigger className={errors.stockStatus ? "border-red-500" : ""}>
+                <SelectTrigger
+                  className={errors.stockStatus ? "border-red-500" : ""}
+                >
                   <SelectValue placeholder="Select stock status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -396,9 +409,38 @@ export default function EditProduct( { productId }: { productId: string } ) {
                 </SelectContent>
               </Select>
               {errors.stockStatus && (
-                <p className="text-red-500 text-sm mt-1">{errors.stockStatus}</p>
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.stockStatus}
+                </p>
               )}
             </div>
+          </div>
+
+          {/* Featured Product Section */}
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="featured"
+                checked={isFeatured}
+                onCheckedChange={setIsFeatured}
+              />
+              <Label
+                htmlFor="featured"
+                className="text-lg font-semibold flex items-center gap-2"
+              >
+                <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
+                Feature this Product
+              </Label>
+            </div>
+            {isFeatured && (
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                <p className="text-yellow-800 dark:text-yellow-200 text-sm">
+                  <strong>Note:</strong> This product will be featured on the
+                  homepage. If another product is already featured, it will be
+                  deactivated automatically.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Pricing Section */}
@@ -421,7 +463,9 @@ export default function EditProduct( { productId }: { productId: string } ) {
                   className={errors.originalPrice ? "border-red-500" : ""}
                 />
                 {errors.originalPrice && (
-                  <p className="text-red-500 text-sm mt-1">{errors.originalPrice}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.originalPrice}
+                  </p>
                 )}
               </div>
 
@@ -449,7 +493,9 @@ export default function EditProduct( { productId }: { productId: string } ) {
                   className={errors.salePrice ? "border-red-500" : ""}
                 />
                 {errors.salePrice && (
-                  <p className="text-red-500 text-sm mt-1">{errors.salePrice}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.salePrice}
+                  </p>
                 )}
               </div>
             )}
@@ -476,9 +522,13 @@ export default function EditProduct( { productId }: { productId: string } ) {
                   </label>
                   <Select
                     value={formData.warrantyPeriod}
-                    onValueChange={(value) => handleSelectChange("warrantyPeriod", value)}
+                    onValueChange={(value) =>
+                      handleSelectChange("warrantyPeriod", value)
+                    }
                   >
-                    <SelectTrigger className={errors.warrantyPeriod ? "border-red-500" : ""}>
+                    <SelectTrigger
+                      className={errors.warrantyPeriod ? "border-red-500" : ""}
+                    >
                       <SelectValue placeholder="Select warranty period" />
                     </SelectTrigger>
                     <SelectContent>
@@ -491,7 +541,9 @@ export default function EditProduct( { productId }: { productId: string } ) {
                     </SelectContent>
                   </Select>
                   {errors.warrantyPeriod && (
-                    <p className="text-red-500 text-sm mt-1">{errors.warrantyPeriod}</p>
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.warrantyPeriod}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -506,7 +558,9 @@ export default function EditProduct( { productId }: { productId: string } ) {
                     className={errors.warrantyDetails ? "border-red-500" : ""}
                   />
                   {errors.warrantyDetails && (
-                    <p className="text-red-500 text-sm mt-1">{errors.warrantyDetails}</p>
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.warrantyDetails}
+                    </p>
                   )}
                 </div>
               </div>
@@ -577,7 +631,9 @@ export default function EditProduct( { productId }: { productId: string } ) {
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium mb-2">Description</label>
+            <label className="block text-sm font-medium mb-2">
+              Description
+            </label>
             <Textarea
               name="description"
               placeholder="Write a detailed description of the product including all relevant features and specifications"
@@ -593,9 +649,12 @@ export default function EditProduct( { productId }: { productId: string } ) {
 
           {/* Image Upload */}
           <div>
-            <label className="block text-sm font-medium mb-2">Product Images</label>
+            <label className="block text-sm font-medium mb-2">
+              Product Images
+            </label>
             <p className="text-sm text-gray-600 mb-2">
-              Add new images to replace existing ones. Leave empty to keep current images.
+              Add new images to replace existing ones. Leave empty to keep
+              current images.
             </p>
             <input
               type="file"
@@ -633,7 +692,11 @@ export default function EditProduct( { productId }: { productId: string } ) {
 
           {/* Actions */}
           <div className="flex justify-end gap-4">
-            <Button type="button" variant="outline" onClick={() => router.back()}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.back()}
+            >
               Cancel
             </Button>
             <Button

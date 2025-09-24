@@ -1,11 +1,18 @@
-import { productSchema } from "@/lib/validation-schemas/products-schema";
+// app/api/products/update-product/[id]/route.ts
+
+import { productSchema, updateProductSchema } from "@/lib/validation-schemas/products-schema";
 import { revalidatePath } from "next/cache";
 import { ZodError } from "zod";
 import { v4 as uuidv4 } from "uuid";
 import { slugify } from "@/lib/slugify";
 import { NextRequest, NextResponse } from "next/server";
 import { dbServer } from "@/db/db-server";
-import { product, productCategory, productImage } from "@/db/schema";
+import {
+  product,
+  productCategory,
+  productImage,
+  featuredProduct,
+} from "@/db/schema";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { eq } from "drizzle-orm";
@@ -14,13 +21,41 @@ import { uploadImageToStorage } from "@/lib/storage";
 type Params = Promise<{ id: string }>;
 
 /**
+ * Simplified function to handle featured product status
+ */
+async function handleFeaturedProduct(
+  productId: string,
+  userId: string,
+  shouldBeFeatured: boolean
+) {
+  // Always deactivate ALL currently active featured products first
+  await dbServer
+    .update(featuredProduct)
+    .set({
+      status: "inactive",
+      updatedAt: new Date(),
+    })
+    .where(eq(featuredProduct.status, "active"));
+
+  // Only proceed if we want to feature this product
+  if (shouldBeFeatured) {
+    // Insert new featured product (no need to check if exists - we just deactivated everything)
+    await dbServer.insert(featuredProduct).values({
+      id: uuidv4(),
+      productId,
+      userId,
+      status: "active",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+  }
+}
+
+/**
  * PUT /api/products/update-product/[id]
  * Updates a product including details, categories, and images.
  */
-export async function PUT(
-  request: NextRequest,
-  props: { params: Params }
-) {
+export async function PUT(request: NextRequest, props: { params: Params }) {
   try {
     const params = await props.params;
     const productId = params.id;
@@ -68,7 +103,9 @@ export async function PUT(
     const brand = formData.get("brand") as string;
     const stock = parseInt(formData.get("stock") as string);
     const stockStatus = formData.get("stockStatus") as string;
-    const categories = JSON.parse(formData.get("categories") as string) as string[];
+    const categories = JSON.parse(
+      formData.get("categories") as string
+    ) as string[];
     const status = formData.get("status") as string;
     const description = formData.get("description") as string;
     const shortDescription = (formData.get("shortDescription") as string) || "";
@@ -78,8 +115,13 @@ export async function PUT(
       ? parseFloat(formData.get("salePrice") as string)
       : undefined;
     const hasWarranty = formData.get("hasWarranty") === "true";
-    const warrantyPeriod = hasWarranty ? (formData.get("warrantyPeriod") as string) : undefined;
-    const warrantyDetails = hasWarranty ? (formData.get("warrantyDetails") as string) : undefined;
+    const warrantyPeriod = hasWarranty
+      ? (formData.get("warrantyPeriod") as string)
+      : undefined;
+    const warrantyDetails = hasWarranty
+      ? (formData.get("warrantyDetails") as string)
+      : undefined;
+    const isFeatured = formData.get("isFeatured") === "true"; // Get featured status
 
     // --- SEO FIELDS ---
     const slug = (formData.get("slug") as string) || slugify(name);
@@ -94,7 +136,7 @@ export async function PUT(
     const imageFiles = formData.getAll("images") as File[];
 
     // --- VALIDATE INPUT DATA ---
-    const validatedData = productSchema.parse({
+    const validatedData = updateProductSchema.parse({
       productType,
       name,
       brand,
@@ -110,6 +152,7 @@ export async function PUT(
       hasWarranty,
       warrantyPeriod,
       warrantyDetails,
+        isFeatured // ADD THIS LINE - it was missing!
     });
 
     // --- UPLOAD IMAGES TO CLOUDFLARE R2 ---
@@ -158,7 +201,9 @@ export async function PUT(
         .returning();
 
       // Update categories
-      await tx.delete(productCategory).where(eq(productCategory.productId, productId));
+      await tx
+        .delete(productCategory)
+        .where(eq(productCategory.productId, productId));
       if (validatedData.categories.length > 0) {
         await tx.insert(productCategory).values(
           validatedData.categories.map((category) => ({
@@ -172,7 +217,9 @@ export async function PUT(
 
       // Update images if new ones were uploaded
       if (newImages.length > 0) {
-        await tx.delete(productImage).where(eq(productImage.productId, productId));
+        await tx
+          .delete(productImage)
+          .where(eq(productImage.productId, productId));
         await tx.insert(productImage).values(
           newImages.map((image, index) => ({
             id: uuidv4(),
@@ -186,6 +233,13 @@ export async function PUT(
         );
       }
 
+      // Handle featured product status
+      await handleFeaturedProduct(
+        productResult.id,
+        session.user.id,
+        isFeatured
+      );
+
       return productResult;
     });
 
@@ -194,11 +248,13 @@ export async function PUT(
     revalidatePath("/admin-dashboard/products");
     revalidatePath(`/product/${slug}`);
     revalidatePath(`/product/${existingProduct[0].slug}`);
+    revalidatePath("/"); // Revalidate homepage to reflect featured product changes
 
     return NextResponse.json(
       {
         success: true,
         product: updatedProduct,
+        featured: isFeatured,
       },
       { status: 200 }
     );

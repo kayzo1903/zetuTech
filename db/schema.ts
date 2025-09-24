@@ -253,3 +253,28 @@ export const pageView = pgTable("page_view", {
   userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+/* ----------- Featured Product ----------- */
+export const featuredProduct = pgTable("featured_product", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  productId: uuid("product_id")
+    .notNull()
+    .references(() => product.id, { onDelete: "cascade" }),
+  status: varchar("status", { length: 20 }).default("active").notNull(), // 'active' or 'inactive'
+  userId: text("user_id") // Admin who added the featured product
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+// Featured Product Status Definitions
+export const FEATURED_STATUS = {
+  ACTIVE: "active",
+  INACTIVE: "inactive",
+} as const;
+
+export type FeaturedStatus = typeof FEATURED_STATUS[keyof typeof FEATURED_STATUS];
