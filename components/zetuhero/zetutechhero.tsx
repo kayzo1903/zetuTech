@@ -14,37 +14,54 @@ import {
   TOP_CATEGORIES,
   TOP_PRODUCT_TYPES,
 } from "@/lib/data/hero-data";
-import { ArrowRight, ArrowUpRight, Plus, Star } from "lucide-react";
+import { ArrowRight, Plus } from "lucide-react";
 
 export default function ZetutechHero(): JSX.Element {
   return (
-    <section className="w-full max-w-7xl mx-auto px-4 py-8">
+    <section className="w-full max-w-7xl mx-auto px-4 pt-8">
       {/* HERO TOP BANNER */}
-      <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-slate-800 via-slate-700 to-slate-900 text-white p-8 md:p-12 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+      <div
+        className="relative rounded-2xl overflow-hidden 
+  bg-gradient-to-r from-gray-50 via-white to-gray-100 
+  dark:from-slate-800 dark:via-slate-900 dark:to-slate-950
+  text-gray-900 dark:text-white 
+  p-8 md:p-12 grid grid-cols-1 md:grid-cols-2 gap-6 items-center transition-colors duration-300"
+      >
+        {/* Left Section */}
         <div className="space-y-4">
           <h1 className="text-3xl md:text-4xl font-extrabold leading-tight">
             Discover Quality Tech at Your Fingertips
           </h1>
-          <p className="text-sm md:text-base text-slate-200 max-w-prose">
+          <p className="text-sm md:text-base text-gray-600 dark:text-slate-200 max-w-prose">
             Top brands, trending categories, and the latest products — all in
             one place. Browse deals, compare specs, and find the perfect gadget
             for your needs.
           </p>
 
+          {/* Actions */}
           <div className="flex flex-wrap gap-3 items-center mt-4">
-            <Button className="shadow-lg" size="lg">
+            <Button
+              className="shadow-lg hover:bg-primary/90 transition"
+              size="lg"
+            >
               Shop Now
             </Button>
-            <Button variant="outline" className="shadow-sm" size="lg">
+
+            <Button
+              variant="outline"
+              className="shadow-sm border-gray-300 dark:border-slate-700 dark:text-slate-200 transition"
+              size="lg"
+            >
               Explore Deals
             </Button>
 
+            {/* Search - visible only on medium+ screens */}
             <div className="ml-2 hidden md:inline-block">
-              <form className="flex items-center bg-white/5 rounded-md p-1 pr-2">
+              <form className="flex items-center bg-gray-100 dark:bg-white/5 rounded-md p-1 pr-2">
                 <Input
                   aria-label="search"
                   placeholder="Search products, brands or types"
-                  className="bg-transparent placeholder:text-slate-300"
+                  className="bg-transparent placeholder:text-gray-400 dark:placeholder:text-slate-300 text-gray-900 dark:text-white"
                 />
                 <Button type="submit" size="sm" className="ml-2">
                   Search
@@ -53,18 +70,29 @@ export default function ZetutechHero(): JSX.Element {
             </div>
           </div>
 
+          {/* Badges */}
           <div className="flex items-center gap-3 mt-4">
-            <Badge>Free delivery over $99</Badge>
-            <Badge>30-day returns</Badge>
+            <Badge className="bg-green-100 text-green-700 dark:bg-green-800 dark:text-green-200">
+              Free delivery over $99
+            </Badge>
+            <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-800 dark:text-blue-200">
+              30-day returns
+            </Badge>
           </div>
         </div>
 
+        {/* Right Section - Hero Illustration */}
         <div className="hidden md:block">
-          {/* Right side illustration / product collage */}
-          <div className="relative w-full h-64 rounded-xl overflow-hidden shadow-xl bg-gradient-to-tr from-slate-600 to-slate-800">
-            <div className="absolute bottom-4 left-4 p-3 bg-black/30 rounded-md backdrop-blur">
-              <div className="text-xs text-slate-100">Featured</div>
-              <div className="text-sm font-semibold">
+          <div
+            className="relative w-full h-64 rounded-xl overflow-hidden shadow-xl
+      bg-gradient-to-tr from-gray-200 to-gray-300
+      dark:from-slate-600 dark:to-slate-800 transition-colors duration-300"
+          >
+            <div className="absolute bottom-4 left-4 p-3 bg-white/80 dark:bg-black/30 rounded-md backdrop-blur">
+              <div className="text-xs text-gray-600 dark:text-slate-100">
+                Featured
+              </div>
+              <div className="text-sm font-semibold dark:text-white">
                 Zetutech Exclusive Deals
               </div>
             </div>
@@ -73,105 +101,58 @@ export default function ZetutechHero(): JSX.Element {
       </div>
 
       {/* TOP BRANDS */}
-      <div className="mt-12">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Top Brands</h2>
-            <p className="text-sm text-gray-600 mt-1">
-              Trusted by millions of customers worldwide
-            </p>
-          </div>
+      <div className="mt-10">
+        {/* Section Header */}
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900">
+            Top Brands
+          </h2>
+          {/* View All only on desktop */}
           <Button
             variant="outline"
-            className="hidden md:flex items-center gap-2"
+            className="hidden md:flex items-center gap-2 font-medium"
           >
-            View All Brands
+            View All
             <ArrowRight className="w-4 h-4" />
           </Button>
         </div>
 
-        <div className="relative">
-          {/* Gradient fade edges */}
-          <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
+        {/* Brands Grid */}
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
+          {TOP_BRANDS.map((brand: Brand) => (
+            <Card
+              key={brand.id}
+              className="group border bg-gray-300/90 rounded-lg hover:shadow-md transition-all cursor-pointer"
+            >
+              <CardContent className="p-3 flex flex-col items-center text-center">
+                {/* Brand Logo as background */}
+                <div
+                  className="w-14 h-14 rounded-md flex items-center justify-center mb-2 group-hover:scale-105 transition-transform"
+                  style={{
+                    backgroundImage: `url(${brand.logo})`,
+                    backgroundSize: "contain",
+                    backgroundPosition: "center",
+                    backgroundRepeat: "no-repeat",
+                  }}
+                />
 
-          <div className="flex gap-6 overflow-x-auto pb-6 hide-scrollbar">
-            {TOP_BRANDS.map((b: Brand) => (
-              <Card
-                key={b.id}
-                className="w-48 p-0 flex-shrink-0 group cursor-pointer border border-gray-100 hover:border-gray-200 hover:shadow-lg transition-all duration-300 overflow-hidden"
-              >
-                <CardContent className="p-0 relative">
-                  {/* Background with subtle overlay */}
-                  <div
-                    className="aspect-[4/3] relative bg-gray-50"
-                    style={{
-                      backgroundImage: `url(${b.logo})`,
-                      backgroundSize: "contain",
-                      backgroundPosition: "center",
-                      backgroundRepeat: "no-repeat",
-                    }}
-                  >
-                    {/* Gradient overlay on hover */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/0 via-black/0 to-black/0 group-hover:from-black/5 group-hover:via-black/2 group-hover:to-black/10 transition-all duration-300" />
-
-                    {/* Premium badge */}
-                    <div className="absolute top-3 right-3">
-                      <div className="bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full">
-                        <Star className="w-3 h-3 text-yellow-500 fill-current" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Brand info */}
-                  <div className="p-4 bg-white">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-semibold text-gray-900 text-sm">
-                          {b.name}
-                        </h3>
-                        <p className="text-xs text-gray-500 mt-1">
-                          Premium Quality
-                        </p>
-                      </div>
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 w-8 p-0"
-                        >
-                          <ArrowUpRight className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-
-            {/* View All Card */}
-            <Card className="w-48 flex-shrink-0 border border-dashed border-gray-200 hover:border-gray-300 transition-colors">
-              <CardContent className="h-full flex flex-col items-center justify-center p-6 text-center">
-                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-                  <Plus className="w-6 h-6 text-gray-400" />
-                </div>
-                <p className="font-medium text-gray-700 text-sm">
-                  Explore All Brands
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  Discover more premium brands
-                </p>
+                {/* Brand Name */}
+                <h3 className="text-sm font-medium text-gray-800 truncate">
+                  {brand.name}
+                </h3>
               </CardContent>
             </Card>
-          </div>
+          ))}
 
-          {/* Mobile view all button */}
-          <div className="flex justify-center mt-4 md:hidden">
-            <Button variant="outline" className="flex items-center gap-2">
-              View All Brands
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-          </div>
+          {/* View All Card (only on desktop) */}
+          <Card className="bg-transparent items-center justify-center border border-dashed hover:shadow-md transition-all cursor-pointer">
+            <CardContent className="p-4 flex flex-col items-center justify-center text-center">
+              <div className="w-10 h-10 border rounded-full flex items-center justify-center mb-2">
+                <Plus className="w-5 h-5 text-gray-g00" />
+              </div>
+              <p className="text-sm font-medium text-gray-700">Explore All</p>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
@@ -231,7 +212,7 @@ export default function ZetutechHero(): JSX.Element {
                 {/* Content */}
                 <div className="relative h-full flex flex-col justify-between p-4 z-10">
                   <div className="flex justify-between items-start">
-                    <Badge className="bg-black/70 text-white backdrop-blur-sm border-0">
+                    <Badge className="bg-red-600/70 text-white backdrop-blur-sm border-0">
                       {t.tag}
                     </Badge>
                   </div>
@@ -243,7 +224,7 @@ export default function ZetutechHero(): JSX.Element {
                     <Button
                       size="sm"
                       variant="secondary"
-                      className="w-full bg-black/60 hover:bg-black/80"
+                      className="w-full text-gray-50 bg-black/60 hover:bg-black/80"
                     >
                       See Products
                     </Button>
@@ -272,10 +253,10 @@ export default function ZetutechHero(): JSX.Element {
           {/* Content */}
           <CardContent className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4 bg-white/5 backdrop-blur-sm">
             <div className="py-2">
-              <div className="text-sm font-semibold text-slate-300">
+              <div className="text-sm font-semibold text-gray-500 dark:text-slate-300">
                 Limited Time: Up to 30% off selected accessories
               </div>
-              <div className="text-xs text-slate-400">
+              <div className="text-xs text-gray-500 dark:text-slate-400">
                 Offer valid while stocks last. Terms apply.
               </div>
             </div>
