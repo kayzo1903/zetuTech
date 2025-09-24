@@ -1,8 +1,6 @@
 import FeaturedProduct from "@/components/featuredproduct";
 import Hero from "@/components/hero/hero";
-import HowItWorks from "@/components/howitwork";
 import NewArrivals from "@/components/newarrival";
-import WhyBuy from "@/components/whybuy";
 import { getNewArrivals } from "@/lib/server/get-newArrival";
 
 
@@ -17,9 +15,7 @@ export default async function Home() {
       <main className="w-full">
         <Hero />
         <NewArrivals products={newArrivalProducts} />
-        <WhyBuy />
         <FeaturedProduct />
-        <HowItWorks />
       </main>
     </div>
   );

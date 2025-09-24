@@ -15,15 +15,10 @@ export default function NewArrivals({ products }: NewArrivalsProps) {
     <section className="py-16 bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
       <div className="max-w-7xl px-4 mx-auto sm:px-6">
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8">
-          <div className="mb-4 md:mb-0">
-            <h2 className="font-bold text-xl text-gray-900 dark:text-white">
-              New Arrival
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400 mt-2">
-              Freshly added premium products with exclusive discounts
-            </p>
-          </div>
+        <div className="flex  flex-row items-start md:items-center justify-between mb-8">
+          <h2 className="font-bold text-xl text-gray-900 dark:text-white">
+            New Arrival
+          </h2>
           <Link
             href="/products"
             className="text-xs md:text-sm flex items-center text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition group"
