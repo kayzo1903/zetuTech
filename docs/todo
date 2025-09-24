@@ -35,3 +35,11 @@
  > fetching product and rendering 
  > hybrid rendering for both server side and client side
  > filtering type based on product type (not completed)
+ > filter is note clothing in small screen instant in small  creen (feedback)
+
+## implementing new arrival on user frontend ui 09/24/2025 //done
+ > Idea is to fetch most recent first four products
+ > once are user click load more will , direct to product list   page
+ > fetching process has to be in server side to optmize seo
+ > product load with page.tsx and pass props to newarrival 
+   components (discussion || pass)
