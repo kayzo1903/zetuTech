@@ -26,7 +26,7 @@ export default function NewArrivals({ products }: NewArrivalsProps) {
           </div>
           <Link
             href="/products"
-            className="hidden md:flex items-center text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition group"
+            className="text-xs md:text-sm flex items-center text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition group"
           >
             View All
             <ArrowRight className="ml-1 w-4 h-4 group-hover:translate-x-1 transition-transform" />
