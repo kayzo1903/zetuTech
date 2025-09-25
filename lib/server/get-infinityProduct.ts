@@ -1,26 +1,65 @@
-// lib/server/get-infinityProduct.ts
+// lib/server/get-infinityProducts.ts
 import { ProductType } from "@/components/cards/productcards";
-
-const MAX_PRODUCTS = 50; // total products available
+import { dbServer } from "@/db/db-server";
+import { product, productImage } from "@/db/schema";
+import { inArray ,desc } from "drizzle-orm";
 
 export async function getInfinityProducts(
-  offset: number = 0,
-  limit: number = 12
-): Promise<ProductType[]> {
-  // Generate dummy products
-  const allProducts = Array.from({ length: MAX_PRODUCTS }).map((_, i) => ({
-    id: `product-${i + 1}`,
-    name: `Laptop Model ${i + 1}`,
-    slug: `laptop-model-${i + 1}`,
-    brand: i % 3 === 0 ? "ZetuTech" : i % 3 === 1 ? "TechPro" : "EliteComp",
-    images: ["/images/categories/laptops.jpg"],
-    originalPrice: 1500000 + i * 10000,
-    salePrice: i % 2 === 0 ? 1200000 + i * 5000 : undefined,
-    hasDiscount: i % 2 === 0,
-    averageRating: 4.0 + (i % 5) * 0.2,
-    stock: i % 5 === 0 ? 0 : 10 + (i % 10),
-  }));
+  offset = 0,
+  limit = 12
+): Promise<ProductType[]> { // ✅ Change return type to ProductType[]
+  try {
+    const rows = await dbServer
+      .select({
+        id: product.id,
+        name: product.name,
+        description: product.description,
+        shortDescription: product.shortDescription,
+        brand: product.brand,
+        productType: product.productType,
+        originalPrice: product.originalPrice,
+        salePrice: product.salePrice,
+        hasDiscount: product.hasDiscount,
+        stock: product.stock,
+        stockStatus: product.stockStatus,
+        status: product.status,
+        slug: product.slug,
+        createdAt: product.createdAt,
+      })
+      .from(product)
+      .orderBy(desc(product.createdAt))
+      .limit(limit)
+      .offset(offset);
 
-  // Return only the slice based on offset and limit
-  return allProducts.slice(offset, offset + limit);
+    if (rows.length === 0) return [];
+
+    const productIds = rows.map((p) => p.id);
+    const images = await dbServer
+      .select({
+        productId: productImage.productId,
+        url: productImage.url,
+      })
+      .from(productImage)
+      .where(inArray(productImage.productId, productIds));
+
+    // ✅ Convert to ProductType with proper number types
+    return rows.map((p) => ({
+      id: p.id,
+      name: p.name,
+      slug: p.slug,
+      brand: p.brand,
+      images: images
+        .filter((img) => img.productId === p.id)
+        .map((img) => img.url),
+      originalPrice: Number(p.originalPrice), // ✅ Convert string to number
+      salePrice: p.salePrice ? Number(p.salePrice) : undefined, // ✅ Convert and make optional
+      hasDiscount: p.hasDiscount,
+      averageRating: 4.5, // ✅ Add default rating
+      stock: p.stock,
+      // Add any other required ProductType fields
+    }));
+  } catch (error) {
+    console.error("Error fetching infinity products:", error);
+    return [];
+  }
 }
