@@ -74,3 +74,7 @@
 ## redisgn a header to more e-commerce style //09/25/05
   > sticky header brand name and navtoogle & account cart , search input below in   small screen , remove theme toogle 
   > on small screen all out screen sidenavbar with many categories , brand type , wishlist. You can implement shadcn drop down , sidebar and any other helper components if necessary , its has to be more ecommerce
+
+## introduce best deals // not started
+  > At best deals we will show case products which are more cheap 
+  
