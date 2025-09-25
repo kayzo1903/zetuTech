@@ -1,3 +1,4 @@
+// components/cards/productcards.tsx
 "use client";
 
 import Link from "next/link";
@@ -7,24 +8,12 @@ import { Star, Truck, Shield, Heart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-
-export interface ProductType {
-  id: string;
-  name: string;
-  slug: string;
-  brand: string;
-  images: string[];
-  originalPrice: number;
-  salePrice?: number;
-  hasDiscount: boolean;
-  averageRating: number;
-  stock: number;
-}
+import { Product } from "@/lib/types/product";
 
 interface ProductCardProps {
-  product: ProductType;
+  product: Product; // ✅ Use unified type
+  index?: number;
 }
-
 export default function ProductCard({ product }: ProductCardProps) {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -35,12 +24,13 @@ export default function ProductCard({ product }: ProductCardProps) {
     setIsWishlisted(!isWishlisted);
   };
 
-  // const discountPercentage = product.hasDiscount 
+  // const discountPercentage = product.hasDiscount
   //   ? Math.round((1 - Number(product.salePrice) / Number(product.originalPrice)) * 100)
   //   : 0;
 
-  const savingsAmount = product.hasDiscount 
-    ? Number(product.originalPrice) - Number(product.salePrice || product.originalPrice)
+  const savingsAmount = product.hasDiscount
+    ? Number(product.originalPrice) -
+      Number(product.salePrice || product.originalPrice)
     : 0;
 
   const finalPrice = Number(product.salePrice || product.originalPrice);
@@ -57,7 +47,11 @@ export default function ProductCard({ product }: ProductCardProps) {
         {/* Product Image */}
         <div className="relative h-40 sm:h-52 w-full overflow-hidden bg-gray-100 dark:bg-gray-700">
           <Image
-            src={imageError ? "/placeholder.png" : product.images[0] || "/placeholder.png"}
+            src={
+              imageError
+                ? "/placeholder.png"
+                : product.images[0] || "/placeholder.png"
+            }
             alt={product.name}
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-110"
@@ -87,13 +81,15 @@ export default function ProductCard({ product }: ProductCardProps) {
             variant="ghost"
             size="icon"
             className={`absolute top-2 right-2 h-8 w-8 rounded-full bg-white/70 dark:bg-gray-800/70 shadow-md transition-all ${
-              isWishlisted 
-                ? 'bg-red-500 text-white opacity-100' 
-                : 'group-hover:opacity-100'
+              isWishlisted
+                ? "bg-red-500 text-white opacity-100"
+                : "group-hover:opacity-100"
             }`}
             onClick={toggleWishlist}
           >
-            <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-current' : ''}`} />
+            <Heart
+              className={`w-4 h-4 ${isWishlisted ? "fill-current" : ""}`}
+            />
           </Button>
         </div>
 
@@ -104,12 +100,14 @@ export default function ProductCard({ product }: ProductCardProps) {
             <span className="text-xs font-medium text-blue-600 uppercase tracking-wide">
               {product.brand}
             </span>
-            <div className="flex items-center gap-1">
-              <Star className="w-3 h-3 text-amber-400 fill-current" />
-              <span className="text-xs text-gray-600 dark:text-gray-400">
-                {product.averageRating.toFixed(1)}
-              </span>
-            </div>
+            {product.averageRating && (
+              <div className="flex items-center gap-1">
+                <Star className="w-3 h-3 text-amber-400 fill-current" />
+                <span className="text-xs text-gray-600 dark:text-gray-400">
+                  {product.averageRating.toFixed(1)}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Product Name */}

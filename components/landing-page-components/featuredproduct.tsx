@@ -15,30 +15,30 @@ import {
   RotateCcw,
 } from "lucide-react"
 import { useState } from "react"
-import { FeaturedProductTypes } from "@/lib/server/get-featuredProduct"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Product } from "@/lib/types/product"
 
 interface FeaturedProductProps {
-  featuredProduct: FeaturedProductTypes | null
+  featuredProduct: Product | null
 }
 
-// Utility: Format price
-const formatPrice = (price: string) => {
+// ✅ FIXED: Format price - now accepts number
+const formatPrice = (price: number) => {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "TZS",
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
-  }).format(parseFloat(price))
+  }).format(price)
 }
 
-// Utility: Calculate discount percentage
-const calculateDiscount = (originalPrice: string, salePrice: string | null): number => {
+// ✅ FIXED: Calculate discount percentage - now works with numbers
+const calculateDiscount = (originalPrice: number, salePrice: number | null): number => {
   if (!salePrice) return 0
-  return Math.round((1 - parseFloat(salePrice) / parseFloat(originalPrice)) * 100)
+  return Math.round((1 - salePrice / originalPrice) * 100)
 }
 
-// Utility: Stock Status
+// ✅ FIXED: Stock Status
 const getStockConfig = (stock: number) => {
   if (stock > 10) return { label: `In stock (${stock} available)`, variant: "success" as const }
   if (stock > 3) return { label: `Low stock (${stock} left)`, variant: "warning" as const }
@@ -63,6 +63,7 @@ export default function FeaturedProduct({ featuredProduct }: FeaturedProductProp
 
   if (!featuredProduct) return null
 
+  // ✅ FIXED: Pass numbers instead of strings
   const discountPercent = calculateDiscount(featuredProduct.originalPrice, featuredProduct.salePrice)
   const stockConfig = getStockConfig(featuredProduct.stock)
   const currentPrice = featuredProduct.salePrice || featuredProduct.originalPrice
@@ -154,13 +155,13 @@ export default function FeaturedProduct({ featuredProduct }: FeaturedProductProp
                     <Star
                       key={i}
                       className={`w-4 h-4 ${
-                        i < Math.floor(featuredProduct.averageRating) ? "fill-current" : "opacity-30"
+                        i < Math.floor(featuredProduct.averageRating || 0) ? "fill-current" : "opacity-30"
                       }`}
                     />
                   ))}
                 </div>
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  {featuredProduct.averageRating.toFixed(1)} ({featuredProduct.reviewCount} reviews)
+                  {(featuredProduct.averageRating || 0).toFixed(1)} ({featuredProduct.reviewCount || 0} reviews)
                 </span>
               </div>
 
@@ -168,10 +169,12 @@ export default function FeaturedProduct({ featuredProduct }: FeaturedProductProp
               <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800 mb-4">
                 <div className="flex items-end gap-3 flex-wrap">
                   <span className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                    {/* ✅ FIXED: Pass number instead of string */}
                     {formatPrice(currentPrice)}
                   </span>
-                  {featuredProduct.hasDiscount && (
+                  {featuredProduct.hasDiscount && featuredProduct.salePrice && (
                     <span className="text-lg text-gray-500 line-through">
+                      {/* ✅ FIXED: Pass number instead of string */}
                       {formatPrice(featuredProduct.originalPrice)}
                     </span>
                   )}
@@ -212,7 +215,7 @@ export default function FeaturedProduct({ featuredProduct }: FeaturedProductProp
                   <AccordionTrigger>Customer Reviews</AccordionTrigger>
                   <AccordionContent>
                     <p className="text-sm text-gray-700 dark:text-gray-300">
-                      {featuredProduct.reviewCount} reviews available.
+                      {featuredProduct.reviewCount || 0} reviews available.
                     </p>
                   </AccordionContent>
                 </AccordionItem>

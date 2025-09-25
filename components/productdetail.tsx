@@ -15,9 +15,7 @@ import {
   ChevronRight,
   ShoppingCart,
 } from "lucide-react";
-import { Product } from "@/lib/validation-schemas/product-type";
-
-// components/productdetail.tsx
+import { Product } from "@/lib/types/product";
 
 interface ProductDetailProps {
   productData: Product;
@@ -44,43 +42,37 @@ export default function ProductDetail({
     // Add your favorite logic here
   };
 
-  // components/productdetail.tsx
   const shareProduct = () => {
     if (navigator.share) {
       navigator.share({
         title: productData.name,
-        text: productData.shortDescription || productData.description, // Fallback to description if shortDescription is null
+        text: productData.shortDescription || productData.description,
         url: window.location.href,
       });
     } else {
-      // Fallback for browsers that don't support Web Share API
       navigator.clipboard.writeText(window.location.href);
       alert("Product link copied to clipboard!");
     }
   };
 
-  // Format price function - updated to handle null values
-  const formatPrice = (price: string | null) => {
-    if (!price) return "TZS 0";
-
-    const priceNum = parseFloat(price);
-    return priceNum.toLocaleString("en-TZ", {
+  // ✅ FIXED: Format price function - now accepts numbers
+  const formatPrice = (price: number | null | undefined) => {
+    if (!price && price !== 0) return "TZS 0";
+    
+    return price.toLocaleString("en-TZ", {
       style: "currency",
       currency: "TZS",
       minimumFractionDigits: 0,
     });
   };
 
-  // Calculate discount percentage
+  // ✅ FIXED: Calculate discount percentage - now works with numbers
   const discountPercentage =
     productData.hasDiscount &&
-    productData.salePrice &&
+    productData.salePrice !== null &&
     productData.originalPrice
       ? Math.round(
-          (1 -
-            parseFloat(productData.salePrice) /
-              parseFloat(productData.originalPrice)) *
-            100
+          (1 - productData.salePrice / productData.originalPrice) * 100
         )
       : 0;
 
@@ -170,7 +162,7 @@ export default function ProductDetail({
                       <Star
                         key={i}
                         className={`h-5 w-5 ${
-                          i < Math.floor(productData.averageRating)
+                          i < Math.floor(productData.averageRating || 0)
                             ? "fill-current"
                             : ""
                         }`}
@@ -178,8 +170,8 @@ export default function ProductDetail({
                     ))}
                   </div>
                   <span className="ml-2 text-gray-600 dark:text-gray-400">
-                    {productData.averageRating.toFixed(1)} (
-                    {productData.reviewCount} reviews)
+                    {(productData.averageRating || 0).toFixed(1)} (
+                    {productData.reviewCount || 0} reviews)
                   </span>
                 </div>
               </div>
@@ -210,11 +202,13 @@ export default function ProductDetail({
             <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
               <div className="flex items-center flex-wrap gap-2">
                 <span className="text-3xl font-bold text-gray-900 dark:text-white">
+                  {/* ✅ FIXED: Pass number instead of string */}
                   {formatPrice(productData.salePrice)}
                 </span>
-                {productData.hasDiscount && (
+                {productData.hasDiscount && productData.originalPrice && (
                   <>
                     <span className="text-lg text-gray-500 dark:text-gray-400 line-through">
+                      {/* ✅ FIXED: Pass number instead of string */}
                       {formatPrice(productData.originalPrice)}
                     </span>
                     <span className="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 px-2 py-1 rounded-md text-sm font-medium">
@@ -429,21 +423,23 @@ export default function ProductDetail({
                         <div className="flex items-center text-amber-500">
                           <Star className="w-4 h-4 fill-current" />
                           <span className="ml-1 text-sm text-gray-700 dark:text-gray-300">
-                            {product.averageRating.toFixed(1)}
+                            {(product.averageRating || 0).toFixed(1)}
                           </span>
                         </div>
                         <span className="mx-2 text-gray-300">•</span>
                         <span className="text-sm text-gray-600 dark:text-gray-400">
-                          {product.reviewCount} reviews
+                          {product.reviewCount || 0} reviews
                         </span>
                       </div>
 
                       <div className="flex items-center">
                         <span className="text-lg font-bold text-gray-900 dark:text-white">
+                          {/* ✅ FIXED: Pass number instead of string */}
                           {formatPrice(product.salePrice)}
                         </span>
                         {product.hasDiscount && (
                           <span className="ml-2 text-sm text-gray-500 dark:text-gray-400 line-through">
+                            {/* ✅ FIXED: Pass number instead of string */}
                             {formatPrice(product.originalPrice)}
                           </span>
                         )}

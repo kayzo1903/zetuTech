@@ -1,16 +1,17 @@
 "use client";
 // ✅ Fixed import
 import { useEffect, useCallback } from "react";
-import ProductCard, { ProductType } from "../cards/productcards";
+import ProductCard from "../cards/productcards";
 import { useInfinityProducts } from "@/hooks/useInfinityProduct";
+import { Product } from "@/lib/types/product";
 
 
 interface InfinityProductsProps {
-  initialProducts?: ProductType[];
+  initialProducts?: Product[]; // ✅ Use Product type
 }
 
 interface ProductsResponse {
-  products: ProductType[];
+  products: Product[]; // ✅ Use Product type
   hasMore: boolean;
   nextOffset?: number;
 }

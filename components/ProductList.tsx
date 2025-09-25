@@ -2,12 +2,10 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { motion } from "framer-motion";
-import { Star, ChevronDown, X } from "lucide-react";
+import { ChevronDown, X } from "lucide-react";
 import { PRODUCT_TYPES } from "@/lib/validation-schemas/product-type";
 import { ProductsListProps } from "@/lib/types/product";
+import ProductCard from "./cards/productlistCard";
 
 export default function ProductsList({
   initialData,
@@ -298,94 +296,13 @@ export default function ProductsList({
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
                 {data.products.map((product, index) => (
-                  <motion.div
+                  <ProductCard
                     key={product.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.03 }}
-                    className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 border border-gray-100 dark:border-gray-700"
-                  >
-                    <Link
-                      href={`/products/${product.slug}/${product.id}`}
-                      className="block"
-                    >
-                      <div className="relative h-48 w-full">
-                        {product.images.length > 0 ? (
-                          <Image
-                            src={product.images[0]}
-                            alt={product.name}
-                            fill
-                            className="object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                            <span className="text-gray-400">No Image</span>
-                          </div>
-                        )}
-
-                        {product.hasDiscount && (
-                          <div className="absolute top-3 left-3 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 text-xs font-semibold px-2.5 py-1 rounded-full">
-                            SALE
-                          </div>
-                        )}
-
-                        {product.stockStatus === "Low Stock" && (
-                          <div className="absolute top-3 right-3 bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 text-xs font-semibold px-2.5 py-1 rounded-full">
-                            LOW STOCK
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="p-5">
-                        <div className="flex justify-between items-start mb-3">
-                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2">
-                            {product.name}
-                          </h3>
-                          <div className="flex items-center text-sm text-amber-500">
-                            <Star className="w-4 h-4 fill-current" />
-                            <span className="ml-1 text-gray-700 dark:text-gray-300">
-                              -
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {product.categories.slice(0, 2).map((c, i) => (
-                            <span
-                              key={i}
-                              className="text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 px-2 py-1 rounded"
-                            >
-                              {c}
-                            </span>
-                          ))}
-                        </div>
-
-                        <div className="flex items-center mb-2">
-                          <span className="text-xl font-bold text-gray-900 dark:text-white">
-                            {parseFloat(product.salePrice).toLocaleString(
-                              "en-TZ",
-                              { style: "currency", currency: "TZS" }
-                            )}
-                          </span>
-                          {product.hasDiscount && (
-                            <span className="ml-2 text-sm text-gray-500 dark:text-gray-400 line-through">
-                              {parseFloat(product.originalPrice).toLocaleString(
-                                "en-TZ",
-                                { style: "currency", currency: "TZS" }
-                              )}
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
-                          <span>{product.brand}</span>
-                          <span>{product.stock} in stock</span>
-                        </div>
-                      </div>
-                    </Link>
-                  </motion.div>
+                    product={product}
+                    index={index}
+                  />
                 ))}
               </div>
             )}

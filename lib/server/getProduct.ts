@@ -3,6 +3,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { dbServer } from "@/db/db-server";
 import { product, productCategory, productImage } from "@/db/schema";
 import { PRODUCT_TYPES, PRODUCT_CATEGORIES } from "@/lib/validation-schemas/product-type";
+import { Product } from "../types/product";
 
 export interface SearchParams {
   productType?: string;
@@ -26,30 +27,30 @@ export async function getProducts(searchParams: SearchParams) {
   const conditions = [];
 
   // Product type filter
-if (searchParams.productType && searchParams.productType !== "all") {
-  conditions.push(eq(product.productType, searchParams.productType));
-}
+  if (searchParams.productType && searchParams.productType !== "all") {
+    conditions.push(eq(product.productType, searchParams.productType));
+  }
 
-// Category filter
-if (searchParams.category && searchParams.category !== "all") {
-  conditions.push(eq(productCategory.category, searchParams.category));
-}
+  // Category filter
+  if (searchParams.category && searchParams.category !== "all") {
+    conditions.push(eq(productCategory.category, searchParams.category));
+  }
 
-// Price range
-if (searchParams.minPrice) {
-  conditions.push(
-    sql`COALESCE(${product.salePrice}, ${product.originalPrice}) >= ${parseFloat(searchParams.minPrice)}`
-  );
-}
-if (searchParams.maxPrice) {
-  conditions.push(
-    sql`COALESCE(${product.salePrice}, ${product.originalPrice}) <= ${parseFloat(searchParams.maxPrice)}`
-  );
-}
+  // Price range
+  if (searchParams.minPrice) {
+    conditions.push(
+      sql`COALESCE(${product.salePrice}, ${product.originalPrice}) >= ${parseFloat(searchParams.minPrice)}`
+    );
+  }
+  if (searchParams.maxPrice) {
+    conditions.push(
+      sql`COALESCE(${product.salePrice}, ${product.originalPrice}) <= ${parseFloat(searchParams.maxPrice)}`
+    );
+  }
 
-// Ensure only active + in-stock products
-conditions.push(sql`${product.status} != 'Draft'`);
-conditions.push(sql`${product.stockStatus} != 'Archived'`);
+  // Ensure only active + in-stock products
+  conditions.push(sql`${product.status} != 'Draft'`);
+  conditions.push(sql`${product.stockStatus} != 'Archived'`);
 
   // Order by
   let orderBy;
@@ -68,7 +69,6 @@ conditions.push(sql`${product.stockStatus} != 'Archived'`);
   }
 
   try {
-
     // Main query
     const productsQuery = dbServer
       .select({
@@ -85,6 +85,10 @@ conditions.push(sql`${product.stockStatus} != 'Archived'`);
         stockStatus: product.stockStatus,
         status: product.status,
         slug: product.slug,
+        hasWarranty: product.hasWarranty,
+        warrantyPeriod: product.warrantyPeriod,
+        warrantyDetails: product.warrantyDetails,
+        updatedAt: product.updatedAt,
         images: sql<string[]>`ARRAY_AGG(DISTINCT ${productImage.url})`,
         categories: sql<string[]>`ARRAY_AGG(DISTINCT ${productCategory.category})`,
         createdAt: product.createdAt,
@@ -118,16 +122,18 @@ conditions.push(sql`${product.stockStatus} != 'Archived'`);
 
     const brands = brandsResult.map(r => r.brand).filter(Boolean) as string[];
 
+        // ✅ Convert prices from string to number
+    const convertedProducts: Product[] = products.map(product => ({
+      ...product,
+      originalPrice: Number(product.originalPrice), // Convert string to number
+      salePrice: product.salePrice ? Number(product.salePrice) : null, // Convert string to number or null
+      createdAt: product.createdAt.toISOString(), // Convert Date to string
+      updatedAt: product.updatedAt?.toISOString(), // Convert Date to string
+      // Ensure other fields match your Product type
+    }));
+    
     return {
-      products: products.map(p => ({
-        ...p,
-        originalPrice: p.originalPrice?.toString() || "0",
-        salePrice: p.salePrice?.toString() || p.originalPrice?.toString() || "0",
-        categories: p.categories || [],
-        images: p.images || [],
-        shortDescription: p.shortDescription || undefined,
-        createdAt: p.createdAt.toISOString(),
-      })),
+      products: convertedProducts,
       filters: {
         brands,
         productTypes: PRODUCT_TYPES,

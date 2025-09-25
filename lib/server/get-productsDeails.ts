@@ -2,8 +2,8 @@
 import { dbServer } from "@/db/db-server";
 import { product, productCategory, productImage, productReview } from "@/db/schema";
 import { safeJsonParse } from "@/utils/parser";
-import { sql} from "drizzle-orm";
-import { Product } from "../validation-schemas/product-type";
+import { sql } from "drizzle-orm";
+import { Product } from "../types/product";
 
 export async function getProductDetails(productId: string): Promise<Product | null> {
   const result = await dbServer
@@ -37,21 +37,28 @@ export async function getProductDetails(productId: string): Promise<Product | nu
   const row = result[0];
 
   return {
-  ...row.product,
-  originalPrice: String(row.product.originalPrice),
-  salePrice: row.product.salePrice !== null ? String(row.product.salePrice) : null,
-
-  categories: safeJsonParse(row.categories, []),
-  images: safeJsonParse(row.images, []),
-
-  averageRating: parseFloat(row.averageRating as unknown as string) || 0,
-  reviewCount: parseInt(row.reviewCount as unknown as string) || 0,
-
-  // Fix: Convert Date to string
-  createdAt: row.product.createdAt.toISOString(),
-  updatedAt: row.product.updatedAt.toISOString(),
-};
-
+    ...row.product,
+    // ✅ FIXED: Convert string prices to numbers
+    originalPrice: Number(row.product.originalPrice),
+    salePrice: row.product.salePrice !== null ? Number(row.product.salePrice) : null,
+    
+    categories: safeJsonParse(row.categories, []),
+    images: safeJsonParse(row.images, []),
+    
+    averageRating: parseFloat(row.averageRating as unknown as string) || 0,
+    reviewCount: parseInt(row.reviewCount as unknown as string) || 0,
+    
+    // Convert Date to string
+    createdAt: row.product.createdAt.toISOString(),
+    updatedAt: row.product.updatedAt.toISOString(),
+    
+    // ✅ Add missing required fields with defaults
+    shortDescription: row.product.shortDescription ?? undefined,
+    hasWarranty: !!row.product.warrantyPeriod,
+    warrantyPeriod: row.product.warrantyPeriod ?? null,
+    warrantyDetails: row.product.warrantyDetails ?? null,
+    sku: row.product.sku ?? null,
+  };
 }
 
 export async function getRelatedProducts(
@@ -109,17 +116,25 @@ export async function getRelatedProducts(
 
   return results.map(row => ({
     ...row.product,
-  originalPrice: String(row.product.originalPrice),
-  salePrice: row.product.salePrice !== null ? String(row.product.salePrice) : null,
-
-  categories: safeJsonParse(row.categories, []),
-  images: safeJsonParse(row.images, []),
-
-  averageRating: parseFloat(row.averageRating as unknown as string) || 0,
-  reviewCount: parseInt(row.reviewCount as unknown as string) || 0,
-
-  // Fix: Convert Date to string
-  createdAt: row.product.createdAt.toISOString(),
-  updatedAt: row.product.updatedAt.toISOString(),
+    // ✅ FIXED: Convert string prices to numbers
+    originalPrice: Number(row.product.originalPrice),
+    salePrice: row.product.salePrice !== null ? Number(row.product.salePrice) : null,
+    
+    categories: safeJsonParse(row.categories, []),
+    images: safeJsonParse(row.images, []),
+    
+    averageRating: parseFloat(row.averageRating as unknown as string) || 0,
+    reviewCount: parseInt(row.reviewCount as unknown as string) || 0,
+    
+    // Convert Date to string
+    createdAt: row.product.createdAt.toISOString(),
+    updatedAt: row.product.updatedAt.toISOString(),
+    
+    // ✅ Add missing required fields with defaults
+    shortDescription: row.product.shortDescription ?? undefined,
+    hasWarranty: !!row.product.warrantyPeriod,
+    warrantyPeriod: row.product.warrantyPeriod ?? null,
+    warrantyDetails: row.product.warrantyDetails ?? null,
+    sku: row.product.sku ?? null,
   }));
 }

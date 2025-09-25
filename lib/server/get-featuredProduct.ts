@@ -2,24 +2,9 @@ import { dbServer } from "@/db/db-server";
 import { featuredProduct } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { getProductDetails } from "./get-productsDeails";
+import { Product } from "../types/product";
 
-export interface FeaturedProductTypes {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  originalPrice: string;
-  salePrice: string | null;
-  hasDiscount: boolean;
-  stock: number;
-  stockStatus: string;
-  images: string[];
-  categories: string[];
-  averageRating: number;
-  reviewCount: number;
-}
-
-export async function getFeaturedProduct(): Promise<FeaturedProductTypes | null> {
+export async function getFeaturedProduct(): Promise<Product | null> {
   try {
     // Get the active featured product
     const featured = await dbServer
@@ -44,22 +29,9 @@ export async function getFeaturedProduct(): Promise<FeaturedProductTypes | null>
       return null; // Product not found or is draft
     }
 
-    // Transform to the format needed by your FeaturedProduct component
-    return {
-      id: productDetails.id,
-      name: productDetails.name,
-      slug: productDetails.slug,
-      description: productDetails.description,
-      originalPrice: productDetails.originalPrice,
-      salePrice: productDetails.salePrice,
-      hasDiscount: productDetails.hasDiscount,
-      stock: productDetails.stock,
-      stockStatus: productDetails.stockStatus,
-      images: productDetails.images,
-      categories: productDetails.categories,
-      averageRating: productDetails.averageRating,
-      reviewCount: productDetails.reviewCount,
-    };
+    // ✅ Return the complete product object
+    return productDetails;
+    
   } catch (error) {
     console.error("Error fetching featured product:", error);
     return null;

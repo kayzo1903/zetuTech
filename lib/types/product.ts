@@ -5,11 +5,11 @@ export interface Product {
   id: string;
   name: string;
   description: string;
-  shortDescription?: string;
+  shortDescription?: string | null;
   brand: string;
   productType: string;
-  originalPrice: string;
-  salePrice: string;
+  originalPrice: number; // ✅ Use number consistently
+  salePrice: number | null; // ✅ Use number consistently
   hasDiscount: boolean;
   stock: number;
   stockStatus: string;
@@ -17,10 +17,16 @@ export interface Product {
   slug: string;
   categories: string[];
   images: string[];
+  averageRating?: number; // ✅ Make optional for flexibility
+  reviewCount?: number; // ✅ Make optional
   createdAt: string;
-  averageRating?: number;
-  reviewCount?: number;
+  updatedAt?: string;
+  warrantyPeriod?: number | null;
+  warrantyDetails?: string | null;
+  sku?: string | null;
+  hasWarranty?: boolean; // ✅ Make optional
 }
+
 
 export interface ProductsResponse {
   products: Product[];

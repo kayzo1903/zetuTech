@@ -65,28 +65,4 @@ export const STOCK_STATUS = [
   "For Parts or Not Working",
 ];
 
-export interface Product {
-  id: string;
-  name: string;
-  description: string;
-  shortDescription?: string | null;
-  brand: string;
-  productType: string;
-  originalPrice: string;
-  salePrice: string | null;
-  hasDiscount: boolean;
-  stock: number;
-  stockStatus: string;
-  status: string;
-  slug: string;
-  categories: string[];
-  images: string[];
-  averageRating: number;
-  reviewCount: number;
-  createdAt: string;
-  updatedAt: string; // ✅ Added this
-  hasWarranty: boolean;
-  warrantyPeriod?: number | null;
-  warrantyDetails?: string | null;
-  sku?: string | null;
-}
+
