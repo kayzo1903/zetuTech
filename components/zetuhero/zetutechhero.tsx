@@ -7,14 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
-  Brand,
   Category,
   ProductType,
-  TOP_BRANDS,
   TOP_CATEGORIES,
   TOP_PRODUCT_TYPES,
 } from "@/lib/data/hero-data";
-import { ArrowRight, Plus } from "lucide-react";
+
 
 export default function ZetutechHero(): JSX.Element {
   return (
