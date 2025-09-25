@@ -1,7 +1,7 @@
 import { dbServer } from "@/db/db-server";
 import { featuredProduct } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { getProductDetails } from "../products/products";
+import { getProductDetails } from "./get-productsDeails";
 
 export interface FeaturedProductTypes {
   id: string;
