@@ -1,80 +1,107 @@
 ## Form submition //done
-  short description and keywords must be included in
-  product form submition to improve product 
-  seo , design system for upc
 
-## returning all products to dashboard (admin-dashboar/products) // done 
-  we have to create a system to show all product on our stock
-  key features we can filter based on product type and category
+short description and keywords must be included in
+product form submition to improve product
+seo , design system for upc
+
+## returning all products to dashboard (admin-dashboar/products) // done
+
+we have to create a system to show all product on our stock
+key features we can filter based on product type and category
 
 ## search-functionality on adminproductlist page // need improvememnt
-   we have to implement functionality to return all page on 
-   search , aim is to ssimplify stock management 
+
+we have to implement functionality to return all page on
+search , aim is to ssimplify stock management
 
 ## implement delete // done
-   creating api for delete a product by  admin , only admin
-   can delete a product from stock.
 
-## implementing editing page // done 
-   creating a page for returning edit product
-   fetching product by id from api a product
-   displaying all its details
-   after editing updating product
+creating api for delete a product by admin , only admin
+can delete a product from stock.
+
+## implementing editing page // done
+
+creating a page for returning edit product
+fetching product by id from api a product
+displaying all its details
+after editing updating product
 
 ## implement cloudfare image system to store image // done.
-   we will connect our webapp with cloudfare 3 for image system
+
+we will connect our webapp with cloudfare 3 for image system
 
 ## implementind customer product list with real data //done
-  > we will implemnt real data in puplic product list frontend
 
-## implement customer detailed page // on progress 
-  > customer detailed page with details 🎯  
-  > no cart / buy option has to implemented 🔨 
- 
-## implement fetch product list in server side // onprogress    09/23 - 09/24
- > fetching product and rendering 
- > hybrid rendering for both server side and client side
- > filtering type based on product type (not completed)
- > filter is note clothing in small screen instant in small  creen (feedback)
+> we will implemnt real data in puplic product list frontend
+
+## implement customer detailed page // on progress
+
+> customer detailed page with details 🎯  
+> no cart / buy option has to implemented 🔨
+
+## implement fetch product list in server side // onprogress 09/23 - 09/24
+
+> fetching product and rendering
+> hybrid rendering for both server side and client side
+> filtering type based on product type (not completed)
+> filter is note clothing in small screen instant in small creen (feedback)
 
 ## implementing new arrival on user frontend ui 09/24/2025 //done
- > Idea is to fetch most recent first four products
- > once are user click load more will , direct to product list   page
- > fetching process has to be in server side to optmize seo
- > product load with page.tsx and pass props to newarrival 
-   components (discussion || pass)
 
-## implementing a featured product and system 09/24/25 done 
- > the idea is to get a product to display in featured product
-  its has to be very dynamic
- > we dont have clear criteria of products
- > we have to set those criteria 
- > wemplement its on serve side rendering
- > we will use a components from product-details modifying its if
-   necessary
- > create a lip/server/get-featuredProduct.ts for fetching product
-  and set agreed criteria
- > We will introdce a table for featured product. Admin can toggle featured product on edit form , it will be insected to the table as a only single product.(system) done
- 
- ## redesign padding and spacing at landing page 09/24/05 done
-  >Reduce space between components
+> Idea is to fetch most recent first four products
+> once are user click load more will , direct to product list page
+> fetching process has to be in server side to optmize seo
+> product load with page.tsx and pass props to newarrival
+> components (discussion || pass)
 
- ## redesign footer to minimal and very informative // not-started
-  >reduce footer size to more modern
+## implementing a featured product and system 09/24/25 done
+
+> the idea is to get a product to display in featured product
+> its has to be very dynamic
+> we dont have clear criteria of products
+> we have to set those criteria
+> wemplement its on serve side rendering
+> we will use a components from product-details modifying its if
+> necessary
+> create a lip/server/get-featuredProduct.ts for fetching product
+> and set agreed criteria
+> We will introdce a table for featured product. Admin can toggle featured product on edit form , it will be insected to the table as a only single product.(system) done
+
+## redesign padding and spacing at landing page 09/24/05 done
+
+> Reduce space between components
+
+## redesign footer to minimal and very informative // not-started
+
+> reduce footer size to more modern
 
 ## redesign hero page // 09/25/05 on progress
-  > Introduce top blands 
-  > Introduce a top categories
-  > Introduce a top product types
-  > introduce a real data and links
+
+> Introduce top blands
+> Introduce a top categories
+> Introduce a top product types
+> introduce a real data and links
 
 ## redesign newarrival layout // 09/25/05 done
-  > redesign a newarrival component with layout 
+
+> redesign a newarrival component with layout
 
 ## redisgn a header to more e-commerce style //09/25/05
-  > sticky header brand name and navtoogle & account cart , search input below in   small screen , remove theme toogle 
-  > on small screen all out screen sidenavbar with many categories , brand type , wishlist. You can implement shadcn drop down , sidebar and any other helper components if necessary , its has to be more ecommerce
 
-## introduce best deals // not started
-  > At best deals we will show case products which are more cheap 
-  
+> sticky header brand name and navtoogle & account cart , search input below in small screen , remove theme toogle
+> on small screen all out screen sidenavbar with many categories , brand type , wishlist. You can implement shadcn drop down , sidebar and any other helper components if necessary , its has to be more ecommerce
+
+## introduce best deals || hot deals // not started
+
+> At best deals we will show case products which are more cheap
+> components will be introduce after having 4 different categories
+
+## introduce infinityproduct // not started
+> components will have a all product random assigned with infinity scroll
+> Aiming to show case our product to customers to increase sells without navigating to other pages  
+> components will have same layout has arrival
+> we will separate a arrival card and start to share with its for
+> simplifications
+> rendering will be on SSR for SEO optimization
+> creating a file at lib/server/get-infinityProduct 
+> fetch at page.tsx and pass it to Infityproducts 

@@ -15,6 +15,7 @@ export async function getServerSession() {
       isAdmin: (session?.user as { role?: string })?.role === "admin",
       isAuthenticated: !!session?.user,
     };
+    
   } catch (error) {
     console.error("Error getting server session:", error);
     return {
