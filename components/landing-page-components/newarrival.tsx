@@ -17,11 +17,11 @@ export default function NewArrivals({ products }: NewArrivalsProps) {
     <section className="py-12 bg-white dark:bg-gray-900 transition-colors duration-300">
       <div className="max-w-7xl px-4 mx-auto sm:px-6">
         {/* Section Header */}
-        <div className="flex flex-row items-start md:items-center justify-between mb-8">
+        <div className="flex flex-row flex-nowrap items-center justify-between mb-8">
           <h2 className="text-lg font-semibold">New Arrival</h2>
           <Link
             href="/products"
-            className="mt-4 md:mt-0 text-sm flex items-center text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-semibold transition group"
+            className="mt-4 md:mt-0 text-xs flex items-center text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-semibold transition group"
           >
             View All
             <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
