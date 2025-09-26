@@ -10,25 +10,16 @@ export interface Category {
   name: string;
   desc: string;
   image: string;
+  link: string;
 }
 
 export interface ProductType {
   id: string;
   name: string;
   tag: string;
-  image : string;
-}
-
-// Dummy Data
-export const TOP_BRANDS: Brand[] = [
-  { id: "apple", name: "apple", logo: "/images/brands/Apple.png" },
-  { id: "samsung", name: "Samsung", logo: "/images/brands/samsung.png" },
-  { id: "hp", name: "hp", logo: "/images/brands/hp.png" },
-  { id: "dell", name: "Dell", logo: "/images/brands/Dell.png" },
-  { id: "sony", name: "Sony", logo: "/images/brands/sony.jpg" },
-  { id: "lenovo", name: "lenovo", logo: "/images/brands/lenovo.png" },
-  { id: "google", name: "google", logo: "/images/brands/google.jpg" },
-];
+  image: string;
+  link: string;
+} 
 
 export const TOP_CATEGORIES: Category[] = [
   {
@@ -36,30 +27,58 @@ export const TOP_CATEGORIES: Category[] = [
     name: "Laptops",
     desc: "Powerful portable machines",
     image: "/images/categories/laptops.jpg",
+    link: "/products?type=laptop"
   },
   {
     id: "phones",
     name: "Smartphones",
     desc: "Latest handsets & accessories",
     image: "/images/categories/smartphone.jpg",
+    link: "/products?type=smartphone"
   },
   {
     id: "audio",
     name: "Audio",
     desc: "Earbuds, headphones & speakers",
     image: "/images/categories/ear_bugs.jpg",
+    link: "/products?type=audio"
   },
   {
     id: "home",
     name: "Home Electronics",
     desc: "TVs, smart home & more",
     image: "/images/categories/homeelectronics.jpg",
+    link: "/products?type=home-electronics"
   },
 ];
 
 export const TOP_PRODUCT_TYPES: ProductType[] = [
-  { id: "gaming-laptops", name: "Gaming Laptops", tag: "Hot" ,  image: "/images/product_type/gaming_laptops.jpg"},
-  { id: "wireless-earbuds", name: "Wireless Earbuds", tag: "Trending" , image: "/images/product_type/headphones.jpg" },
-  { id: "smart-watches", name: "Smart Watches", tag: "New" , image: "/images/product_type/smartwatch.jpg" },
-  { id: "4k-tvs", name: "4K TVs", tag: "Top Pick" , image: "/images/product_type/4ktv.jpg" },
+  { 
+    id: "gaming-laptops", 
+    name: "Gaming Laptops", 
+    tag: "Hot",  
+    image: "/images/product_type/gaming_laptops.jpg",
+    link: "/products?category=laptops&type=Gaming Laptops" 
+  },
+  { 
+    id: "wireless-earbuds", 
+    name: "Wireless Earbuds", 
+    tag: "Trending", 
+    image: "/images/product_type/headphones.jpg", 
+    link: "/products?category=audio&type=wireless" 
+  },
+  { 
+    id: "smart-watches", 
+    name: "Smart Watches", 
+    tag: "New", 
+    image: "/images/product_type/smartwatch.jpg", 
+    link: "/products?category=wearables&type=smart-watches" 
+  },
+  { 
+    id: "4k-tvs", 
+    name: "4K TVs", 
+    tag: "Top Pick", 
+    image: "/images/product_type/4ktv.jpg", 
+    link: "/products?type=tv" 
+  },
 ];

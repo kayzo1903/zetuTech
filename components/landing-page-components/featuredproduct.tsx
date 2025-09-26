@@ -76,7 +76,7 @@ export default function FeaturedProduct({ featuredProduct }: FeaturedProductProp
 
   return (
     <section className="bg-white dark:bg-gray-900 py-6 lg:py-12">
-      <div className="container mx-auto px-4">
+      <div className="max-w-7xl mx-auto px-4">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}

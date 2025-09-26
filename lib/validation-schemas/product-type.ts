@@ -5,6 +5,12 @@ export const PRODUCT_TYPES = [
   { id: "mouse", label: "Mouse" },
   { id: "monitor", label: "Monitor" },
   { id: "accessory", label: "Accessory" },
+  // New product types from hero
+  { id: "smartphone", label: "Smartphone" },
+  { id: "audio", label: "Audio" },
+  { id: "home-electronics", label: "Home Electronics" },
+  { id: "wearables", label: "Wearables" },
+  { id: "tv", label: "TV" },
 ];
 
 // Categories per product type
@@ -36,6 +42,63 @@ export const PRODUCT_CATEGORIES = {
   mouse: ["Gaming Mice", "Wireless Mice", "Ergonomic Mice", "Trackballs"],
   monitor: ["Gaming Monitors", "Professional Monitors", "Portable Monitors"],
   accessory: ["Cables & Adapters", "Headsets", "Webcams", "Speakers"],
+  // New categories from hero data
+  smartphone: [
+    "Flagship Phones",
+    "Mid-range Phones",
+    "Budget Phones",
+    "Gaming Phones",
+    "Camera Phones",
+    "Foldable Phones",
+    "Business Phones",
+    "Refurbished Phones",
+    "5G Phones",
+    "Compact Phones",
+  ],
+  audio: [
+    "Wireless Earbuds",
+    "Headphones",
+    "Speakers",
+    "Soundbars",
+    "Earphones",
+    "Gaming Headsets",
+    "Noise Cancelling Headphones",
+    "Sports Earphones",
+    "Bluetooth Speakers",
+    "Home Audio Systems",
+  ],
+  "home-electronics" : [
+    "Smart Home Devices",
+    "Smart TVs",
+    "Streaming Devices",
+    "Home Security",
+    "Smart Lighting",
+    "Robot Vacuums",
+    "Smart Plugs",
+    "Voice Assistants",
+    "Home Theater Systems",
+    "Gaming Consoles",
+  ],
+  wearables: [
+    "Smart Watches",
+    "Fitness Trackers",
+    "Smart Glasses",
+    "Health Monitors",
+    "Sports Watches",
+    "Luxury Smartwatches",
+    "Kids Smartwatches",
+  ],
+  tv: [
+    "4K TVs",
+    "8K TVs",
+    "Smart TVs",
+    "OLED TVs",
+    "QLED TVs",
+    "Gaming TVs",
+    "Curved TVs",
+    "Portable TVs",
+    "Home Theater Projectors",
+  ],
 };
 
 export const PRODUCT_STATUS = [
