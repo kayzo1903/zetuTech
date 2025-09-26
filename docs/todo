@@ -86,7 +86,7 @@ we will connect our webapp with cloudfare 3 for image system
 
 > redesign a newarrival component with layout
 
-## redisgn a header to more e-commerce style // 🟢🟢 09/25/05 
+## redisgn a header to more e-commerce style // 🟢🟢 09/25/05
 
 > sticky header brand name and navtoogle & account cart , search input below in small screen , remove theme toogle
 > on small screen all out screen sidenavbar with many categories , brand type , wishlist. You can implement shadcn drop down , sidebar and any other helper components if necessary , its has to be more ecommerce
@@ -96,25 +96,37 @@ we will connect our webapp with cloudfare 3 for image system
 > At best deals we will show case products which are more cheap
 > components will be introduce after having 4 different categories
 
-## introduce infinityproduct // 🟢🟢 on progress 
+## introduce infinityproduct // 🟢🟢 on progress
+
 > components will have a all product random assigned with infinity scroll
 > Aiming to show case our product to customers to increase sells without navigating to other pages  
 > components will have same layout has arrival
 > we will separate a arrival card and start to share with its for
 > simplifications
 > rendering will be on SSR for SEO optimization
-> creating a file at lib/server/get-infinityProduct 
-> fetch at page.tsx and pass it to Infityproducts 
+> creating a file at lib/server/get-infinityProduct
+> fetch at page.tsx and pass it to Infityproducts
 
 ## applying a productcards to all my components for unification // ✅✅ done
+
 > use a productCard to all of my product components  
 > using single type to all product
 
 ## link whole landing pages components with a real data ✅✅
- > connecting a product type and categories of zetutech hero with a real links
 
-## redesign a product-list
- > implementing real fiters from the productlist 
+> connecting a product type and categories of zetutech hero with a real links
 
-## redesign a dashboard
-  > change side bar style to mode dynamic
+## redesign a product-list 🔴🔴
+> implementing real fiters from the productlist and simplfies that
+
+## redesign a dashboard 🔴🔴
+
+> change side bar style to mode dynamic
+
+## implementing wish list functionality 🟢🟢
+> creating a wishlist page //app/page.tsx 
+> creating a components //app/components/wishlist
+> creating a dumy data first for demostration
+> introduce a table at db
+> creating a functinality to fetch user wish list
+> implemting a functinality to all components

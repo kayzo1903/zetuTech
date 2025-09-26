@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import ProductCard from "../cards/productcards";
 import { Product } from "@/lib/types/product";
+import ProductCard from "../cards/productlistCard";
 
 interface NewArrivalsProps {
   products: Product[]; // Use Product type

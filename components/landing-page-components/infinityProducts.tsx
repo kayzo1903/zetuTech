@@ -1,9 +1,9 @@
 "use client";
 // ✅ Fixed import
 import { useEffect, useCallback } from "react";
-import ProductCard from "../cards/productcards";
 import { useInfinityProducts } from "@/hooks/useInfinityProduct";
 import { Product } from "@/lib/types/product";
+import ProductCard from "../cards/productlistCard";
 
 
 interface InfinityProductsProps {
