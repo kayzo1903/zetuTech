@@ -1,97 +1,104 @@
 "use client";
-// ✅ Fixed import
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { useInfinityProducts } from "@/hooks/useInfinityProduct";
-import { Product } from "@/lib/types/product";
 import ProductCard from "../cards/productlistCard";
-
+import ProductSkeletonGrid from "../cards/skeletongrid";
+import { Product } from "@/lib/types/product";
 
 interface InfinityProductsProps {
-  initialProducts?: Product[]; // ✅ Use Product type
+  initialProducts?: Product[];
 }
 
-interface ProductsResponse {
-  products: Product[]; // ✅ Use Product type
-  hasMore: boolean;
-  nextOffset?: number;
-}
-
-export default function InfinityProducts({
-  initialProducts = [],
-}: InfinityProductsProps) {
+export default function InfinityProducts({ initialProducts = [] }: InfinityProductsProps) {
   const {
     data,
     isLoading,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfinityProducts(8);
+    error,
+  } = useInfinityProducts({ limit: 12, enabled: true });
 
-  // ✅ Fixed scroll handler with throttle
-  const handleScroll = useCallback(() => {
-    if (!hasNextPage || isFetchingNextPage) return;
+  // ✅ Use ref to track throttle state and latest values
+  const throttleRef = useRef({
+    inThrottle: false,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  });
 
-    const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
-
-    // ✅ Better threshold calculation
-    if (scrollTop + clientHeight >= scrollHeight - 300) {
-      fetchNextPage();
-    }
+  // ✅ Update ref values when dependencies change
+  useEffect(() => {
+    throttleRef.current.hasNextPage = hasNextPage;
+    throttleRef.current.isFetchingNextPage = isFetchingNextPage;
+    throttleRef.current.fetchNextPage = fetchNextPage;
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  useEffect(() => {
-    const scrollListener = () => handleScroll();
+  // ✅ Simple scroll handler with inline throttle logic
+  const handleScroll = useCallback(() => {
+    const { inThrottle, hasNextPage, isFetchingNextPage, fetchNextPage } = throttleRef.current;
+    
+    if (inThrottle || !hasNextPage || isFetchingNextPage) return;
 
-    window.addEventListener("scroll", scrollListener, { passive: true });
-    return () => window.removeEventListener("scroll", scrollListener);
+    const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+    const distanceToBottom = scrollHeight - (scrollTop + clientHeight);
+
+    if (distanceToBottom < 300) {
+      throttleRef.current.inThrottle = true;
+      fetchNextPage();
+      
+      setTimeout(() => {
+        throttleRef.current.inThrottle = false;
+      }, 200);
+    }
+  }, []); // Empty dependencies since we use ref
+
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, [handleScroll]);
 
-  // ✅ Proper type handling for merged products
-  const allPages = data?.pages as ProductsResponse[] | undefined;
-  const products =
-    allPages?.flatMap((page) => page.products) || initialProducts;
+  // ✅ Error state
+  if (error) {
+    return (
+      <section className="py-12 bg-white dark:bg-gray-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
+          <p className="text-red-500">Error loading products: {error.message}</p>
+        </div>
+      </section>
+    );
+  }
 
-  // ✅ Use product.id instead of index for key
+  const products = data?.pages.flatMap((page) => page.products) || initialProducts;
+
   return (
-    <section className="py-12 bg-white dark:bg-gray-900 transition-colors">
+    <section className="py-12 bg-white dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <h2 className="text-2xl font-bold mb-8">Discover</h2>
-        {/* Products Grid */}
+
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+          {isLoading ? (
+            <ProductSkeletonGrid count={12} />
+          ) : (
+            products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))
+          )}
         </div>
 
-        {/* Loading States */}
         <div className="mt-8 text-center">
           {(isLoading || isFetchingNextPage) && (
-            <div className="text-gray-500 dark:text-gray-400">
-              <div className="flex items-center justify-center space-x-2 mb-2">
-                <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
-                <div
-                  className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"
-                  style={{ animationDelay: "0.1s" }}
-                ></div>
-                <div
-                  className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"
-                  style={{ animationDelay: "0.2s" }}
-                ></div>
-              </div>
-              <p>Loading more products...</p>
-            </div>
+            <p className="text-gray-500 dark:text-gray-400">Loading more products...</p>
           )}
 
           {!hasNextPage && products.length > 0 && (
-            <p className="text-gray-500 dark:text-gray-400">
-              🎉 You&apos;ve seen all products
-            </p>
+            <p className="text-gray-500 dark:text-gray-400">🎉 You&apos;ve seen all products</p>
           )}
 
           {!isLoading && products.length === 0 && (
-            <p className="text-gray-500 dark:text-gray-400">
-              No products found
-            </p>
+            <p className="text-gray-500 dark:text-gray-400">No products found</p>
           )}
         </div>
       </div>
