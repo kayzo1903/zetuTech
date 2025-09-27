@@ -2,7 +2,7 @@
 import { Suspense } from "react";
 import { PRODUCT_TYPES } from "@/lib/validation-schemas/product-type";
 import { getProducts } from "@/lib/server/getProduct";
-import ProductsList from "@/components/ProductList";
+import ProductsList from "@/components/productsInfo/ProductList";
 
 interface SearchParams {
   productType?: string;

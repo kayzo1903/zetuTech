@@ -5,7 +5,6 @@ export const PRODUCT_TYPES = [
   { id: "mouse", label: "Mouse" },
   { id: "monitor", label: "Monitor" },
   { id: "accessory", label: "Accessory" },
-  // New product types from hero
   { id: "smartphone", label: "Smartphone" },
   { id: "audio", label: "Audio" },
   { id: "home-electronics", label: "Home Electronics" },
