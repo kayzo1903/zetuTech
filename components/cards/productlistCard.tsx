@@ -11,7 +11,7 @@ import { useState } from "react";
 import { Product } from "@/lib/types/product";
 
 interface ProductCardProps {
-  product: Product; // ✅ Use unified type
+  product: Product;
   index?: number;
 }
 
@@ -26,7 +26,6 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
   };
 
   // Price calculations
-  // Price calculations (now working with numbers)
   const originalPrice = product.originalPrice;
   const salePrice = product.salePrice;
   const displayPrice = salePrice || originalPrice;
@@ -99,7 +98,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
             )}
           </div>
 
-          {/* Top Right Actions */}
+          {/* Top Right Actions - FIXED FOR MOBILE */}
           <div className="absolute top-2 right-2 flex flex-col gap-1">
             <Button
               variant="ghost"
@@ -107,7 +106,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
               className={`h-8 w-8 rounded-full bg-white/80 dark:bg-gray-800/80 shadow-md transition-all ${
                 isWishlisted
                   ? "bg-red-500 text-white opacity-100"
-                  : "opacity-0 group-hover:opacity-100"
+                  : "opacity-100 md:opacity-0 md:group-hover:opacity-100" // ✅ Always visible on mobile
               }`}
               onClick={toggleWishlist}
             >
@@ -132,7 +131,6 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
             <span className="text-xs font-semibold text-blue-600 uppercase tracking-wide">
               {product.brand}
             </span>
-            {/* Removed rating section */}
           </div>
 
           {/* Product Name */}
