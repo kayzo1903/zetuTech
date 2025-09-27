@@ -2,9 +2,11 @@
 import { Suspense } from "react";
 import { PRODUCT_TYPES } from "@/lib/validation-schemas/product-type";
 import { getProducts } from "@/lib/server/getProduct";
-import ProductsList from "@/components/productsInfo/ProductList";
+import ProductsList from "@/components/products/ProductList";
 
-interface SearchParams {
+
+// Define SearchParams with Record utility
+type SearchParams = Record<string, string | undefined> & {
   productType?: string;
   category?: string;
   brand?: string;
@@ -15,7 +17,7 @@ interface SearchParams {
   sortBy?: string;
   page?: string;
   limit?: string;
-}
+};
 
 export async function generateMetadata({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const resolved = await searchParams;
@@ -36,6 +38,8 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
 
   return { title, description, openGraph: { title, description, type: "website" } };
 }
+
+
 
 export default async function ProductsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const resolved = await searchParams;

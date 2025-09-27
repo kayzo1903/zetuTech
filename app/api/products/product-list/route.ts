@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
 
   // Clean params
   const searchParams = Object.fromEntries(
-    Object.entries(rawParams).filter(([_, v]) => v !== "")
+    Object.entries(rawParams).filter(([v]) => v !== "")
   );
 
   try {

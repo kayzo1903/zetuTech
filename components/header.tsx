@@ -215,7 +215,7 @@ export default function Header({ session, isAdmin }: HeaderProps) {
                                   (category) => (
                                     <SheetClose key={category} asChild>
                                       <Link
-                                        href={`/products?type=${type.id}&category=${category}`}
+                                        href={`/products?type=${type.id}&category=${encodeURIComponent(category)}`}
                                         className="block text-sm text-muted-foreground hover:text-primary py-1 transition-colors"
                                       >
                                         {category}

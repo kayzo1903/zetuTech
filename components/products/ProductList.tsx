@@ -1,25 +1,33 @@
-// app/components/ProductsList.tsx
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { X, Filter } from "lucide-react";
 import { ProductsListProps, SearchParams } from "@/lib/types/product";
 import { PRODUCT_TYPES } from "@/lib/validation-schemas/product-type";
 import ProductCard from "../cards/productlistCard";
 import { useDebounce } from "@/hooks/debounce";
 
-export default function ProductsList({
-  initialData,
-  searchParams,
-}: ProductsListProps) {
+export default function ProductsList({ initialData }: ProductsListProps) {
+  const search = useSearchParams();
+  const isInitialMount = useRef(true);
+  const isSyncingFromURL = useRef(false);
+
   const [data, setData] = useState(initialData);
   const [loading, setLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [localFilters, setLocalFilters] = useState<SearchParams>(searchParams);
+  const [localFilters, setLocalFilters] = useState<SearchParams>({
+    productType: "all",
+    category: "",
+    brand: "",
+    minPrice: "",
+    maxPrice: "",
+    sortBy: "newest",
+    page: "1",
+  });
 
+  // Debounced filters to limit API calls while user types or adjusts values
   const debouncedFilters = useDebounce(localFilters, 500);
-
-  const currentProductType = searchParams.productType || "all";
 
   const sortOptions = [
     { value: "newest", label: "Newest" },
@@ -28,74 +36,106 @@ export default function ProductsList({
     { value: "name", label: "Name: A to Z" },
   ];
 
-  const updateFilters = useCallback(
-    async (newParams: Partial<SearchParams>) => {
-      setLoading(true);
+  /**
+   * Fetch products from the API
+   */
+  const fetchProducts = useCallback(async (params: SearchParams, isFromURLSync = false) => {
+    setLoading(true);
+    try {
+      const cleanedParams: Record<string, string> = {};
+      Object.entries(params).forEach(([key, value]) => {
+        if (value && value !== "all") cleanedParams[key] = value.toString();
+      });
 
-      try {
-        // Clean parameters
-        const cleanedParams: Record<string, string> = {};
-        Object.entries(newParams).forEach(([key, value]) => {
-          if (value && value !== "all") {
-            cleanedParams[key] = value.toString();
-          }
-        });
+      const queryString = new URLSearchParams(cleanedParams).toString();
 
-        // Always reset to page 1 when filters change (except for page changes)
-        if (
-          !newParams.page &&
-          Object.keys(newParams).some((k) => k !== "page")
-        ) {
-          cleanedParams.page = "1";
-        }
+      const res = await fetch(`/api/products?${queryString}`);
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
-        const queryString = new URLSearchParams(cleanedParams).toString();
+      const newData = await res.json();
+      setData(newData);
 
-        const res = await fetch(`/api/products?${queryString}`);
-
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-
-        const newData = await res.json();
-        setData(newData);
-
-        // Update URL without page reload
+      // Only update URL if this is NOT from URL synchronization
+      if (!isFromURLSync) {
         window.history.replaceState({}, "", `/products?${queryString}`);
-      } catch (err) {
-        console.error("Error updating filters:", err);
-      } finally {
-        setLoading(false);
       }
-    },
-    []
-  ); // Empty dependency array since we don't use any external variables
+    } catch (err) {
+      console.error("Error fetching products:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
+  /**
+   * Sync local filters with URL on initial load and when browser navigation occurs
+   */
   useEffect(() => {
-    updateFilters(debouncedFilters);
-  }, [debouncedFilters, updateFilters]); // Now properly included
+    // Skip on initial mount if we already have initialData
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
 
+    const params: SearchParams = {
+      productType: search.get("type") || search.get("productType") || "all",
+      category: search.get("category") || "",
+      brand: search.get("brand") || "",
+      minPrice: search.get("minPrice") || "",
+      maxPrice: search.get("maxPrice") || "",
+      sortBy: search.get("sortBy") || "newest",
+      page: search.get("page") || "1",
+    };
+
+    // Set flag to indicate we're syncing from URL
+    isSyncingFromURL.current = true;
+    setLocalFilters(params);
+    
+    // Fetch products with the URL params but don't update URL again
+    fetchProducts(params, true);
+  }, [search, fetchProducts]);
+
+  /**
+   * Trigger fetching when filters (debounced) update, but not when syncing from URL
+   */
+  useEffect(() => {
+    // Skip if this is from URL synchronization
+    if (isSyncingFromURL.current) {
+      isSyncingFromURL.current = false;
+      return;
+    }
+
+    // Skip initial mount to prevent double fetching
+    if (isInitialMount.current) {
+      return;
+    }
+
+    fetchProducts(debouncedFilters);
+  }, [debouncedFilters, fetchProducts]);
+
+  /**
+   * Handle filter changes
+   */
   const handleFilterChange = (key: keyof SearchParams, value: string) => {
-    setLocalFilters((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
+    setLocalFilters((prev) => ({ ...prev, [key]: value }));
   };
 
+  /**
+   * Clear all filters
+   */
   const clearFilters = () => {
     const resetFilters: SearchParams = {
       productType: "all",
-      brand: "",
       category: "",
+      brand: "",
       minPrice: "",
       maxPrice: "",
       sortBy: "newest",
       page: "1",
     };
-
     setLocalFilters(resetFilters);
-    updateFilters(resetFilters);
   };
 
-  const hasActiveFilters = Object.entries(searchParams).some(
+  const hasActiveFilters = Object.entries(localFilters).some(
     ([key, value]) =>
       value &&
       value !== "all" &&
@@ -112,9 +152,8 @@ export default function ProductsList({
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                {currentProductType !== "all"
-                  ? PRODUCT_TYPES.find((t) => t.id === currentProductType)
-                      ?.label
+                {localFilters.productType !== "all"
+                  ? PRODUCT_TYPES.find((t) => t.id === localFilters.productType)?.label
                   : "All Products"}
               </h1>
               <p className="text-gray-600 dark:text-gray-400 mt-2">
@@ -140,7 +179,7 @@ export default function ProductsList({
               <span className="text-sm text-gray-600 dark:text-gray-400">
                 Active filters:
               </span>
-              {Object.entries(searchParams).map(([key, value]) => {
+              {Object.entries(localFilters).map(([key, value]) => {
                 if (
                   !value ||
                   value === "all" ||
@@ -151,12 +190,11 @@ export default function ProductsList({
 
                 let label = value;
                 if (key === "productType") {
-                  label =
-                    PRODUCT_TYPES.find((t) => t.id === value)?.label || value;
+                  label = PRODUCT_TYPES.find((t) => t.id === value)?.label || value;
                 } else if (key === "minPrice") {
-                  label = `Min $${value}`;
+                  label = `Min Tsh${value}`;
                 } else if (key === "maxPrice") {
-                  label = `Max $${value}`;
+                  label = `Max Tsh${value}`;
                 }
 
                 return (
@@ -166,9 +204,7 @@ export default function ProductsList({
                   >
                     {label}
                     <button
-                      onClick={() =>
-                        handleFilterChange(key as keyof SearchParams, "")
-                      }
+                      onClick={() => handleFilterChange(key as keyof SearchParams, "")}
                       className="hover:text-blue-600 ml-1"
                     >
                       <X className="w-3 h-3" />
@@ -219,8 +255,7 @@ export default function ProductsList({
                         name="productType"
                         value="all"
                         checked={
-                          localFilters.productType === "all" ||
-                          !localFilters.productType
+                          localFilters.productType === "all" || !localFilters.productType
                         }
                         onChange={(e) =>
                           handleFilterChange("productType", e.target.value)
@@ -252,7 +287,6 @@ export default function ProductsList({
                 </div>
 
                 {/* Brand Filter */}
-                {/* Brand Filter */}
                 {data?.filters?.brands?.length > 0 && (
                   <div>
                     <h3 className="font-medium text-gray-900 dark:text-white mb-3">
@@ -278,7 +312,7 @@ export default function ProductsList({
                 {/* Price Range */}
                 <div>
                   <h3 className="font-medium text-gray-900 dark:text-white mb-3">
-                    Price Range ($)
+                    Price Range (Tsh)
                   </h3>
                   <div className="grid grid-cols-2 gap-2">
                     <input
@@ -331,7 +365,7 @@ export default function ProductsList({
               </div>
             </div>
 
-            {/* Loading State */}
+            {/* Loading Overlay */}
             {loading && (
               <div className="absolute inset-0 bg-white dark:bg-gray-900 bg-opacity-50 flex items-center justify-center z-10">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -358,62 +392,6 @@ export default function ProductsList({
                 </div>
               )}
             </div>
-
-            {/* Pagination */}
-            {data.pagination.totalPages > 1 && (
-              <div className="flex justify-center mt-12">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <button
-                    disabled={!data.pagination.hasPrev || loading}
-                    onClick={() =>
-                      handleFilterChange(
-                        "page",
-                        (data.pagination.page - 1).toString()
-                      )
-                    }
-                    className="px-4 py-2 rounded-md bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-700"
-                  >
-                    Previous
-                  </button>
-
-                  {Array.from(
-                    { length: Math.min(5, data.pagination.totalPages) },
-                    (_, i) => {
-                      const pageNum = i + 1;
-                      return (
-                        <button
-                          key={pageNum}
-                          disabled={loading}
-                          onClick={() =>
-                            handleFilterChange("page", pageNum.toString())
-                          }
-                          className={`px-4 py-2 rounded-md ${
-                            data.pagination.page === pageNum
-                              ? "bg-blue-600 text-white"
-                              : "bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                          }`}
-                        >
-                          {pageNum}
-                        </button>
-                      );
-                    }
-                  )}
-
-                  <button
-                    disabled={!data.pagination.hasNext || loading}
-                    onClick={() =>
-                      handleFilterChange(
-                        "page",
-                        (data.pagination.page + 1).toString()
-                      )
-                    }
-                    className="px-4 py-2 rounded-md bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-700"
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>

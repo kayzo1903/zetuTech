@@ -1,39 +1,64 @@
+// lib/server/getProduct.ts
 import { and, eq, sql, ilike } from "drizzle-orm";
 import { dbServer } from "@/db/db-server";
 import { product, productCategory, productImage } from "@/db/schema";
-import { PRODUCT_TYPES, PRODUCT_CATEGORIES } from "@/lib/validation-schemas/product-type";
+import {
+  PRODUCT_TYPES,
+  PRODUCT_CATEGORIES,
+} from "@/lib/validation-schemas/product-type";
 
-export async function getProducts(searchParams: Record<string, string>) {
-  const page = Math.max(1, parseInt(searchParams.page || "1"));
-  const limit = Math.min(100, parseInt(searchParams.limit || "12"));
+// Update the function signature
+export async function getProducts(searchParams: Record<string, string | undefined>) {
+  // Normalization handles undefined values safely
+  const normalizedParams = {
+    productType: searchParams.productType || searchParams.type || "all",
+    category: searchParams.category || searchParams.cat || "all",
+    brand: searchParams.brand || "all",
+    minPrice: searchParams.minPrice || "",
+    maxPrice: searchParams.maxPrice || "",
+    sortBy: searchParams.sortBy || "",
+    page: searchParams.page || "1",
+    limit: searchParams.limit || "12",
+  };
+
+  const page = Math.max(1, parseInt(normalizedParams.page));
+  const limit = Math.min(100, parseInt(normalizedParams.limit));
   const offset = (page - 1) * limit;
 
   const conditions = [];
 
   // Product Type Filter
-  if (searchParams.productType && searchParams.productType !== "all") {
-    conditions.push(eq(product.productType, searchParams.productType));
+  if (normalizedParams.productType !== "all") {
+    conditions.push(
+      ilike(product.productType, `%${normalizedParams.productType}%`)
+    );
   }
 
   // Category Filter
-  if (searchParams.category && searchParams.category !== "all") {
-    conditions.push(eq(productCategory.category, searchParams.category));
+  if (normalizedParams.category !== "all") {
+    conditions.push(
+      ilike(productCategory.category, `%${normalizedParams.category}%`)
+    );
   }
 
   // Brand Filter
-  if (searchParams.brand && searchParams.brand !== "all") {
-    conditions.push(ilike(product.brand, `%${searchParams.brand}%`));
+  if (normalizedParams.brand !== "all") {
+    conditions.push(ilike(product.brand, `%${normalizedParams.brand}%`));
   }
 
   // Price Range Filter
-  if (searchParams.minPrice) {
+  if (normalizedParams.minPrice) {
     conditions.push(
-      sql`COALESCE(${product.salePrice}, ${product.originalPrice}) >= ${parseFloat(searchParams.minPrice)}`
+      sql`COALESCE(${product.salePrice}, ${
+        product.originalPrice
+      }) >= ${parseFloat(normalizedParams.minPrice)}`
     );
   }
-  if (searchParams.maxPrice) {
+  if (normalizedParams.maxPrice) {
     conditions.push(
-      sql`COALESCE(${product.salePrice}, ${product.originalPrice}) <= ${parseFloat(searchParams.maxPrice)}`
+      sql`COALESCE(${product.salePrice}, ${
+        product.originalPrice
+      }) <= ${parseFloat(normalizedParams.maxPrice)}`
     );
   }
 
@@ -78,7 +103,9 @@ export async function getProducts(searchParams: Record<string, string>) {
         warrantyPeriod: product.warrantyPeriod,
         warrantyDetails: product.warrantyDetails,
         images: sql<string[]>`ARRAY_AGG(DISTINCT ${productImage.url})`,
-        categories: sql<string[]>`ARRAY_AGG(DISTINCT ${productCategory.category})`,
+        categories: sql<
+          string[]
+        >`ARRAY_AGG(DISTINCT ${productCategory.category})`,
         createdAt: product.createdAt,
         updatedAt: product.updatedAt,
       })
@@ -106,6 +133,7 @@ export async function getProducts(searchParams: Record<string, string>) {
     const brandsResult = await dbServer
       .select({ brand: product.brand })
       .from(product)
+      .leftJoin(productCategory, eq(productCategory.productId, product.id)) // <-- FIX
       .where(conditions.length > 0 ? and(...conditions) : undefined)
       .groupBy(product.brand);
 

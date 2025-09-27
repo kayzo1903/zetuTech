@@ -1,7 +1,7 @@
 // app/products/[...slug]/page.tsx
 import { notFound } from "next/navigation";
-import ProductDetail from "@/components/productsInfo/productdetail";
 import { getProductDetails, getRelatedProducts } from "@/lib/server/get-productsDeails";
+import ProductDetail from "@/components/products/productdetail";
 
 interface PageProps {
   params: Promise<{
