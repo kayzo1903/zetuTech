@@ -1,42 +1,31 @@
-// lib/server/getProducts.ts
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, sql, ilike } from "drizzle-orm";
 import { dbServer } from "@/db/db-server";
 import { product, productCategory, productImage } from "@/db/schema";
 import { PRODUCT_TYPES, PRODUCT_CATEGORIES } from "@/lib/validation-schemas/product-type";
-import { Product } from "../types/product";
 
-export interface SearchParams {
-  productType?: string;
-  category?: string;
-  brand?: string;
-  status?: string;
-  stockStatus?: string;
-  minPrice?: string;
-  maxPrice?: string;
-  sortBy?: string;
-  page?: string;
-  limit?: string;
-}
-
-export async function getProducts(searchParams: SearchParams) {
-  
+export async function getProducts(searchParams: Record<string, string>) {
   const page = Math.max(1, parseInt(searchParams.page || "1"));
   const limit = Math.min(100, parseInt(searchParams.limit || "12"));
   const offset = (page - 1) * limit;
 
   const conditions = [];
 
-  // Product type filter
+  // Product Type Filter
   if (searchParams.productType && searchParams.productType !== "all") {
     conditions.push(eq(product.productType, searchParams.productType));
   }
 
-  // Category filter
+  // Category Filter
   if (searchParams.category && searchParams.category !== "all") {
     conditions.push(eq(productCategory.category, searchParams.category));
   }
 
-  // Price range
+  // Brand Filter
+  if (searchParams.brand && searchParams.brand !== "all") {
+    conditions.push(ilike(product.brand, `%${searchParams.brand}%`));
+  }
+
+  // Price Range Filter
   if (searchParams.minPrice) {
     conditions.push(
       sql`COALESCE(${product.salePrice}, ${product.originalPrice}) >= ${parseFloat(searchParams.minPrice)}`
@@ -48,11 +37,11 @@ export async function getProducts(searchParams: SearchParams) {
     );
   }
 
-  // Ensure only active + in-stock products
+  // Status Filters
   conditions.push(sql`${product.status} != 'Draft'`);
   conditions.push(sql`${product.stockStatus} != 'Archived'`);
 
-  // Order by
+  // Sorting
   let orderBy;
   switch (searchParams.sortBy) {
     case "price-low":
@@ -69,7 +58,7 @@ export async function getProducts(searchParams: SearchParams) {
   }
 
   try {
-    // Main query
+    // Main Product Query
     const productsQuery = dbServer
       .select({
         id: product.id,
@@ -88,10 +77,10 @@ export async function getProducts(searchParams: SearchParams) {
         hasWarranty: product.hasWarranty,
         warrantyPeriod: product.warrantyPeriod,
         warrantyDetails: product.warrantyDetails,
-        updatedAt: product.updatedAt,
         images: sql<string[]>`ARRAY_AGG(DISTINCT ${productImage.url})`,
         categories: sql<string[]>`ARRAY_AGG(DISTINCT ${productCategory.category})`,
         createdAt: product.createdAt,
+        updatedAt: product.updatedAt,
       })
       .from(product)
       .leftJoin(productImage, eq(productImage.productId, product.id))
@@ -104,7 +93,7 @@ export async function getProducts(searchParams: SearchParams) {
 
     const products = await productsQuery;
 
-    // Total count
+    // Total Count
     const countResult = await dbServer
       .select({ count: sql<number>`COUNT(DISTINCT ${product.id})` })
       .from(product)
@@ -113,27 +102,23 @@ export async function getProducts(searchParams: SearchParams) {
 
     const totalCount = Number(countResult[0]?.count || 0);
 
-    // Available brands
+    // Available Brands
     const brandsResult = await dbServer
       .select({ brand: product.brand })
       .from(product)
       .where(conditions.length > 0 ? and(...conditions) : undefined)
       .groupBy(product.brand);
 
-    const brands = brandsResult.map(r => r.brand).filter(Boolean) as string[];
+    const brands = brandsResult.map((r) => r.brand).filter(Boolean) as string[];
 
-        // ✅ Convert prices from string to number
-    const convertedProducts: Product[] = products.map(product => ({
-      ...product,
-      originalPrice: Number(product.originalPrice), // Convert string to number
-      salePrice: product.salePrice ? Number(product.salePrice) : null, // Convert string to number or null
-      createdAt: product.createdAt.toISOString(), // Convert Date to string
-      updatedAt: product.updatedAt?.toISOString(), // Convert Date to string
-      // Ensure other fields match your Product type
-    }));
-    
     return {
-      products: convertedProducts,
+      products: products.map((p) => ({
+        ...p,
+        originalPrice: Number(p.originalPrice),
+        salePrice: p.salePrice ? Number(p.salePrice) : null,
+        createdAt: p.createdAt.toISOString(),
+        updatedAt: p.updatedAt?.toISOString(),
+      })),
       filters: {
         brands,
         productTypes: PRODUCT_TYPES,
@@ -148,7 +133,6 @@ export async function getProducts(searchParams: SearchParams) {
         hasPrev: page > 1,
       },
     };
-
   } catch (error) {
     console.error("❌ getProducts error:", error);
     return {

@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import {  X, Filter } from "lucide-react";
+import { X, Filter } from "lucide-react";
 import { ProductsListProps, SearchParams } from "@/lib/types/product";
 import { PRODUCT_TYPES } from "@/lib/validation-schemas/product-type";
 import ProductCard from "../cards/productlistCard";
@@ -28,48 +28,53 @@ export default function ProductsList({
     { value: "name", label: "Name: A to Z" },
   ];
 
+  const updateFilters = useCallback(
+    async (newParams: Partial<SearchParams>) => {
+      setLoading(true);
 
- const updateFilters = useCallback(async (newParams: Partial<SearchParams>) => {
-  setLoading(true);
+      try {
+        // Clean parameters
+        const cleanedParams: Record<string, string> = {};
+        Object.entries(newParams).forEach(([key, value]) => {
+          if (value && value !== "all") {
+            cleanedParams[key] = value.toString();
+          }
+        });
 
-  try {
-    // Clean parameters
-    const cleanedParams: Record<string, string> = {};
-    Object.entries(newParams).forEach(([key, value]) => {
-      if (value && value !== "all") {
-        cleanedParams[key] = value.toString();
+        // Always reset to page 1 when filters change (except for page changes)
+        if (
+          !newParams.page &&
+          Object.keys(newParams).some((k) => k !== "page")
+        ) {
+          cleanedParams.page = "1";
+        }
+
+        const queryString = new URLSearchParams(cleanedParams).toString();
+
+        const res = await fetch(`/api/products?${queryString}`);
+
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+
+        const newData = await res.json();
+        setData(newData);
+
+        // Update URL without page reload
+        window.history.replaceState({}, "", `/products?${queryString}`);
+      } catch (err) {
+        console.error("Error updating filters:", err);
+      } finally {
+        setLoading(false);
       }
-    });
+    },
+    []
+  ); // Empty dependency array since we don't use any external variables
 
-    // Always reset to page 1 when filters change (except for page changes)
-    if (!newParams.page && Object.keys(newParams).some(k => k !== 'page')) {
-      cleanedParams.page = "1";
-    }
-
-    const queryString = new URLSearchParams(cleanedParams).toString();
-    
-    const res = await fetch(`/api/products?${queryString}`);
-    
-    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-    
-    const newData = await res.json();
-    setData(newData);
-
-    // Update URL without page reload
-    window.history.replaceState({}, "", `/products?${queryString}`);
-  } catch (err) {
-    console.error("Error updating filters:", err);
-  } finally {
-    setLoading(false);
-  }
-}, []); // Empty dependency array since we don't use any external variables
-
-useEffect(() => {
-  updateFilters(debouncedFilters);
-}, [debouncedFilters, updateFilters]); // Now properly included
+  useEffect(() => {
+    updateFilters(debouncedFilters);
+  }, [debouncedFilters, updateFilters]); // Now properly included
 
   const handleFilterChange = (key: keyof SearchParams, value: string) => {
-    setLocalFilters(prev => ({
+    setLocalFilters((prev) => ({
       ...prev,
       [key]: value,
     }));
@@ -85,18 +90,18 @@ useEffect(() => {
       sortBy: "newest",
       page: "1",
     };
-    
+
     setLocalFilters(resetFilters);
     updateFilters(resetFilters);
   };
 
   const hasActiveFilters = Object.entries(searchParams).some(
-    ([key, value]) => 
-      value && 
-      value !== "all" && 
-      value !== "newest" && 
+    ([key, value]) =>
+      value &&
+      value !== "all" &&
+      value !== "newest" &&
       value !== "1" &&
-      !['page', 'limit'].includes(key)
+      !["page", "limit"].includes(key)
   );
 
   return (
@@ -108,14 +113,15 @@ useEffect(() => {
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                 {currentProductType !== "all"
-                  ? PRODUCT_TYPES.find((t) => t.id === currentProductType)?.label
+                  ? PRODUCT_TYPES.find((t) => t.id === currentProductType)
+                      ?.label
                   : "All Products"}
               </h1>
               <p className="text-gray-600 dark:text-gray-400 mt-2">
                 {data.pagination.totalCount.toLocaleString()} products found
               </p>
             </div>
-            
+
             <button
               onClick={() => setShowFilters(!showFilters)}
               className="lg:hidden flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm"
@@ -135,11 +141,18 @@ useEffect(() => {
                 Active filters:
               </span>
               {Object.entries(searchParams).map(([key, value]) => {
-                if (!value || value === "all" || value === "newest" || value === "1") return null;
+                if (
+                  !value ||
+                  value === "all" ||
+                  value === "newest" ||
+                  value === "1"
+                )
+                  return null;
 
                 let label = value;
                 if (key === "productType") {
-                  label = PRODUCT_TYPES.find((t) => t.id === value)?.label || value;
+                  label =
+                    PRODUCT_TYPES.find((t) => t.id === value)?.label || value;
                 } else if (key === "minPrice") {
                   label = `Min $${value}`;
                 } else if (key === "maxPrice") {
@@ -153,7 +166,9 @@ useEffect(() => {
                   >
                     {label}
                     <button
-                      onClick={() => handleFilterChange(key as keyof SearchParams, "")}
+                      onClick={() =>
+                        handleFilterChange(key as keyof SearchParams, "")
+                      }
                       className="hover:text-blue-600 ml-1"
                     >
                       <X className="w-3 h-3" />
@@ -174,9 +189,11 @@ useEffect(() => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Filters Sidebar */}
           <div className="lg:col-span-1">
-            <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 sticky top-4 ${
-              showFilters ? 'block' : 'hidden lg:block'
-            }`}>
+            <div
+              className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 sticky top-4 ${
+                showFilters ? "block" : "hidden lg:block"
+              }`}
+            >
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                   Filters
@@ -201,8 +218,13 @@ useEffect(() => {
                         type="radio"
                         name="productType"
                         value="all"
-                        checked={localFilters.productType === "all" || !localFilters.productType}
-                        onChange={(e) => handleFilterChange("productType", e.target.value)}
+                        checked={
+                          localFilters.productType === "all" ||
+                          !localFilters.productType
+                        }
+                        onChange={(e) =>
+                          handleFilterChange("productType", e.target.value)
+                        }
                         className="text-blue-600 focus:ring-blue-500"
                       />
                       <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
@@ -216,7 +238,9 @@ useEffect(() => {
                           name="productType"
                           value={type.id}
                           checked={localFilters.productType === type.id}
-                          onChange={(e) => handleFilterChange("productType", e.target.value)}
+                          onChange={(e) =>
+                            handleFilterChange("productType", e.target.value)
+                          }
                           className="text-blue-600 focus:ring-blue-500"
                         />
                         <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
@@ -228,14 +252,17 @@ useEffect(() => {
                 </div>
 
                 {/* Brand Filter */}
-                {data.filters.brands.length > 0 && (
+                {/* Brand Filter */}
+                {data?.filters?.brands?.length > 0 && (
                   <div>
                     <h3 className="font-medium text-gray-900 dark:text-white mb-3">
                       Brand
                     </h3>
                     <select
                       value={localFilters.brand || "all"}
-                      onChange={(e) => handleFilterChange("brand", e.target.value)}
+                      onChange={(e) =>
+                        handleFilterChange("brand", e.target.value)
+                      }
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-sm focus:ring-blue-500 focus:border-blue-500"
                     >
                       <option value="all">All Brands</option>
@@ -258,7 +285,9 @@ useEffect(() => {
                       type="number"
                       placeholder="Min"
                       value={localFilters.minPrice || ""}
-                      onChange={(e) => handleFilterChange("minPrice", e.target.value)}
+                      onChange={(e) =>
+                        handleFilterChange("minPrice", e.target.value)
+                      }
                       min="0"
                       className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
                     />
@@ -266,7 +295,9 @@ useEffect(() => {
                       type="number"
                       placeholder="Max"
                       value={localFilters.maxPrice || ""}
-                      onChange={(e) => handleFilterChange("maxPrice", e.target.value)}
+                      onChange={(e) =>
+                        handleFilterChange("maxPrice", e.target.value)
+                      }
                       min="0"
                       className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
                     />
@@ -281,7 +312,8 @@ useEffect(() => {
             {/* Controls */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
               <div className="text-sm text-gray-600 dark:text-gray-400">
-                Showing {data.products.length} of {data.pagination.totalCount.toLocaleString()} products
+                Showing {data.products.length} of{" "}
+                {data.pagination.totalCount.toLocaleString()} products
               </div>
 
               <div className="flex items-center gap-4">
@@ -333,33 +365,48 @@ useEffect(() => {
                 <div className="flex items-center gap-2 flex-wrap">
                   <button
                     disabled={!data.pagination.hasPrev || loading}
-                    onClick={() => handleFilterChange("page", (data.pagination.page - 1).toString())}
+                    onClick={() =>
+                      handleFilterChange(
+                        "page",
+                        (data.pagination.page - 1).toString()
+                      )
+                    }
                     className="px-4 py-2 rounded-md bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-700"
                   >
                     Previous
                   </button>
 
-                  {Array.from({ length: Math.min(5, data.pagination.totalPages) }, (_, i) => {
-                    const pageNum = i + 1;
-                    return (
-                      <button
-                        key={pageNum}
-                        disabled={loading}
-                        onClick={() => handleFilterChange("page", pageNum.toString())}
-                        className={`px-4 py-2 rounded-md ${
-                          data.pagination.page === pageNum
-                            ? "bg-blue-600 text-white"
-                            : "bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
+                  {Array.from(
+                    { length: Math.min(5, data.pagination.totalPages) },
+                    (_, i) => {
+                      const pageNum = i + 1;
+                      return (
+                        <button
+                          key={pageNum}
+                          disabled={loading}
+                          onClick={() =>
+                            handleFilterChange("page", pageNum.toString())
+                          }
+                          className={`px-4 py-2 rounded-md ${
+                            data.pagination.page === pageNum
+                              ? "bg-blue-600 text-white"
+                              : "bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    }
+                  )}
 
                   <button
                     disabled={!data.pagination.hasNext || loading}
-                    onClick={() => handleFilterChange("page", (data.pagination.page + 1).toString())}
+                    onClick={() =>
+                      handleFilterChange(
+                        "page",
+                        (data.pagination.page + 1).toString()
+                      )
+                    }
                     className="px-4 py-2 rounded-md bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-700"
                   >
                     Next
