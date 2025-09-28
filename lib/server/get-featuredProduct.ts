@@ -1,7 +1,7 @@
 import { dbServer } from "@/db/db-server";
 import { featuredProduct } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { getProductDetails } from "./get-productsDeails";
+import { getProductDetails } from "../../app/products/libs/servers/get-productsDeails";
 import { Product } from "../types/product";
 
 export async function getFeaturedProduct(): Promise<Product | null> {

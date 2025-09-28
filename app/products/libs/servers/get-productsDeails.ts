@@ -3,7 +3,7 @@ import { dbServer } from "@/db/db-server";
 import { product, productCategory, productImage, productReview } from "@/db/schema";
 import { safeJsonParse } from "@/utils/parser";
 import { sql } from "drizzle-orm";
-import { Product } from "../types/product";
+import { Product } from "../../../../lib/types/product";
 
 export async function getProductDetails(productId: string): Promise<Product | null> {
   const result = await dbServer

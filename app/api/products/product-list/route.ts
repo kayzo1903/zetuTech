@@ -1,5 +1,5 @@
 // app/api/products/product-list/route.ts
-import { getProducts } from "@/lib/server/getProduct";
+import { getProducts } from "@/app/products/libs/servers/getProduct";
 import { NextRequest } from "next/server";
 
 export async function GET(request: NextRequest) {
