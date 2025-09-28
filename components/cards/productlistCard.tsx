@@ -15,6 +15,17 @@ interface ProductCardProps {
   index?: number;
 }
 
+// Utility function to format numbers with commas for readability
+const formatNumber = (num: number): string => {
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+};
+
+// Utility function to format currency with proper commas
+const formatCurrency = (amount: number, currency: string = "TZS"): string => {
+  const formattedNumber = formatNumber(amount);
+  return `${currency} ${formattedNumber}`;
+};
+
 export default function ProductCard({ product, index = 0 }: ProductCardProps) {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -41,7 +52,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
         return { text: "In Stock", class: "text-green-600 bg-green-50" };
       case "Low Stock":
         return {
-          text: `Only ${product.stock} left`,
+          text: `Only ${formatNumber(product.stock)} left`,
           class: "text-amber-600 bg-amber-50",
         };
       case "Out of Stock":
@@ -151,7 +162,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
               ))}
               {product.categories.length > 2 && (
                 <span className="text-xs text-gray-400">
-                  +{product.categories.length - 2}
+                  +{formatNumber(product.categories.length - 2)}
                 </span>
               )}
             </div>
@@ -168,21 +179,13 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
 
           {/* Pricing */}
           <div className="mt-auto">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-lg font-bold text-gray-900 dark:text-white">
-                {displayPrice.toLocaleString("en-TZ", {
-                  style: "currency",
-                  currency: "TZS",
-                  maximumFractionDigits: 0,
-                })}
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-2 mb-2">
+              <span className="text-sm md:text-lg font-bold text-gray-900 dark:text-white">
+                {formatCurrency(displayPrice)}
               </span>
               {product.hasDiscount && salePrice && (
                 <span className="text-sm text-gray-500 dark:text-gray-400 line-through">
-                  {originalPrice.toLocaleString("en-TZ", {
-                    style: "currency",
-                    currency: "TZS",
-                    maximumFractionDigits: 0,
-                  })}
+                  {formatCurrency(originalPrice)}
                 </span>
               )}
             </div>
@@ -190,12 +193,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
             {/* Savings */}
             {product.hasDiscount && salePrice && (
               <div className="text-xs text-green-600 font-medium">
-                Save{" "}
-                {(originalPrice - salePrice).toLocaleString("en-TZ", {
-                  style: "currency",
-                  currency: "TZS",
-                  maximumFractionDigits: 0,
-                })}
+                Save {formatCurrency(originalPrice - salePrice)}
               </div>
             )}
           </div>
