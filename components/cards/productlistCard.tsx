@@ -7,18 +7,20 @@ import { motion } from "framer-motion";
 import { Heart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Product } from "@/lib/types/product";
+import {
+  checkWishlistStatus,
+  toggleWishlistItem,
+} from "@/app/wishlist/actions/wishlist";
+import { formatNumber } from "@/utils/formartCurency";
 
 interface ProductCardProps {
   product: Product;
   index?: number;
 }
 
-// Utility function to format numbers with commas for readability
-const formatNumber = (num: number): string => {
-  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-};
+
 
 // Utility function to format currency with proper commas
 const formatCurrency = (amount: number, currency: string = "TZS"): string => {
@@ -29,8 +31,20 @@ const formatCurrency = (amount: number, currency: string = "TZS"): string => {
 export default function ProductCard({ product, index = 0 }: ProductCardProps) {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const toggleWishlist = (e: React.MouseEvent) => {
+  // Check wishlist status on component mount
+  useEffect(() => {
+    async function checkStatus() {
+      const result = await checkWishlistStatus(product.id);
+      if (result.success) {
+        setIsWishlisted(result.isInWishlist);
+      }
+    }
+    checkStatus();
+  }, [product.id]);
+
+  const handleWishlistToggle = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsWishlisted(!isWishlisted);
@@ -109,20 +123,23 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
             )}
           </div>
 
-          {/* Top Right Actions - FIXED FOR MOBILE */}
+          {/* Top Right Actions - Wishlist Button */}
           <div className="absolute top-2 right-2 flex flex-col gap-1">
             <Button
               variant="ghost"
               size="icon"
+              disabled={isLoading}
               className={`h-8 w-8 rounded-full bg-white/80 dark:bg-gray-800/80 shadow-md transition-all ${
                 isWishlisted
                   ? "bg-red-500 text-white opacity-100"
-                  : "opacity-100 md:opacity-0 md:group-hover:opacity-100" // ✅ Always visible on mobile
-              }`}
-              onClick={toggleWishlist}
+                  : "opacity-100 md:opacity-0 md:group-hover:opacity-100"
+              } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+              onClick={handleWishlistToggle}
             >
               <Heart
-                className={`w-4 h-4 ${isWishlisted ? "fill-current" : ""}`}
+                className={`w-4 h-4 ${isWishlisted ? "fill-current" : ""} ${
+                  isLoading ? "animate-pulse" : ""
+                }`}
               />
             </Button>
           </div>

@@ -1,7 +1,7 @@
-// components/wishlist/wishlist.tsx
+// app/components/wishlist.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -10,120 +10,59 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Heart, ShoppingCart, Trash2, Share2 } from "lucide-react";
 import { Product } from "@/lib/types/product";
-
-// Mock data matching your Product type
-const WISHLIST_ITEMS: Product[] = [
-  {
-    id: "1",
-    name: 'MacBook Pro 16"',
-    description: 'M2 Pro chip, 16GB RAM, 1TB SSD - Experience unparalleled performance with the latest MacBook Pro.',
-    shortDescription: "M2 Pro chip, 16GB RAM, 1TB SSD",
-    brand: "Apple",
-    productType: "laptop",
-    originalPrice: 2799000,
-    salePrice: 2499000,
-    hasDiscount: true,
-    stock: 15,
-    stockStatus: "In Stock",
-    status: "active",
-    slug: "macbook-pro-16",
-    categories: ["Laptops", "Apple", "Premium"],
-    images: ["/images/categories/laptops.jpg"],
-    averageRating: 4.8,
-    reviewCount: 124,
-    createdAt: "2024-01-15",
-    warrantyPeriod: 12,
-    warrantyDetails: "1 year limited warranty",
-    sku: "MBP16-M2-2024",
-    hasWarranty: true
-  },
-  {
-    id: "2",
-    name: "Sony WH-1000XM5",
-    description: "Wireless Noise Canceling Headphones with exceptional sound quality.",
-    shortDescription: "Wireless Noise Canceling Headphones",
-    brand: "Sony",
-    productType: "headphones",
-    originalPrice: 449000,
-    salePrice: 399000,
-    hasDiscount: true,
-    stock: 8,
-    stockStatus: "Low Stock",
-    status: "active",
-    slug: "sony-wh-1000xm5",
-    categories: ["Audio", "Headphones", "Wireless"],
-    images: ["/images/categories/laptops.jpg"],
-    averageRating: 4.6,
-    reviewCount: 89,
-    createdAt: "2024-02-20",
-    warrantyPeriod: 24,
-    warrantyDetails: "2 years manufacturer warranty",
-    sku: "SONY-XM5-2024",
-    hasWarranty: true
-  },
-  {
-    id: "3",
-    name: "iPhone 15 Pro",
-    description: "Titanium design, 256GB, Natural Titanium - The ultimate iPhone experience.",
-    shortDescription: "Titanium, 256GB, Natural Titanium",
-    brand: "Apple",
-    productType: "smartphone",
-    originalPrice: 1299000,
-    salePrice: 1199000,
-    hasDiscount: true,
-    stock: 0,
-    stockStatus: "Out of Stock",
-    status: "active",
-    slug: "iphone-15-pro",
-    categories: ["Smartphones", "Apple", "Flagship"],
-    images: ["/images/categories/laptops.jpg"],
-    averageRating: 4.9,
-    reviewCount: 256,
-    createdAt: "2024-03-10",
-    warrantyPeriod: 12,
-    warrantyDetails: "1 year Apple warranty",
-    sku: "IP15P-256-TI",
-    hasWarranty: true
-  },
-  {
-    id: "4",
-    name: "Samsung Odyssey G9",
-    description: '49" Curved Gaming Monitor with stunning visuals and immersive experience.',
-    shortDescription: '49" Curved Gaming Monitor',
-    brand: "Samsung",
-    productType: "monitor",
-    originalPrice: 1499000,
-    salePrice: 1299000,
-    hasDiscount: true,
-    stock: 25,
-    stockStatus: "In Stock",
-    status: "active",
-    slug: "samsung-odyssey-g9",
-    categories: ["Monitors", "Gaming", "Curved"],
-    images: ["/images/categories/laptops.jpg"],
-    averageRating: 4.7,
-    reviewCount: 67,
-    createdAt: "2024-01-30",
-    warrantyPeriod: 36,
-    warrantyDetails: "3 years panel warranty",
-    sku: "SAM-ODY-G9-49",
-    hasWarranty: true
-  }
-];
+import { getWishlist, removeWishlistItem } from "@/app/wishlist/actions/wishlist";
+import { toast } from "sonner";
 
 export default function Wishlist() {
-  const [items, setItems] = useState<Product[]>(WISHLIST_ITEMS);
+  const [items, setItems] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [sortBy, setSortBy] = useState("date-added");
 
-  const removeFromWishlist = (id: string) => {
-    setItems(items.filter((item) => item.id !== id));
+
+  // Load wishlist items on component mount
+  useEffect(() => {
+    loadWishlist();
+  }, []);
+
+  const loadWishlist = async () => {
+    try {
+      setIsLoading(true);
+      const result = await getWishlist();
+      
+      if (result.success && result.data) {
+        setItems(result.data.items);
+      } else {
+        toast.error(result.error || "Failed to load wishlist");
+      }
+    } catch (error) {
+      console.error("Error loading wishlist:", error);
+      toast.error("Failed to load wishlist");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRemoveFromWishlist = async (id: string) => {
+    try {
+      const result = await removeWishlistItem(id);
+      
+      if (result.success) {
+        setItems(items.filter((item) => item.id !== id));
+        toast.success("Item removed from wishlist");
+      } else {
+        toast.error(result.error || "Failed to remove item");
+      }
+    } catch (error) {
+      console.error("Error removing item from wishlist:", error);
+      toast.error("Failed to remove item from wishlist");
+    }
   };
 
   const moveToCart = (id: string) => {
     // In a real app, this would move the item to cart
     console.log("Moving item to cart:", id);
     // For demo, just remove from wishlist
-    removeFromWishlist(id);
+    handleRemoveFromWishlist(id);
   };
 
   const addAllToCart = () => {
@@ -131,9 +70,25 @@ export default function Wishlist() {
     inStockItems.forEach((item) => moveToCart(item.id));
   };
 
-  const totalItems = items.length;
-  const totalValue = items.reduce((sum, item) => sum + (item.salePrice || item.originalPrice), 0);
-  const inStockCount = items.filter((item) => item.stockStatus === "In Stock" || item.stockStatus === "Low Stock").length;
+  // Apply sorting
+  const sortedItems = [...items].sort((a, b) => {
+    switch (sortBy) {
+      case "price-low":
+        return (a.salePrice || a.originalPrice) - (b.salePrice || b.originalPrice);
+      case "price-high":
+        return (b.salePrice || b.originalPrice) - (a.salePrice || a.originalPrice);
+      case "name":
+        return a.name.localeCompare(b.name);
+      case "date-added":
+      default:
+        // Using createdAt for sorting since we don't have addedAt in Product type
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    }
+  });
+
+  const totalItems = sortedItems.length;
+  const totalValue = sortedItems.reduce((sum, item) => sum + (item.salePrice || item.originalPrice), 0);
+  const inStockCount = sortedItems.filter((item) => item.stockStatus === "In Stock" || item.stockStatus === "Low Stock").length;
 
   // Stock status styling (matching your product card)
   const getStockStatus = (product: Product) => {
@@ -154,7 +109,22 @@ export default function Wishlist() {
     }
   };
 
-  if (items.length === 0) {
+  if (isLoading) {
+    return (
+      <div className="w-full max-w-7xl mx-auto px-4 py-8">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="bg-gray-200 dark:bg-gray-700 rounded-xl h-80"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (sortedItems.length === 0) {
     return (
       <div className="w-full max-w-7xl mx-auto px-4 py-8">
         <div className="text-center py-16">
@@ -212,8 +182,8 @@ export default function Wishlist() {
       </div>
 
       {/* Wishlist Items Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3  lg:grid-cols-4 gap-6">
-        {items.map((item, index) => {
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {sortedItems.map((item, index) => {
           const stockInfo = getStockStatus(item);
           const discountPercentage = item.hasDiscount && item.salePrice
             ? Math.round(((item.originalPrice - item.salePrice) / item.originalPrice) * 100)
@@ -361,7 +331,7 @@ export default function Wishlist() {
                       className="w-full border-gray-300 dark:border-slate-700 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/20"
                       onClick={(e) => {
                         e.preventDefault();
-                        removeFromWishlist(item.id);
+                        handleRemoveFromWishlist(item.id);
                       }}
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
