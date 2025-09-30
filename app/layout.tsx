@@ -6,7 +6,8 @@ import Footer from "@/components/footer";
 import Header from "@/components/header";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import Providers from "@/lib/tanStackprovider";
+import TanStackProviders from "@/lib/tanStackprovider";
+import WishlistProvider from "./wishlist/provider/wishlistProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -61,7 +62,9 @@ export default async function RootLayout({
             }
             isAdmin={isAdmin}
           />
-          <Providers>{children}</Providers>
+          <WishlistProvider>
+            <TanStackProviders>{children}</TanStackProviders>
+          </WishlistProvider>
           <Footer />
         </ThemeProvider>
       </body>

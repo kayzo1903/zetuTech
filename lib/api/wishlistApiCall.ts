@@ -1,4 +1,4 @@
-// lib/api/wishlist.ts
+// lib/api/wishlistApiCall.ts
 const API_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
 async function apiCall(endpoint: string, options: RequestInit = {}) {
@@ -43,7 +43,3 @@ export async function removeWishlistItem(productId: string) {
   });
 }
 
-// Check if product is in user's wishlist
-export async function checkWishlistStatus(productId: string) {
-  return apiCall(`/api/wishlist/items?productId=${productId}`);
-}

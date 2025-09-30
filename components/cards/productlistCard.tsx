@@ -6,10 +6,10 @@ import { motion } from "framer-motion";
 import { Heart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Product } from "@/lib/types/product";
 import { formatNumber } from "@/utils/formartCurency";
-import { checkWishlistStatus, toggleWishlistItem } from "@/lib/api/wishlistApiCall";
+import { useWishlistStore } from "@/store/wishlist-store";
 
 
 interface ProductCardProps {
@@ -17,52 +17,24 @@ interface ProductCardProps {
   index?: number;
 }
 
-
 export default function ProductCard({ product, index = 0 }: ProductCardProps) {
-  const [isWishlisted, setIsWishlisted] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  // ✅ 1. Check if product is in wishlist on mount
-  useEffect(() => {
-    async function checkStatus() {
-      try {
-        const result = await checkWishlistStatus(product.id);
-        if (result.success) {
-          setIsWishlisted(result.isInWishlist);
-        }
-      } catch (error) {
-        console.error("Error checking wishlist status:", error);
-      }
-    }
-    checkStatus();
-  }, [product.id]);
+  // ✅ Get from store (instead of API call)
+  const { isInWishlist, toggleItem } = useWishlistStore();
+  const isWishlisted = isInWishlist(product.id);
 
-  // ✅ 2. Handle wishlist toggle
   const handleWishlistToggle = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    if (isLoading) return; // prevent double clicks
-    setIsLoading(true);
+    if (loading) return;
+    setLoading(true);
 
-    try {
-      const result = await toggleWishlistItem(product.id);
+    await toggleItem(product.id);
 
-      if (result.success) {
-        // Optimistically update UI
-        setIsWishlisted(result.action === "added");
-
-        // Optional: show success message (toast)
-        console.log(result.message);
-      } else {
-        console.error(result.error || "Failed to update wishlist");
-      }
-    } catch (error) {
-      console.error("Error toggling wishlist:", error);
-    } finally {
-      setIsLoading(false);
-    }
+    setLoading(false);
   };
 
   // Price calculations
@@ -143,17 +115,17 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
             <Button
               variant="ghost"
               size="icon"
-              disabled={isLoading}
+              disabled={loading}
               className={`h-8 w-8 rounded-full bg-white/80 dark:bg-gray-800/80 shadow-md transition-all ${
                 isWishlisted
                   ? "bg-red-500 text-white opacity-100"
                   : "opacity-100 md:opacity-0 md:group-hover:opacity-100"
-              } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+              } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
               onClick={handleWishlistToggle}
             >
               <Heart
                 className={`w-4 h-4 ${isWishlisted ? "fill-current" : ""} ${
-                  isLoading ? "animate-pulse" : ""
+                  loading ? "animate-pulse" : ""
                 }`}
               />
             </Button>
