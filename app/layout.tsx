@@ -8,6 +8,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import TanStackProviders from "@/lib/tanStackprovider";
 import WishlistProvider from "./wishlist/provider/wishlistProvider";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -66,6 +67,7 @@ export default async function RootLayout({
             <TanStackProviders>{children}</TanStackProviders>
           </WishlistProvider>
           <Footer />
+           <Toaster position="top-center"/>
         </ThemeProvider>
       </body>
     </html>

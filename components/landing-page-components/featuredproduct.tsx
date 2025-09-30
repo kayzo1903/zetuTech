@@ -1,25 +1,32 @@
-"use client"
+"use client";
 
-import Image from "next/image"
-import Link from "next/link"
-import { motion } from "framer-motion"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import Image from "next/image";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
-  Heart,
   Zap,
   Shield,
   Clock,
   Star,
   Truck,
   RotateCcw,
-} from "lucide-react"
-import { useState } from "react"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Product } from "@/lib/types/product"
+  Share2,
+} from "lucide-react";
+import { useState } from "react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Product } from "@/lib/types/product";
+import WishlistButton from "@/app/wishlist/components/wishlist-button";
+import { toast } from "sonner";
 
 interface FeaturedProductProps {
-  featuredProduct: Product | null
+  featuredProduct: Product | null;
 }
 
 // ✅ FIXED: Format price - now accepts number
@@ -29,22 +36,31 @@ const formatPrice = (price: number) => {
     currency: "TZS",
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
-  }).format(price)
-}
+  }).format(price);
+};
 
 // ✅ FIXED: Calculate discount percentage - now works with numbers
-const calculateDiscount = (originalPrice: number, salePrice: number | null): number => {
-  if (!salePrice) return 0
-  return Math.round((1 - salePrice / originalPrice) * 100)
-}
+const calculateDiscount = (
+  originalPrice: number,
+  salePrice: number | null
+): number => {
+  if (!salePrice) return 0;
+  return Math.round((1 - salePrice / originalPrice) * 100);
+};
 
 // ✅ FIXED: Stock Status
 const getStockConfig = (stock: number) => {
-  if (stock > 10) return { label: `In stock (${stock} available)`, variant: "success" as const }
-  if (stock > 3) return { label: `Low stock (${stock} left)`, variant: "warning" as const }
-  if (stock > 0) return { label: `Only ${stock} left!`, variant: "danger" as const }
-  return { label: "Out of stock", variant: "outline" as const }
-}
+  if (stock > 10)
+    return {
+      label: `In stock (${stock} available)`,
+      variant: "success" as const,
+    };
+  if (stock > 3)
+    return { label: `Low stock (${stock} left)`, variant: "warning" as const };
+  if (stock > 0)
+    return { label: `Only ${stock} left!`, variant: "danger" as const };
+  return { label: "Out of stock", variant: "outline" as const };
+};
 
 const badgeVariants = {
   success:
@@ -55,24 +71,55 @@ const badgeVariants = {
     "bg-red-100 text-red-700 border-red-200 dark:bg-red-900 dark:text-red-100 dark:border-red-700",
   outline:
     "bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-900 dark:text-gray-100 dark:border-gray-700",
-}
+};
 
-export default function FeaturedProduct({ featuredProduct }: FeaturedProductProps) {
-  const [isLiked, setIsLiked] = useState(false)
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+export default function FeaturedProduct({
+  featuredProduct,
+}: FeaturedProductProps) {
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
-  if (!featuredProduct) return null
+  if (!featuredProduct) return null;
+
+  // ✅ FIXED: Share function with proper parameters and URL construction
+  const shareProduct = () => {
+    // Construct the product URL using slug and id
+    const productUrl = `${window.location.origin}/products/${featuredProduct.slug}/${featuredProduct.id}`;
+    
+    const shareData = {
+      title: featuredProduct.name,
+      text: featuredProduct.description || "Check out this amazing product!",
+      url: productUrl,
+    };
+
+    // Check if Web Share API is supported
+    if (navigator.share) {
+      navigator.share(shareData).catch((error) => {
+        console.error("Sharing failed:", error);
+        // Fallback: copy to clipboard
+        navigator.clipboard.writeText(productUrl);
+        toast.success("Product link copied to clipboard!");
+      });
+    } else {
+      // Fallback for browsers that don't support Web Share API
+      navigator.clipboard.writeText(productUrl);
+      toast.success("Product link copied to clipboard!");
+    }
+  };
 
   // ✅ FIXED: Pass numbers instead of strings
-  const discountPercent = calculateDiscount(featuredProduct.originalPrice, featuredProduct.salePrice)
-  const stockConfig = getStockConfig(featuredProduct.stock)
-  const currentPrice = featuredProduct.salePrice || featuredProduct.originalPrice
+  const discountPercent = calculateDiscount(
+    featuredProduct.originalPrice,
+    featuredProduct.salePrice
+  );
+  const stockConfig = getStockConfig(featuredProduct.stock);
+  const currentPrice =
+    featuredProduct.salePrice || featuredProduct.originalPrice;
 
   const features = [
     { text: "30-day money-back guarantee", icon: RotateCcw },
     { text: "Free shipping", icon: Truck },
     { text: "1-year warranty", icon: Shield },
-  ]
+  ];
 
   return (
     <section className="bg-white dark:bg-gray-900 py-6 lg:py-12">
@@ -93,7 +140,10 @@ export default function FeaturedProduct({ featuredProduct }: FeaturedProductProp
           <div className="flex flex-col">
             <div className="relative w-full h-80 sm:h-96 rounded-xl overflow-hidden">
               <Image
-                src={featuredProduct.images[selectedImageIndex] || "/placeholder-product.png"}
+                src={
+                  featuredProduct.images[selectedImageIndex] ||
+                  "/placeholder-product.png"
+                }
                 alt={featuredProduct.name}
                 fill
                 priority
@@ -101,13 +151,18 @@ export default function FeaturedProduct({ featuredProduct }: FeaturedProductProp
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
 
-              {/* Wishlist */}
-              <button
-                className="absolute top-4 right-4 p-2 rounded-full bg-white/80 dark:bg-gray-800/80 border shadow-md"
-                onClick={() => setIsLiked(!isLiked)}
-              >
-                <Heart className={`w-5 h-5 ${isLiked ? "text-red-500 fill-red-500" : "text-gray-600"}`} />
-              </button>
+              {/* Wishlist & Share Buttons */}
+              <div className="absolute top-4 right-4 flex flex-nowrap gap-2">
+                <WishlistButton productId={featuredProduct.id} />
+                {/* ✅ FIXED: Share Button */}
+                <button
+                  onClick={shareProduct}
+                  className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                  aria-label="Share product"
+                >
+                  <Share2 className="h-5 w-5" />
+                </button>
+              </div>
 
               {/* Discount Badge */}
               {discountPercent > 0 && (
@@ -125,7 +180,9 @@ export default function FeaturedProduct({ featuredProduct }: FeaturedProductProp
                     key={index}
                     onClick={() => setSelectedImageIndex(index)}
                     className={`relative w-16 h-16 rounded-lg overflow-hidden border-2 flex-shrink-0 transition-all duration-200 ${
-                      selectedImageIndex === index ? "border-blue-500" : "border-gray-200"
+                      selectedImageIndex === index
+                        ? "border-blue-500"
+                        : "border-gray-200"
                     }`}
                   >
                     <Image
@@ -155,13 +212,16 @@ export default function FeaturedProduct({ featuredProduct }: FeaturedProductProp
                     <Star
                       key={i}
                       className={`w-4 h-4 ${
-                        i < Math.floor(featuredProduct.averageRating || 0) ? "fill-current" : "opacity-30"
+                        i < Math.floor(featuredProduct.averageRating || 0)
+                          ? "fill-current"
+                          : "opacity-30"
                       }`}
                     />
                   ))}
                 </div>
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  {(featuredProduct.averageRating || 0).toFixed(1)} ({featuredProduct.reviewCount || 0} reviews)
+                  {(featuredProduct.averageRating || 0).toFixed(1)} (
+                  {featuredProduct.reviewCount || 0} reviews)
                 </span>
               </div>
 
@@ -180,7 +240,9 @@ export default function FeaturedProduct({ featuredProduct }: FeaturedProductProp
                   )}
                 </div>
                 <div className="mt-2">
-                  <Badge className={`text-sm ${badgeVariants[stockConfig.variant]}`}>
+                  <Badge
+                    className={`text-sm ${badgeVariants[stockConfig.variant]}`}
+                  >
                     <Clock className="w-3 h-3 mr-1" /> {stockConfig.label}
                   </Badge>
                 </div>
@@ -188,13 +250,19 @@ export default function FeaturedProduct({ featuredProduct }: FeaturedProductProp
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-3 mb-6">
-                <Button asChild size="lg" className="flex-1 bg-blue-600 hover:bg-blue-700">
+                <Button
+                  asChild
+                  size="lg"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                >
                   <Link href={`/checkout?product=${featuredProduct.id}`}>
                     {featuredProduct.stock === 0 ? "Out of Stock" : "Buy Now"}
                   </Link>
                 </Button>
                 <Button asChild size="lg" variant="outline" className="flex-1">
-                  <Link href={`/products/${featuredProduct.slug}/${featuredProduct.id}`}>
+                  <Link
+                    href={`/products/${featuredProduct.slug}/${featuredProduct.id}`}
+                  >
                     View Details
                   </Link>
                 </Button>
@@ -206,7 +274,8 @@ export default function FeaturedProduct({ featuredProduct }: FeaturedProductProp
                   <AccordionTrigger>Product Description</AccordionTrigger>
                   <AccordionContent>
                     <p className="text-sm text-gray-700 dark:text-gray-300">
-                      {featuredProduct.description || "No description provided."}
+                      {featuredProduct.description ||
+                        "No description provided."}
                     </p>
                   </AccordionContent>
                 </AccordionItem>
@@ -239,5 +308,5 @@ export default function FeaturedProduct({ featuredProduct }: FeaturedProductProp
         </div>
       </div>
     </section>
-  )
+  );
 }

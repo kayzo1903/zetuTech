@@ -10,7 +10,9 @@ import { useState } from "react";
 import { Product } from "@/lib/types/product";
 import { formatNumber } from "@/utils/formartCurency";
 import { useWishlistStore } from "@/store/wishlist-store";
-
+import { authClient } from "@/lib/auth-client";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface ProductCardProps {
   product: Product;
@@ -25,17 +27,33 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
   const { isInWishlist, toggleItem } = useWishlistStore();
   const isWishlisted = isInWishlist(product.id);
 
-  const handleWishlistToggle = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const router = useRouter();
+  const { data: session } = authClient.useSession();
 
-    if (loading) return;
-    setLoading(true);
+ const handleWishlistToggle = async (e: React.MouseEvent) => {
+  e.preventDefault();
+  e.stopPropagation();
 
-    await toggleItem(product.id);
+  if (!session) {
+    toast.error("You must be logged in to manage your wishlist.", {
+      description: "Click below to sign in.",
+      action: {
+        label: "Sign in",
+        onClick: () => router.push("/auth/sign-in"),
+      },
+    });
+    return;
+  }
 
-    setLoading(false);
-  };
+  if (loading) return;
+  setLoading(true);
+
+  await toggleItem(product.id);
+
+  setLoading(false);
+};
+
+
 
   // Price calculations
   const originalPrice = product.originalPrice;

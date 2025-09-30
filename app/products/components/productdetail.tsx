@@ -10,12 +10,13 @@ import {
   Truck,
   Shield,
   ArrowLeft,
-  Heart,
   Share2,
   ChevronRight,
   ShoppingCart,
 } from "lucide-react";
 import { Product } from "@/lib/types/product";
+import WishlistButton from "@/app/wishlist/components/wishlist-button";
+import { toast } from "sonner";
 
 interface ProductDetailProps {
   productData: Product;
@@ -29,7 +30,7 @@ export default function ProductDetail({
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
+
 
   const handleAddToCart = () => {
     setAddedToCart(true);
@@ -37,10 +38,6 @@ export default function ProductDetail({
     // Add your cart logic here
   };
 
-  const toggleFavorite = () => {
-    setIsFavorite(!isFavorite);
-    // Add your favorite logic here
-  };
 
   const shareProduct = () => {
     if (navigator.share) {
@@ -51,14 +48,14 @@ export default function ProductDetail({
       });
     } else {
       navigator.clipboard.writeText(window.location.href);
-      alert("Product link copied to clipboard!");
+      toast.success("Product link copied to clipboard!");
     }
   };
 
   // ✅ FIXED: Format price function - now accepts numbers
   const formatPrice = (price: number | null | undefined) => {
     if (!price && price !== 0) return "TZS 0";
-    
+
     return price.toLocaleString("en-TZ", {
       style: "currency",
       currency: "TZS",
@@ -177,18 +174,7 @@ export default function ProductDetail({
               </div>
 
               <div className="flex space-x-2">
-                <button
-                  onClick={toggleFavorite}
-                  className={`p-2 rounded-full transition-colors ${
-                    isFavorite
-                      ? "bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-400"
-                      : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-                  }`}
-                >
-                  <Heart
-                    className={`h-5 w-5 ${isFavorite ? "fill-current" : ""}`}
-                  />
-                </button>
+                <WishlistButton productId={productData.id} />
                 <button
                   onClick={shareProduct}
                   className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
