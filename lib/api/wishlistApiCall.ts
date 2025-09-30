@@ -1,5 +1,5 @@
 // lib/api/wishlist.ts
-const API_BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
 async function apiCall(endpoint: string, options: RequestInit = {}) {
   try {
