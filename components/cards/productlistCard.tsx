@@ -30,30 +30,36 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
   const router = useRouter();
   const { data: session } = authClient.useSession();
 
- const handleWishlistToggle = async (e: React.MouseEvent) => {
-  e.preventDefault();
-  e.stopPropagation();
+  const handleWishlistToggle = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
 
-  if (!session) {
-    toast.error("You must be logged in to manage your wishlist.", {
-      description: "Click below to sign in.",
-      action: {
-        label: "Sign in",
-        onClick: () => router.push("/auth/sign-in"),
-      },
-    });
-    return;
-  }
+    if (!session) {
+      toast.error("Please sign in to save items.", {
+        action: {
+          label: "Sign in",
+          onClick: () => router.push("/auth/sign-in"),
+        },
+      });
+      return;
+    }
 
-  if (loading) return;
-  setLoading(true);
+    if (loading) return;
+    setLoading(true);
 
-  await toggleItem(product.id);
+    await toggleItem(product.id);
 
-  setLoading(false);
-};
-
-
+    setLoading(false);
+    toast.success(
+      isWishlisted ? "Removed from wishlist." : "Added to your wishlist!",
+      {
+        action: {
+          label: "Go to Wishlist",
+          onClick: () => router.push("/wishlist"),
+        },
+      }
+    );
+  };
 
   // Price calculations
   const originalPrice = product.originalPrice;

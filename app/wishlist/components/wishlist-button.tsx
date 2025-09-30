@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { useWishlistStore } from "@/store/wishlist-store";
+import { Button } from "@/components/ui/button";
 
 interface WishlistButtonProps {
   productId: string;
@@ -52,16 +53,22 @@ export default function WishlistButton({ productId }: WishlistButtonProps) {
   };
 
   return (
-    <button
-      onClick={handleClick}
+    <Button
+      variant="ghost"
+      size="icon"
       disabled={loading || localLoading}
-      className={`p-2 rounded-full transition-colors ${
+      className={`h-8 w-8 rounded-full bg-white/80 dark:bg-gray-800/80 shadow-md transition-all ${
         isWished
-          ? "bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-400"
-          : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-      }`}
+          ? "bg-red-500 text-white opacity-100"
+          : "opacity-100 md:opacity-0 md:group-hover:opacity-100"
+      } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+      onClick={handleClick}
     >
-      <Heart className={`h-5 w-5 ${isWished ? "fill-current" : ""}`} />
-    </button>
+      <Heart
+        className={`w-4 h-4 ${isWished ? "fill-current" : ""} ${
+          loading ? "animate-pulse" : ""
+        }`}
+      />
+    </Button>
   );
 }
