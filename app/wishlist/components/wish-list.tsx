@@ -107,9 +107,13 @@ export default function Wishlist() {
   const sortedItems = [...items].sort((a, b) => {
     switch (sortBy) {
       case "price-low":
-        return (a.salePrice || a.originalPrice) - (b.salePrice || b.originalPrice);
+        return (
+          (a.salePrice || a.originalPrice) - (b.salePrice || b.originalPrice)
+        );
       case "price-high":
-        return (b.salePrice || b.originalPrice) - (a.salePrice || a.originalPrice);
+        return (
+          (b.salePrice || b.originalPrice) - (a.salePrice || a.originalPrice)
+        );
       case "name":
         return a.name.localeCompare(b.name);
       case "date-added":
@@ -120,11 +124,6 @@ export default function Wishlist() {
     }
   });
 
-  const totalItems = sortedItems.length;
-  const totalValue = sortedItems.reduce(
-    (sum, item) => sum + (item.salePrice || item.originalPrice),
-    0
-  );
   const inStockCount = sortedItems.filter(
     (item) =>
       item.stockStatus === "In Stock" || item.stockStatus === "Low Stock"
@@ -199,14 +198,6 @@ export default function Wishlist() {
           My Wishlist
         </h1>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <p className="text-gray-600 dark:text-slate-400">
-            {totalItems} {totalItems === 1 ? "item" : "items"} • Total value:{" "}
-            {totalValue.toLocaleString("en-TZ", {
-              style: "currency",
-              currency: "TZS",
-              maximumFractionDigits: 0,
-            })}
-          </p>
           <div className="flex items-center gap-4">
             <select
               value={sortBy}
@@ -347,7 +338,10 @@ export default function Wishlist() {
                     {/* Add to Cart Button */}
                     <Button
                       size="sm"
-                      disabled={item.stockStatus === "Out of Stock" || loadingCart === item.id}
+                      disabled={
+                        item.stockStatus === "Out of Stock" ||
+                        loadingCart === item.id
+                      }
                       onClick={(e) => {
                         e.preventDefault();
                         moveToCart(item.id);
@@ -396,9 +390,7 @@ export default function Wishlist() {
           ) : (
             <ShoppingCart className="w-5 h-5 mr-2" />
           )}
-          {loadingAddAll
-            ? "Adding..."
-            : `Add All to Cart (${inStockCount})`}
+          {loadingAddAll ? "Adding..." : `Add All to Cart (${inStockCount})`}
         </Button>
       </div>
     </div>
