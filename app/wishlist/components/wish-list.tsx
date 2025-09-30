@@ -1,4 +1,4 @@
-// app/components/wishlist.tsx
+// components/wishlist/Wishlist.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -8,16 +8,20 @@ import { motion } from "framer-motion";
 import { CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Heart, ShoppingCart, Trash2, Share2 } from "lucide-react";
+import { Heart, ShoppingCart, Trash2, Share2, Loader2 } from "lucide-react";
 import { Product } from "@/lib/types/product";
-import { getWishlist, removeWishlistItem } from "@/app/wishlist/actions/wishlist";
 import { toast } from "sonner";
+import { getWishlist, removeWishlistItem } from "@/lib/api/wishlistApiCall";
 
 export default function Wishlist() {
   const [items, setItems] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [sortBy, setSortBy] = useState("date-added");
 
+  // Track button loading states
+  const [loadingRemove, setLoadingRemove] = useState<string | null>(null);
+  const [loadingCart, setLoadingCart] = useState<string | null>(null);
+  const [loadingAddAll, setLoadingAddAll] = useState(false);
 
   // Load wishlist items on component mount
   useEffect(() => {
@@ -28,7 +32,7 @@ export default function Wishlist() {
     try {
       setIsLoading(true);
       const result = await getWishlist();
-      
+
       if (result.success && result.data) {
         setItems(result.data.items);
       } else {
@@ -44,8 +48,9 @@ export default function Wishlist() {
 
   const handleRemoveFromWishlist = async (id: string) => {
     try {
+      setLoadingRemove(id);
       const result = await removeWishlistItem(id);
-      
+
       if (result.success) {
         setItems(items.filter((item) => item.id !== id));
         toast.success("Item removed from wishlist");
@@ -55,19 +60,47 @@ export default function Wishlist() {
     } catch (error) {
       console.error("Error removing item from wishlist:", error);
       toast.error("Failed to remove item from wishlist");
+    } finally {
+      setLoadingRemove(null);
     }
   };
 
-  const moveToCart = (id: string) => {
-    // In a real app, this would move the item to cart
-    console.log("Moving item to cart:", id);
-    // For demo, just remove from wishlist
-    handleRemoveFromWishlist(id);
+  const moveToCart = async (id: string) => {
+    try {
+      setLoadingCart(id);
+      // TODO: Replace this with a real API call to add item to cart
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+
+      toast.success("Item moved to cart");
+      // Optionally remove from wishlist after adding to cart
+      handleRemoveFromWishlist(id);
+    } catch (error) {
+      console.error("Error moving to cart:", error);
+      toast.error("Failed to move item to cart");
+    } finally {
+      setLoadingCart(null);
+    }
   };
 
-  const addAllToCart = () => {
-    const inStockItems = items.filter((item) => item.stockStatus === "In Stock" || item.stockStatus === "Low Stock");
-    inStockItems.forEach((item) => moveToCart(item.id));
+  const addAllToCart = async () => {
+    try {
+      setLoadingAddAll(true);
+      const inStockItems = items.filter(
+        (item) =>
+          item.stockStatus === "In Stock" || item.stockStatus === "Low Stock"
+      );
+
+      for (const item of inStockItems) {
+        await moveToCart(item.id);
+      }
+
+      toast.success("All available items moved to cart");
+    } catch (error) {
+      console.error("Error adding all to cart:", error);
+      toast.error("Failed to move all items to cart");
+    } finally {
+      setLoadingAddAll(false);
+    }
   };
 
   // Apply sorting
@@ -81,16 +114,23 @@ export default function Wishlist() {
         return a.name.localeCompare(b.name);
       case "date-added":
       default:
-        // Using createdAt for sorting since we don't have addedAt in Product type
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
     }
   });
 
   const totalItems = sortedItems.length;
-  const totalValue = sortedItems.reduce((sum, item) => sum + (item.salePrice || item.originalPrice), 0);
-  const inStockCount = sortedItems.filter((item) => item.stockStatus === "In Stock" || item.stockStatus === "Low Stock").length;
+  const totalValue = sortedItems.reduce(
+    (sum, item) => sum + (item.salePrice || item.originalPrice),
+    0
+  );
+  const inStockCount = sortedItems.filter(
+    (item) =>
+      item.stockStatus === "In Stock" || item.stockStatus === "Low Stock"
+  ).length;
 
-  // Stock status styling (matching your product card)
+  // Stock status styling
   const getStockStatus = (product: Product) => {
     switch (product.stockStatus) {
       case "In Stock":
@@ -109,6 +149,7 @@ export default function Wishlist() {
     }
   };
 
+  // Skeleton Loading for the entire wishlist
   if (isLoading) {
     return (
       <div className="w-full max-w-7xl mx-auto px-4 py-8">
@@ -116,7 +157,10 @@ export default function Wishlist() {
           <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {[...Array(8)].map((_, i) => (
-              <div key={i} className="bg-gray-200 dark:bg-gray-700 rounded-xl h-80"></div>
+              <div
+                key={i}
+                className="bg-gray-200 dark:bg-gray-700 rounded-xl h-80"
+              ></div>
             ))}
           </div>
         </div>
@@ -124,6 +168,7 @@ export default function Wishlist() {
     );
   }
 
+  // Empty wishlist state
   if (sortedItems.length === 0) {
     return (
       <div className="w-full max-w-7xl mx-auto px-4 py-8">
@@ -185,9 +230,13 @@ export default function Wishlist() {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {sortedItems.map((item, index) => {
           const stockInfo = getStockStatus(item);
-          const discountPercentage = item.hasDiscount && item.salePrice
-            ? Math.round(((item.originalPrice - item.salePrice) / item.originalPrice) * 100)
-            : 0;
+          const discountPercentage =
+            item.hasDiscount && item.salePrice
+              ? Math.round(
+                  ((item.originalPrice - item.salePrice) / item.originalPrice) *
+                    100
+                )
+              : 0;
           const displayPrice = item.salePrice || item.originalPrice;
 
           return (
@@ -201,7 +250,7 @@ export default function Wishlist() {
             >
               <CardContent className="p-0 flex flex-col h-full">
                 {/* Product Image Section */}
-                <Link 
+                <Link
                   href={`/products/${item.slug}/${item.id}`}
                   className="block flex-1 md:flex flex-col"
                 >
@@ -245,45 +294,9 @@ export default function Wishlist() {
 
                   {/* Product Details Section */}
                   <div className="p-4 flex-1 flex flex-col">
-                    {/* Brand */}
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-semibold text-blue-600 uppercase tracking-wide">
-                        {item.brand}
-                      </span>
-                    </div>
-
-                    {/* Product Name */}
                     <h3 className="font-semibold text-gray-900 dark:text-white line-clamp-2 mb-2 group-hover:text-blue-600 transition-colors text-sm leading-tight">
                       {item.name}
                     </h3>
-
-                    {/* Categories */}
-                    {item.categories.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mb-3">
-                        {item.categories.slice(0, 2).map((category, i) => (
-                          <span
-                            key={i}
-                            className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded"
-                          >
-                            {category}
-                          </span>
-                        ))}
-                        {item.categories.length > 2 && (
-                          <span className="text-xs text-gray-400">
-                            +{item.categories.length - 2}
-                          </span>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Product Type & Warranty */}
-                    <div className="mb-3 space-y-1">
-                      <div>
-                        <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">
-                          {item.productType.replace("-", " ")}
-                        </span>
-                      </div>
-                    </div>
 
                     {/* Pricing */}
                     <div className="mt-auto">
@@ -305,51 +318,50 @@ export default function Wishlist() {
                           </span>
                         )}
                       </div>
-
-                      {/* Savings */}
-                      {item.hasDiscount && item.salePrice && (
-                        <div className="text-xs text-green-600 font-medium">
-                          Save{" "}
-                          {(item.originalPrice - item.salePrice).toLocaleString("en-TZ", {
-                            style: "currency",
-                            currency: "TZS",
-                            maximumFractionDigits: 0,
-                          })}
-                        </div>
-                      )}
                     </div>
                   </div>
                 </Link>
 
-                {/* Actions Section - Matching your product card layout */}
+                {/* Actions Section */}
                 <div className="p-4 pt-0">
                   <div className="flex flex-col gap-2">
                     {/* Remove Button */}
                     <Button
                       variant="outline"
                       size="sm"
+                      disabled={loadingRemove === item.id}
                       className="w-full border-gray-300 dark:border-slate-700 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/20"
                       onClick={(e) => {
                         e.preventDefault();
                         handleRemoveFromWishlist(item.id);
                       }}
                     >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Remove
+                      {loadingRemove === item.id ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-4 h-4 mr-2" />
+                      )}
+                      {loadingRemove === item.id ? "Removing..." : "Remove"}
                     </Button>
 
                     {/* Add to Cart Button */}
                     <Button
                       size="sm"
-                      disabled={item.stockStatus === "Out of Stock"}
+                      disabled={item.stockStatus === "Out of Stock" || loadingCart === item.id}
                       onClick={(e) => {
                         e.preventDefault();
                         moveToCart(item.id);
                       }}
                       className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <ShoppingCart className="w-4 h-4 mr-2" />
-                      {item.stockStatus === "Out of Stock"
+                      {loadingCart === item.id ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <ShoppingCart className="w-4 h-4 mr-2" />
+                      )}
+                      {loadingCart === item.id
+                        ? "Adding..."
+                        : item.stockStatus === "Out of Stock"
                         ? "Out of Stock"
                         : item.stockStatus === "Preorder"
                         ? "Preorder Now"
@@ -377,10 +389,16 @@ export default function Wishlist() {
           size="lg"
           className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
           onClick={addAllToCart}
-          disabled={inStockCount === 0}
+          disabled={inStockCount === 0 || loadingAddAll}
         >
-          <ShoppingCart className="w-5 h-5 mr-2" />
-          Add All to Cart ({inStockCount})
+          {loadingAddAll ? (
+            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+          ) : (
+            <ShoppingCart className="w-5 h-5 mr-2" />
+          )}
+          {loadingAddAll
+            ? "Adding..."
+            : `Add All to Cart (${inStockCount})`}
         </Button>
       </div>
     </div>

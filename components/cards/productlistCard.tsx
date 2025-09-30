@@ -1,4 +1,3 @@
-// components/cards/productlistCard.tsx
 "use client";
 
 import Link from "next/link";
@@ -9,11 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { Product } from "@/lib/types/product";
-import {
-  checkWishlistStatus,
-  toggleWishlistItem,
-} from "@/app/wishlist/actions/wishlist";
 import { formatNumber } from "@/utils/formartCurency";
+import { checkWishlistStatus, toggleWishlistItem } from "@/lib/api/wishlistApiCall";
+
 
 interface ProductCardProps {
   product: Product;
@@ -21,33 +18,51 @@ interface ProductCardProps {
 }
 
 
-
-// Utility function to format currency with proper commas
-const formatCurrency = (amount: number, currency: string = "TZS"): string => {
-  const formattedNumber = formatNumber(amount);
-  return `${currency} ${formattedNumber}`;
-};
-
 export default function ProductCard({ product, index = 0 }: ProductCardProps) {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Check wishlist status on component mount
+  // ✅ 1. Check if product is in wishlist on mount
   useEffect(() => {
     async function checkStatus() {
-      const result = await checkWishlistStatus(product.id);
-      if (result.success) {
-        setIsWishlisted(result.isInWishlist);
+      try {
+        const result = await checkWishlistStatus(product.id);
+        if (result.success) {
+          setIsWishlisted(result.isInWishlist);
+        }
+      } catch (error) {
+        console.error("Error checking wishlist status:", error);
       }
     }
     checkStatus();
   }, [product.id]);
 
+  // ✅ 2. Handle wishlist toggle
   const handleWishlistToggle = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsWishlisted(!isWishlisted);
+
+    if (isLoading) return; // prevent double clicks
+    setIsLoading(true);
+
+    try {
+      const result = await toggleWishlistItem(product.id);
+
+      if (result.success) {
+        // Optimistically update UI
+        setIsWishlisted(result.action === "added");
+
+        // Optional: show success message (toast)
+        console.log(result.message);
+      } else {
+        console.error(result.error || "Failed to update wishlist");
+      }
+    } catch (error) {
+      console.error("Error toggling wishlist:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Price calculations
@@ -198,11 +213,11 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
           <div className="mt-auto">
             <div className="flex flex-col md:flex-row items-start md:items-center gap-2 mb-2">
               <span className="text-sm md:text-lg font-bold text-gray-900 dark:text-white">
-                {formatCurrency(displayPrice)}
+                {formatNumber(displayPrice)}
               </span>
               {product.hasDiscount && salePrice && (
                 <span className="text-sm text-gray-500 dark:text-gray-400 line-through">
-                  {formatCurrency(originalPrice)}
+                  {formatNumber(originalPrice)}
                 </span>
               )}
             </div>
@@ -210,7 +225,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
             {/* Savings */}
             {product.hasDiscount && salePrice && (
               <div className="text-xs text-green-600 font-medium">
-                Save {formatCurrency(originalPrice - salePrice)}
+                Save {formatNumber(originalPrice - salePrice)}
               </div>
             )}
           </div>

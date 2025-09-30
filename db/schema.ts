@@ -295,7 +295,6 @@ export const wishlistItem = pgTable("wishlist_item", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
   wishlistId: uuid("wishlist_id").notNull().references(() => wishlist.id, { onDelete: "cascade" }),
   productId: uuid("product_id").notNull().references(() => product.id, { onDelete: "cascade" }),
-  quantity: integer("quantity").default(1).notNull(),
   note: text("note"),
   priceAtAdd: decimal("price_at_add", { precision: 10, scale: 2 }),
   isActive: boolean("is_active").default(true).notNull(),

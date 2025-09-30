@@ -1,8 +1,7 @@
 // app/wishlist/server/wishlistQuery.tsx
 import { eq, and, desc, sql } from "drizzle-orm";
-import { Product } from "@/lib/types/product";
 import { dbServer } from "@/db/db-server";
-import { product, productCategory, productImage, productReview, wishlist, wishlistItem } from "@/db/schema";
+import { product, wishlist, wishlistItem } from "@/db/schema";
 
 // Get user's wishlist
 export async function getUserWishlist(userId: string) {
@@ -40,7 +39,7 @@ export async function createWishlist(userId: string, name: string = "My Wishlist
 }
 
 // Get wishlist items with product details
-export async function getWishlistItems(wishlistId: string): Promise<Product[]> {
+export async function getWishlistItems(wishlistId: string) {
   try {
     const items = await dbServer
       .select({
@@ -58,13 +57,13 @@ export async function getWishlistItems(wishlistId: string): Promise<Product[]> {
         status: product.status,
         slug: product.slug,
         averageRating: sql<number>`COALESCE((
-          SELECT AVG(rating) 
-          FROM ${productReview} 
+          SELECT AVG(rating)
+          FROM product_review
           WHERE product_id = ${product.id}
         ), 0)`,
         reviewCount: sql<number>`(
-          SELECT COUNT(*) 
-          FROM ${productReview} 
+          SELECT COUNT(*)
+          FROM product_review
           WHERE product_id = ${product.id}
         )`,
         createdAt: product.createdAt,
@@ -72,18 +71,15 @@ export async function getWishlistItems(wishlistId: string): Promise<Product[]> {
         warrantyDetails: product.warrantyDetails,
         sku: product.sku,
         hasWarranty: product.hasWarranty,
-        // Get categories as array
         categories: sql<string[]>`(
-          SELECT ARRAY_AGG(category) 
-          FROM ${productCategory} 
+          SELECT ARRAY_AGG(category)
+          FROM product_category
           WHERE product_id = ${product.id}
         )`,
-        // Get images as array
         images: sql<string[]>`(
-          SELECT ARRAY_AGG(url) 
-          FROM ${productImage} 
-          WHERE product_id = ${product.id} 
-          ORDER BY ${productImage.order} ASC
+          SELECT ARRAY_AGG(url ORDER BY "product_image"."order" ASC)
+          FROM product_image
+          WHERE product_id = ${product.id}
         )`,
         addedAt: wishlistItem.addedAt,
         priceAtAdd: wishlistItem.priceAtAdd,
@@ -98,48 +94,18 @@ export async function getWishlistItems(wishlistId: string): Promise<Product[]> {
       )
       .orderBy(desc(wishlistItem.addedAt));
 
-    // Convert decimal prices to numbers
-     return items.map(item => ({
-      ...item,
-      originalPrice: Number(item.originalPrice),
-      salePrice: item.salePrice ? Number(item.salePrice) : null,
-      averageRating: Number(item.averageRating) || 0,
-      reviewCount: Number(item.reviewCount) || 0,
-      categories: item.categories || [],
-      images: item.images || [],
-      // Convert Date objects to ISO strings
-      createdAt: item.createdAt.toISOString(),
-      // Add optional fields with proper types
-      updatedAt: item.addedAt.toISOString(), // Using addedAt as updatedAt fallback
-      warrantyPeriod: item.warrantyPeriod ? Number(item.warrantyPeriod) : null,
-      hasWarranty: item.hasWarranty ?? false,
-    }));
+    return items;
   } catch (error) {
     console.error("Error getting wishlist items:", error);
-    return [];
+    throw error;
   }
 }
 
+
 // Add item to wishlist
+// app/wishlist/server/wishlistQuery.ts
 export async function addToWishlist(wishlistId: string, productId: string) {
   try {
-    // Check if item already exists in wishlist
-    const existingItem = await dbServer
-      .select()
-      .from(wishlistItem)
-      .where(
-        and(
-          eq(wishlistItem.wishlistId, wishlistId),
-          eq(wishlistItem.productId, productId),
-          eq(wishlistItem.isActive, true)
-        )
-      )
-      .limit(1);
-
-    if (existingItem.length > 0) {
-      return { success: true, message: "Item already in wishlist" };
-    }
-
     // Get current product price
     const productData = await dbServer
       .select({
@@ -150,25 +116,52 @@ export async function addToWishlist(wishlistId: string, productId: string) {
       .where(eq(product.id, productId))
       .limit(1);
 
-    const currentPrice = productData[0]?.salePrice || productData[0]?.originalPrice;
+    if (!productData.length) {
+      return { success: false, error: "Product not found" };
+    }
 
-    // Add to wishlist
-    const [newItem] = await dbServer
-      .insert(wishlistItem)
-      .values({
-        wishlistId,
-        productId,
-        priceAtAdd: currentPrice,
-        isActive: true,
-      })
-      .returning();
+    const currentPrice = productData[0].salePrice || productData[0].originalPrice;
 
-    return { success: true, data: newItem };
+    // Check if item already exists in wishlist
+    const existing = await dbServer
+      .select()
+      .from(wishlistItem)
+      .where(
+        and(
+          eq(wishlistItem.wishlistId, wishlistId),
+          eq(wishlistItem.productId, productId)
+        )
+      );
+
+    if (existing.length > 0) {
+      // ✅ Reactivate instead of inserting a duplicate
+      await dbServer
+        .update(wishlistItem)
+        .set({
+          isActive: true,
+          addedAt: new Date(),
+          priceAtAdd: currentPrice, // optional: update with latest price
+        })
+        .where(eq(wishlistItem.id, existing[0].id));
+
+      return { success: true, message: "Item reactivated in wishlist" };
+    }
+
+    // Insert a brand new item if none exists
+    await dbServer.insert(wishlistItem).values({
+      wishlistId,
+      productId,
+      priceAtAdd: currentPrice,
+      isActive: true,
+    });
+
+    return { success: true, message: "Item added to wishlist" };
   } catch (error) {
     console.error("Error adding to wishlist:", error);
     return { success: false, error: "Failed to add item to wishlist" };
   }
 }
+
 
 // Remove item from wishlist
 export async function removeFromWishlist(wishlistId: string, productId: string) {

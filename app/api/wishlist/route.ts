@@ -1,9 +1,9 @@
 // app/api/wishlist/route.ts
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getServerSession } from "@/lib/server-session";
 import { getUserWishlist, createWishlist, getWishlistItems } from "@/app/wishlist/server/wishlistQuery";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession();
     
