@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   ShoppingCart,
@@ -50,6 +50,7 @@ import {
   PRODUCT_TYPES,
 } from "@/lib/validation-schemas/product-type";
 import { ModeToggle } from "./modetoggle";
+import { useWishlistStore } from "@/store/wishlist-store";
 
 interface HeaderProps {
   session: {
@@ -65,6 +66,17 @@ interface HeaderProps {
 export default function Header({ session, isAdmin }: HeaderProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
+  
+  // ✅ Get real wishlist data from store
+  const { items: wishlistItems, initializeWishlist } = useWishlistStore();
+  const wishlistCount = wishlistItems.length;
+
+  // ✅ Initialize wishlist when user is logged in
+  useEffect(() => {
+    if (session?.user) {
+      initializeWishlist();
+    }
+  }, [session?.user, initializeWishlist]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -230,6 +242,25 @@ export default function Header({ session, isAdmin }: HeaderProps) {
                       </Accordion>
                     </div>
 
+                    {/* ✅ Wishlist with Real Count */}
+                    <SheetClose asChild>
+                      <Link
+                        href="/wishlist"
+                        className="flex items-center gap-2 p-2 hover:bg-muted rounded-md relative"
+                      >
+                        <Heart className="w-5 h-5" />
+                        <span>My Wishlist</span>
+                        {wishlistCount > 0 && (
+                          <Badge 
+                            variant="destructive" 
+                            className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                          >
+                            {wishlistCount > 99 ? '99+' : wishlistCount}
+                          </Badge>
+                        )}
+                      </Link>
+                    </SheetClose>
+
                     <SheetClose asChild>
                       <Link
                         href="/deals"
@@ -279,15 +310,17 @@ export default function Header({ session, isAdmin }: HeaderProps) {
             {/* Theme Toggle */}
             <ModeToggle />
 
-            {/* Wishlist */}
+            {/* ✅ Wishlist with Real Count */}
             <Link
               href="/wishlist"
-              className="relative hidden sm:flex items-center text-foreground hover:text-primary transition"
+              className="relative flex items-center text-foreground hover:text-primary transition"
             >
               <Heart className="w-5 h-5" />
-              <span className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                3
-              </span>
+              {wishlistCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {wishlistCount > 99 ? '99+' : wishlistCount}
+                </span>
+              )}
             </Link>
 
             {/* Cart */}
@@ -338,9 +371,19 @@ export default function Header({ session, isAdmin }: HeaderProps) {
                   <DropdownMenuItem asChild>
                     <Link href="/orders">My Orders</Link>
                   </DropdownMenuItem>
+                  
+                  {/* ✅ Wishlist in Dropdown with Count */}
                   <DropdownMenuItem asChild>
-                    <Link href="/wishlist">My Wishlist</Link>
+                    <Link href="/wishlist" className="flex justify-between items-center w-full">
+                      <span>My Wishlist</span>
+                      {wishlistCount > 0 && (
+                        <Badge variant="secondary" className="ml-2 h-5 min-w-5 flex items-center justify-center text-xs">
+                          {wishlistCount}
+                        </Badge>
+                      )}
+                    </Link>
                   </DropdownMenuItem>
+                  
                   <DropdownMenuItem asChild>
                     <Link href="/account">Account Settings</Link>
                   </DropdownMenuItem>

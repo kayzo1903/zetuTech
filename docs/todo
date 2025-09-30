@@ -127,5 +127,8 @@ we will connect our webapp with cloudfare 3 for image system
 > creating a components //app/components/wishlist
 > creating a dumy data first for demostration
 > introduce a table at db
-> creating a functinality to fetch user wish list
+> creating a functinality to fetch user's wish list
 > implemting a functinality to all components
+> fetching a wishlist at a table
+
+## implemting cart-items and final ordering 
