@@ -300,3 +300,36 @@ export const wishlistItem = pgTable("wishlist_item", {
   isActive: boolean("is_active").default(true).notNull(),
   addedAt: timestamp("added_at").defaultNow().notNull(),
 });
+
+/* ----------- Cart ----------- */
+export const cart = pgTable("cart", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  sessionId: text("session_id"), // For guest users
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+/* ----------- Cart Items ----------- */
+export const cartItem = pgTable("cart_item", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  cartId: uuid("cart_id")
+    .notNull()
+    .references(() => cart.id, { onDelete: "cascade" }),
+  productId: uuid("product_id")
+    .notNull()
+    .references(() => product.id, { onDelete: "cascade" }),
+  quantity: integer("quantity").notNull(),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(), // Price at time of adding
+  selectedAttributes: text("selected_attributes"), // JSON string for product variations
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});

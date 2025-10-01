@@ -51,6 +51,7 @@ import {
 } from "@/lib/validation-schemas/product-type";
 import { ModeToggle } from "./modetoggle";
 import { useWishlistStore } from "@/store/wishlist-store";
+import { toast } from "sonner";
 
 interface HeaderProps {
   session: {
@@ -66,7 +67,7 @@ interface HeaderProps {
 export default function Header({ session, isAdmin }: HeaderProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
-  
+
   // ✅ Get real wishlist data from store
   const { items: wishlistItems, initializeWishlist } = useWishlistStore();
   const wishlistCount = wishlistItems.length;
@@ -88,15 +89,19 @@ export default function Header({ session, isAdmin }: HeaderProps) {
   const handleSignOut = async () => {
     await authClient.signOut({
       fetchOptions: {
-        onSuccess: () => router.push("/"),
+        onSuccess: () => {
+          toast.success("Signed out successfully");
+        },
       },
     });
   };
 
   return (
-    <header className="sticky bg-gradient-to-r from-gray-50 via-white to-gray-100 
+    <header
+      className="sticky bg-gradient-to-r from-gray-50 via-white to-gray-100 
         dark:from-slate-800 dark:via-slate-900 dark:to-slate-950 
-        text-gray-900 dark:text-white text-xs sm:text-sm top-0 z-50 w-full border-b bg-background shadow-sm">
+        text-gray-900 dark:text-white text-xs sm:text-sm top-0 z-50 w-full border-b bg-background shadow-sm"
+    >
       {/* Top Bar */}
       <div>
         <div className="container mx-auto px-4 py-2">
@@ -196,7 +201,10 @@ export default function Header({ session, isAdmin }: HeaderProps) {
                   {/* Mobile Navigation */}
                   <nav className="space-y-2">
                     <SheetClose asChild>
-                      <Link href="/" className="block rounded-md hover:bg-muted">
+                      <Link
+                        href="/"
+                        className="block rounded-md hover:bg-muted"
+                      >
                         Home
                       </Link>
                     </SheetClose>
@@ -223,18 +231,22 @@ export default function Header({ session, isAdmin }: HeaderProps) {
                             </AccordionTrigger>
                             <AccordionContent>
                               <div className="space-y-1 pl-4">
-                                {PRODUCT_CATEGORIES[type.id as keyof typeof PRODUCT_CATEGORIES]?.map(
-                                  (category) => (
-                                    <SheetClose key={category} asChild>
-                                      <Link
-                                        href={`/products?type=${type.id}&category=${encodeURIComponent(category)}`}
-                                        className="block text-sm text-muted-foreground hover:text-primary py-1 transition-colors"
-                                      >
-                                        {category}
-                                      </Link>
-                                    </SheetClose>
-                                  )
-                                )}
+                                {PRODUCT_CATEGORIES[
+                                  type.id as keyof typeof PRODUCT_CATEGORIES
+                                ]?.map((category) => (
+                                  <SheetClose key={category} asChild>
+                                    <Link
+                                      href={`/products?type=${
+                                        type.id
+                                      }&category=${encodeURIComponent(
+                                        category
+                                      )}`}
+                                      className="block text-sm text-muted-foreground hover:text-primary py-1 transition-colors"
+                                    >
+                                      {category}
+                                    </Link>
+                                  </SheetClose>
+                                ))}
                               </div>
                             </AccordionContent>
                           </AccordionItem>
@@ -251,11 +263,11 @@ export default function Header({ session, isAdmin }: HeaderProps) {
                         <Heart className="w-5 h-5" />
                         <span>My Wishlist</span>
                         {wishlistCount > 0 && (
-                          <Badge 
-                            variant="destructive" 
+                          <Badge
+                            variant="destructive"
                             className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
                           >
-                            {wishlistCount > 99 ? '99+' : wishlistCount}
+                            {wishlistCount > 99 ? "99+" : wishlistCount}
                           </Badge>
                         )}
                       </Link>
@@ -318,7 +330,7 @@ export default function Header({ session, isAdmin }: HeaderProps) {
               <Heart className="w-5 h-5" />
               {wishlistCount > 0 && (
                 <span className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {wishlistCount > 99 ? '99+' : wishlistCount}
+                  {wishlistCount > 99 ? "99+" : wishlistCount}
                 </span>
               )}
             </Link>
@@ -371,19 +383,25 @@ export default function Header({ session, isAdmin }: HeaderProps) {
                   <DropdownMenuItem asChild>
                     <Link href="/orders">My Orders</Link>
                   </DropdownMenuItem>
-                  
+
                   {/* ✅ Wishlist in Dropdown with Count */}
                   <DropdownMenuItem asChild>
-                    <Link href="/wishlist" className="flex justify-between items-center w-full">
+                    <Link
+                      href="/wishlist"
+                      className="flex justify-between items-center w-full"
+                    >
                       <span>My Wishlist</span>
                       {wishlistCount > 0 && (
-                        <Badge variant="secondary" className="ml-2 h-5 min-w-5 flex items-center justify-center text-xs">
+                        <Badge
+                          variant="secondary"
+                          className="ml-2 h-5 min-w-5 flex items-center justify-center text-xs"
+                        >
                           {wishlistCount}
                         </Badge>
                       )}
                     </Link>
                   </DropdownMenuItem>
-                  
+
                   <DropdownMenuItem asChild>
                     <Link href="/account">Account Settings</Link>
                   </DropdownMenuItem>
@@ -422,17 +440,17 @@ export default function Header({ session, isAdmin }: HeaderProps) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                {PRODUCT_CATEGORIES[type.id as keyof typeof PRODUCT_CATEGORIES]?.map(
-                  (category) => (
-                    <DropdownMenuItem key={category} asChild>
-                      <Link
-                        href={`/products?type=${type.id}&category=${category}`}
-                      >
-                        {category}
-                      </Link>
-                    </DropdownMenuItem>
-                  )
-                )}
+                {PRODUCT_CATEGORIES[
+                  type.id as keyof typeof PRODUCT_CATEGORIES
+                ]?.map((category) => (
+                  <DropdownMenuItem key={category} asChild>
+                    <Link
+                      href={`/products?type=${type.id}&category=${category}`}
+                    >
+                      {category}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
               </DropdownMenuContent>
             </DropdownMenu>
           ))}

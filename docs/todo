@@ -122,7 +122,7 @@ we will connect our webapp with cloudfare 3 for image system
 ## redesign a dashboard 🔴🔴
 > change side bar style to mode dynamic
 
-## implementing wish list functionality 🟢🟢
+## implementing wish list functionality ✅✅
 > creating a wishlist page //app/page.tsx 
 > creating a components //app/components/wishlist
 > creating a dumy data first for demostration
@@ -131,4 +131,11 @@ we will connect our webapp with cloudfare 3 for image system
 > implemting a functinality to all components
 > fetching a wishlist at a table
 
-## implemting cart-items and final ordering 
+## implemting cart-items and final ordering 🟢🟢
+> creating table in db for cart & cartitems 
+> creatig types
+> cart-provider
+
+
+## implementing a metadata to all page 🔴🔴
+ > creating a metadata for page seo to all routes
