@@ -51,11 +51,14 @@ import {
 } from "@/lib/validation-schemas/product-type";
 import { ModeToggle } from "./modetoggle";
 import { useWishlistStore } from "@/store/wishlist-store";
+import { useCartStore } from "@/lib/cart/store"; // ✅ Import cart store
 import { toast } from "sonner";
+import { CartDrawer } from "./cart-system/cart-drawer";
 
 interface HeaderProps {
   session: {
     user?: {
+      id?: string; // ✅ Added id for cart merging
       name?: string;
       image?: string;
       role?: string;
@@ -72,12 +75,20 @@ export default function Header({ session, isAdmin }: HeaderProps) {
   const { items: wishlistItems, initializeWishlist } = useWishlistStore();
   const wishlistCount = wishlistItems.length;
 
-  // ✅ Initialize wishlist when user is logged in
+  // ✅ Get cart data from store
+  const { summary: cartSummary, initializeCart, syncCart } = useCartStore();
+  const cartItemsCount = cartSummary.totalItems;
+
+  // ✅ Initialize wishlist and cart when user state changes
   useEffect(() => {
     if (session?.user) {
       initializeWishlist();
+      initializeCart();
+    } else {
+      // Initialize cart for guest users too
+      initializeCart();
     }
-  }, [session?.user, initializeWishlist]);
+  }, [session?.user, initializeWishlist, initializeCart]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,6 +102,10 @@ export default function Header({ session, isAdmin }: HeaderProps) {
       fetchOptions: {
         onSuccess: () => {
           toast.success("Signed out successfully");
+          // ✅ Reinitialize cart as guest after sign out
+          setTimeout(() => {
+            initializeCart();
+          }, 1000);
         },
       },
     });
@@ -273,6 +288,25 @@ export default function Header({ session, isAdmin }: HeaderProps) {
                       </Link>
                     </SheetClose>
 
+                    {/* ✅ Cart in Mobile Menu with Real Count */}
+                    <SheetClose asChild>
+                      <Link
+                        href="/cart"
+                        className="flex items-center gap-2 p-2 hover:bg-muted rounded-md relative"
+                      >
+                        <ShoppingCart className="w-5 h-5" />
+                        <span>My Cart</span>
+                        {cartItemsCount > 0 && (
+                          <Badge
+                            variant="default"
+                            className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                          >
+                            {cartItemsCount > 99 ? "99+" : cartItemsCount}
+                          </Badge>
+                        )}
+                      </Link>
+                    </SheetClose>
+
                     <SheetClose asChild>
                       <Link
                         href="/deals"
@@ -325,26 +359,18 @@ export default function Header({ session, isAdmin }: HeaderProps) {
             {/* ✅ Wishlist with Real Count */}
             <Link
               href="/wishlist"
-              className="relative flex items-center text-foreground hover:text-primary transition"
+              className="relative hidden md:flex items-center text-foreground hover:text-primary transition p-2 rounded-md hover:bg-muted"
             >
               <Heart className="w-5 h-5" />
               {wishlistCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
                   {wishlistCount > 99 ? "99+" : wishlistCount}
                 </span>
               )}
             </Link>
 
-            {/* Cart */}
-            <Link
-              href="/cart"
-              className="relative flex items-center text-foreground hover:text-primary transition"
-            >
-              <ShoppingCart className="w-6 h-6" />
-              <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                2
-              </span>
-            </Link>
+            {/* ✅ Cart Drawer - Replaces direct cart link */}
+            <CartDrawer />
 
             {/* Account Menu */}
             {!session ? (
@@ -397,6 +423,24 @@ export default function Header({ session, isAdmin }: HeaderProps) {
                           className="ml-2 h-5 min-w-5 flex items-center justify-center text-xs"
                         >
                           {wishlistCount}
+                        </Badge>
+                      )}
+                    </Link>
+                  </DropdownMenuItem>
+
+                  {/* ✅ Cart in Dropdown with Real Count */}
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href="/cart"
+                      className="flex justify-between items-center w-full"
+                    >
+                      <span>My Cart</span>
+                      {cartItemsCount > 0 && (
+                        <Badge
+                          variant="default"
+                          className="ml-2 h-5 min-w-5 flex items-center justify-center text-xs"
+                        >
+                          {cartItemsCount > 99 ? "99+" : cartItemsCount}
                         </Badge>
                       )}
                     </Link>

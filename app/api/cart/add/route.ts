@@ -1,14 +1,40 @@
-import { getCartContext } from "@/lib/context/cart-context";
-import { addItemToCart } from "@/utils/cart-helper";
-import { NextRequest, NextResponse } from "next/server";
+// app/api/cart/add/route.ts
+import { getServerSession } from '@/lib/server-session';
+import { addItemToCart } from '@/utils/cart-helper';
+import { getGuestSessionId } from '@/utils/cart-session';
+import { NextRequest, NextResponse } from 'next/server';
 
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await request.json();
     const { productId, quantity, selectedAttributes } = body;
 
-    const { userId, sessionId } = await getCartContext(req);
+    // Validation
+    if (!productId || !quantity) {
+      return NextResponse.json(
+        { success: false, error: 'Product ID and quantity are required' },
+        { status: 400 }
+      );
+    }
+
+    if (quantity <= 0) {
+      return NextResponse.json(
+        { success: false, error: 'Quantity must be greater than 0' },
+        { status: 400 }
+      );
+    }
+
+    const session = await getServerSession();
+    let userId: string | undefined;
+    let sessionId: string | undefined;
+
+    if (session?.user?.id) {
+      userId = session.user.id;
+    } else {
+      sessionId = await getGuestSessionId();
+    }
+
     const items = await addItemToCart({
       userId,
       sessionId,
@@ -17,10 +43,18 @@ export async function POST(req: NextRequest) {
       selectedAttributes,
     });
 
-    return NextResponse.json({ items });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    console.error("Cart ADD error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({
+      success: true,
+      items,
+    });
+  } catch (error) {
+    console.error('Add to cart error:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to add item to cart' 
+      },
+      { status: 500 }
+    );
   }
 }

@@ -1,53 +1,45 @@
-import { NextRequest, NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
-import { dbServer } from "@/db/db-server";
-import { cart, cartItem } from "@/db/schema";
+// app/api/cart/merge/route.ts
+import { getServerSession } from '@/lib/server-session';
+import { mergeCarts } from '@/utils/cart-helper';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function POST(req: NextRequest) {
+
+export async function POST(request: NextRequest) {
   try {
-    const { guestSessionId, userId } = await req.json();
-
-    const [guestCart] = await dbServer
-      .select()
-      .from(cart)
-      .where(eq(cart.sessionId, guestSessionId));
-
-    if (!guestCart) return NextResponse.json({ success: true });
-
-    const [userCart] = await dbServer
-      .select()
-      .from(cart)
-      .where(eq(cart.userId, userId));
-
-    if (userCart) {
-      const guestItems = await dbServer
-        .select()
-        .from(cartItem)
-        .where(eq(cartItem.cartId, guestCart.id));
-
-      for (const item of guestItems) {
-        await dbServer.insert(cartItem).values({
-          cartId: userCart.id,
-          productId: item.productId,
-          quantity: item.quantity,
-          price: item.price,
-          selectedAttributes: item.selectedAttributes,
-        });
-      }
-
-      await dbServer.delete(cart).where(eq(cart.id, guestCart.id));
-    } else {
-      await dbServer
-        .update(cart)
-        .set({ userId })
-        .where(eq(cart.id, guestCart.id));
+    const session = await getServerSession();
+    
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { success: false, error: 'User not authenticated' },
+        { status: 401 }
+      );
     }
 
-    return NextResponse.json({ success: true });
-    
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    console.error("Cart MERGE error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const body = await request.json();
+    const { guestSessionId } = body;
+
+    if (!guestSessionId) {
+      return NextResponse.json(
+        { success: false, error: 'Guest session ID is required' },
+        { status: 400 }
+      );
+    }
+
+    const items = await mergeCarts(guestSessionId, session.user.id);
+
+    return NextResponse.json({
+      success: true,
+      items,
+      message: 'Cart merged successfully',
+    });
+  } catch (error) {
+    console.error('Cart merge error:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to merge carts' 
+      },
+      { status: 500 }
+    );
   }
 }

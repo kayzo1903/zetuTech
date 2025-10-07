@@ -13,6 +13,7 @@ import { useWishlistStore } from "@/store/wishlist-store";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { AddToCartButton } from "../cart-system/cart-add-btn";
 
 interface ProductCardProps {
   product: Product;
@@ -230,18 +231,11 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
 
       {/* Add to Cart Button */}
       <div className="p-4 pt-0">
-        <Button
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-transform hover:scale-105 text-sm py-2"
-          disabled={
-            product.stock === 0 || product.stockStatus === "Out of Stock"
-          }
-        >
-          {product.stockStatus === "Out of Stock"
-            ? "Out of Stock"
-            : product.stockStatus === "Preorder"
-            ? "Preorder Now"
-            : "Add to Cart"}
-        </Button>
+        <AddToCartButton
+          product={product}
+          className="max-w-xs"
+          showQuantity={false}
+        />
       </div>
     </motion.div>
   );

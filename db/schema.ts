@@ -115,7 +115,7 @@ export const product = pgTable("product", {
   shortDescription: text("short_description"),
   brand: varchar("brand", { length: 100 }).notNull(),
   productType: varchar("product_type", { length: 50 }).notNull(),
-  status: varchar("status", { length: 20 }).default("Draft").notNull(),
+  status: varchar("status", { length: 20 }).default("active").notNull(),
   stockStatus: varchar("stock_status", { length: 50 })
     .default(STOCK_STATUS.IN_STOCK)
     .notNull(),
@@ -362,8 +362,8 @@ export const wishlistItem = pgTable("wishlist_item", {
 export const cart = pgTable("cart", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: text("user_id").references(() => user.id, { onDelete: "cascade" }),
-  sessionId: text("session_id"),
-  expiresAt: timestamp("expires_at").default(sql`NOW() + INTERVAL '30 days'`),
+  sessionId: text("session_id").unique(),
+  expiresAt: timestamp("expires_at").default(sql`NOW() + INTERVAL '30 days'`).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()

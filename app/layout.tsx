@@ -9,6 +9,7 @@ import { headers } from "next/headers";
 import TanStackProviders from "@/lib/tanStackprovider";
 import WishlistProvider from "./wishlist/provider/wishlistProvider";
 import { Toaster } from "@/components/ui/sonner";
+import { CartProvider } from "@/components/provider/cart-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,27 +48,31 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Header
-            session={
-              session
-                ? {
-                    user: session.user
-                      ? {
-                          name: session.user.name,
-                          image: session.user.image ?? undefined,
-                          role: session.user.role ?? undefined,
-                        }
-                      : undefined,
-                  }
-                : null
-            }
-            isAdmin={isAdmin}
-          />
           <WishlistProvider>
-            <TanStackProviders>{children}</TanStackProviders>
+            <TanStackProviders>
+              <CartProvider>
+                <Header
+                  session={
+                    session
+                      ? {
+                          user: session.user
+                            ? {
+                                name: session.user.name,
+                                image: session.user.image ?? undefined,
+                                role: session.user.role ?? undefined,
+                              }
+                            : undefined,
+                        }
+                      : null
+                  }
+                  isAdmin={isAdmin}
+                />
+                {children}
+              </CartProvider>
+            </TanStackProviders>
           </WishlistProvider>
           <Footer />
-           <Toaster position="top-center"/>
+          <Toaster position="top-center" />
         </ThemeProvider>
       </body>
     </html>

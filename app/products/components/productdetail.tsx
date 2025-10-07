@@ -17,6 +17,9 @@ import {
 import { Product } from "@/lib/types/product";
 import WishlistButton from "@/app/wishlist/components/wishlist-button";
 import { toast } from "sonner";
+import ProductCard from "@/components/cards/productlistCard";
+import { AddToCartButton } from "@/components/cart-system/cart-add-btn";
+import { Button } from "@/components/ui/button";
 
 interface ProductDetailProps {
   productData: Product;
@@ -28,16 +31,6 @@ export default function ProductDetail({
   relatedProducts,
 }: ProductDetailProps) {
   const [selectedImage, setSelectedImage] = useState(0);
-  const [quantity, setQuantity] = useState(1);
-  const [addedToCart, setAddedToCart] = useState(false);
-
-
-  const handleAddToCart = () => {
-    setAddedToCart(true);
-    setTimeout(() => setAddedToCart(false), 2000);
-    // Add your cart logic here
-  };
-
 
   const shareProduct = () => {
     if (navigator.share) {
@@ -82,7 +75,7 @@ export default function ProductDetail({
     { name: "In Stock", value: productData.stock.toString() },
     ...(productData.hasWarranty
       ? [
-          { name: "Warranty", value: `${productData.warrantyPeriod} years` },
+          { name: "Warranty", value: `${productData.warrantyPeriod} days` },
           {
             name: "Warranty Details",
             value: productData.warrantyDetails || "Standard warranty",
@@ -239,60 +232,17 @@ export default function ProductDetail({
 
             {/* Quantity and Add to Cart */}
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-gray-700 dark:text-gray-300 font-medium">
-                  Quantity:
-                </span>
-                <div className="flex items-center border border-gray-300 dark:border-gray-700 rounded-md">
-                  <button
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="px-3 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
-                    disabled={quantity <= 1}
-                  >
-                    -
-                  </button>
-                  <span className="px-4 py-2 text-gray-900 dark:text-white min-w-[60px] text-center">
-                    {quantity}
-                  </span>
-                  <button
-                    onClick={() =>
-                      setQuantity(Math.min(productData.stock, quantity + 1))
-                    }
-                    className="px-3 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
-                    disabled={quantity >= productData.stock}
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-
               <div className="flex space-x-4">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleAddToCart}
-                  disabled={productData.stock === 0}
-                  className={`flex-1 py-3 px-6 rounded-lg font-semibold transition-colors ${
-                    productData.stock === 0
-                      ? "bg-gray-400 cursor-not-allowed text-white"
-                      : "bg-blue-600 hover:bg-blue-700 text-white"
-                  }`}
-                >
-                  {addedToCart ? "Added to Cart! ✓" : "Add to Cart"}
-                </motion.button>
+                <div className="mt-4">
+                  <AddToCartButton
+                    product={productData}
+                    className="w-full"
+                    showQuantity={true}
+                  />
+                </div>
 
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  disabled={productData.stock === 0}
-                  className={`flex-1 py-3 px-6 rounded-lg font-semibold transition-colors ${
-                    productData.stock === 0
-                      ? "bg-gray-400 cursor-not-allowed text-white"
-                      : "bg-gray-800 hover:bg-gray-900 text-white dark:bg-gray-700 dark:hover:bg-gray-600"
-                  }`}
-                >
-                  Buy Now
-                </motion.button>
+                {/* button buy now*/}
+
               </div>
             </div>
 
@@ -314,8 +264,8 @@ export default function ProductDetail({
                 <div>
                   <p className="font-medium text-gray-900 dark:text-white">
                     {productData.hasWarranty
-                      ? `${productData.warrantyPeriod} Year Warranty`
-                      : "1 Year Warranty"}
+                      ? `${productData.warrantyPeriod} days`
+                      : "6 Month Warranty"}
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     Free support
@@ -372,7 +322,7 @@ export default function ProductDetail({
               </Link>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
               {relatedProducts.map((product, index) => (
                 <motion.div
                   key={product.id}
@@ -381,57 +331,7 @@ export default function ProductDetail({
                   transition={{ duration: 0.3, delay: index * 0.1 }}
                   className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 border border-gray-100 dark:border-gray-700"
                 >
-                  <Link
-                    href={`/products/${product.slug}/${product.id}`}
-                    className="block"
-                  >
-                    <div className="relative h-48 w-full">
-                      {product.images.length > 0 ? (
-                        <Image
-                          src={product.images[0]}
-                          alt={product.name}
-                          fill
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                          <ShoppingCart className="h-8 w-8 text-gray-400" />
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="p-4">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2 mb-2">
-                        {product.name}
-                      </h3>
-
-                      <div className="flex items-center mb-2">
-                        <div className="flex items-center text-amber-500">
-                          <Star className="w-4 h-4 fill-current" />
-                          <span className="ml-1 text-sm text-gray-700 dark:text-gray-300">
-                            {(product.averageRating || 0).toFixed(1)}
-                          </span>
-                        </div>
-                        <span className="mx-2 text-gray-300">•</span>
-                        <span className="text-sm text-gray-600 dark:text-gray-400">
-                          {product.reviewCount || 0} reviews
-                        </span>
-                      </div>
-
-                      <div className="flex items-center">
-                        <span className="text-lg font-bold text-gray-900 dark:text-white">
-                          {/* ✅ FIXED: Pass number instead of string */}
-                          {formatPrice(product.salePrice)}
-                        </span>
-                        {product.hasDiscount && (
-                          <span className="ml-2 text-sm text-gray-500 dark:text-gray-400 line-through">
-                            {/* ✅ FIXED: Pass number instead of string */}
-                            {formatPrice(product.originalPrice)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </Link>
+                  <ProductCard product={product} />
                 </motion.div>
               ))}
             </div>
