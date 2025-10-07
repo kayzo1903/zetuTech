@@ -7,11 +7,11 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
-import { authClient, signIn } from "@/lib/auth-client";
+import { signIn } from "@/lib/auth-client";
 import { useState } from "react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { mergeGuestCart } from "@/utils/cart-merge";
+
 
 export default function SignUp() {
   const [loading, setLoading] = useState(false);
@@ -30,16 +30,6 @@ export default function SignUp() {
           toast.error(ctx.error.message || "Login failed", {
             description: "Please try again.",
           });
-        },
-        onSuccess: async () => {
-          const { data: session } = authClient.useSession();
-          if (session) {
-            const userId = session.user.id;
-            await mergeGuestCart(
-              localStorage.getItem("guest_session_id")!,
-              userId
-            );
-          }
         },
       },
     });
