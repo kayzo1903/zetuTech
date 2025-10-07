@@ -19,7 +19,6 @@ import WishlistButton from "@/app/wishlist/components/wishlist-button";
 import { toast } from "sonner";
 import ProductCard from "@/components/cards/productlistCard";
 import { AddToCartButton } from "@/components/cart-system/cart-add-btn";
-import { Button } from "@/components/ui/button";
 
 interface ProductDetailProps {
   productData: Product;

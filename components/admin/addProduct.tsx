@@ -49,7 +49,7 @@ export default function ProductForm() {
     warrantyPeriod: "",
     warrantyDetails: "",
     description: "",
-    status: "Draft",
+    status: "active",
   });
 
   const router = useRouter();

@@ -76,7 +76,7 @@ export default function Header({ session, isAdmin }: HeaderProps) {
   const wishlistCount = wishlistItems.length;
 
   // ✅ Get cart data from store
-  const { summary: cartSummary, initializeCart, syncCart } = useCartStore();
+  const { summary: cartSummary, initializeCart } = useCartStore();
   const cartItemsCount = cartSummary.totalItems;
 
   // ✅ Initialize wishlist and cart when user state changes

@@ -2,10 +2,10 @@
 import { getServerSession } from '@/lib/server-session';
 import { getCartItems, getOrCreateCart } from '@/utils/cart-helper';
 import { getGuestSessionId } from '@/utils/cart-session';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession();
     let userId: string | undefined;
