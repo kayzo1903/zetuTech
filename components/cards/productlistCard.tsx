@@ -210,11 +210,11 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
           <div className="mt-auto">
             <div className="flex flex-col md:flex-row items-start md:items-center gap-2 mb-2">
               <span className="text-sm md:text-lg font-bold text-gray-900 dark:text-white">
-                {formatNumber(displayPrice)}
+               Tsh  {formatNumber(displayPrice)}
               </span>
               {product.hasDiscount && salePrice && (
                 <span className="text-sm text-gray-500 dark:text-gray-400 line-through">
-                  {formatNumber(originalPrice)}
+                Tsh  {formatNumber(originalPrice)}
                 </span>
               )}
             </div>
@@ -222,7 +222,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
             {/* Savings */}
             {product.hasDiscount && salePrice && (
               <div className="text-xs text-green-600 font-medium">
-                Save {formatNumber(originalPrice - salePrice)}
+                Save Tsh {formatNumber(originalPrice - salePrice)}
               </div>
             )}
           </div>

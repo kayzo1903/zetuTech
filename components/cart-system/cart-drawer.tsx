@@ -1,4 +1,4 @@
-// components/cart/cart-drawer.tsx
+// components/cart/cart-drawer.tsx - ADD THIS BUTTON
 'use client';
 
 import { useState } from 'react';
@@ -12,9 +12,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { useCartStore } from '@/lib/cart/store';
 import { CartBadge } from './cart-badge';
-import { ShoppingCart, X, Loader2 } from 'lucide-react';
+import { ShoppingCart, X, Loader2, ArrowRight } from 'lucide-react';
 import { CartItems } from './cart-items';
 import { CartSummary } from './cart-summary';
+import Link from 'next/link'; // ✅ Add this import
 
 export function CartDrawer() {
   const [open, setOpen] = useState(false);
@@ -36,7 +37,7 @@ export function CartDrawer() {
       <SheetContent className="flex flex-col w-full sm:max-w-md">
         <SheetHeader>
           <SheetTitle className="flex items-center justify-between">
-            <span>Shopping Cart</span>
+            <span>Shopping Cart ({summary.totalItems})</span>
             <Button
               variant="ghost"
               size="icon"
@@ -72,12 +73,27 @@ export function CartDrawer() {
               <CartSummary />
               
               <div className="space-y-2">
+                {/* ✅ ADD THIS: View Full Cart Button */}
+                <Button 
+                  variant="outline"
+                  className="w-full" 
+                  asChild
+                >
+                  <Link 
+                    href="/cart" 
+                    onClick={() => setOpen(false)}
+                    className="flex items-center justify-center"
+                  >
+                    View Full Cart Page
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+
                 <Button 
                   className="w-full" 
                   size="lg"
                   onClick={() => {
                     setOpen(false);
-                    // Navigate to checkout
                     window.location.href = '/checkout';
                   }}
                 >
