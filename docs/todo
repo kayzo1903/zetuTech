@@ -82,11 +82,11 @@ we will connect our webapp with cloudfare 3 for image system
 > Introduce a top product types
 > introduce a real data and links
 
-## redesign newarrival layout // 09/25/05 done
+## redesign newarrival layout // ✅✅ 09/25/05 done
 
 > redesign a newarrival component with layout
 
-## redisgn a header to more e-commerce style // 🟢🟢 09/25/05
+## redisgn a header to more e-commerce style // ✅✅ 09/25/05
 
 > sticky header brand name and navtoogle & account cart , search input below in small screen , remove theme toogle
 > on small screen all out screen sidenavbar with many categories , brand type , wishlist. You can implement shadcn drop down , sidebar and any other helper components if necessary , its has to be more ecommerce
@@ -131,11 +131,33 @@ we will connect our webapp with cloudfare 3 for image system
 > implemting a functinality to all components
 > fetching a wishlist at a table
 
-## implemting cart-items and final ordering 🟢🟢
+## implemting cart-items and final ordering ✅✅
 > creating table in db for cart & cartitems 
 > creatig types
-> cart-provider
+> Cart Helper Functions
+> Create API Endpoints
+> Zustand Store Setup
+> Guest Session Handling
+> Cart Drawer Component
+> Cart Badge Component
+> Full Cart Page
+> Header Integration
+> Wishlist Integration
+> Product Page Integration
 
 
 ## implementing a metadata to all page 🔴🔴
  > creating a metadata for page seo to all routes
+
+## Proceed to checkout Page
+ > Designed checkout page structure with progress stepper
+ > Built contact information step with region selection
+ > Created delivery method step with region-based options
+ > Developed address information step for delivery/pickup
+ > Built payment method step focusing on cash on delivery 
+ > Created review and confirm step with order summary 
+ > Added order confirmation success page
+ > Fixed TypeScript interfaces for all checkout components
+ > Implemented proper shipping logic: free in Dar es Salaam, 15,000 TZS elsewhere
+
+ 

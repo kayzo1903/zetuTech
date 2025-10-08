@@ -12,6 +12,7 @@ import { Heart, ShoppingCart, Trash2, Share2, Loader2 } from "lucide-react";
 import { Product } from "@/lib/types/product";
 import { toast } from "sonner";
 import { getWishlist, removeWishlistItem } from "@/lib/api/wishlistApiCall";
+import { useCartStore } from "@/lib/cart/store"; // ✅ Import cart store
 
 export default function Wishlist() {
   const [items, setItems] = useState<Product[]>([]);
@@ -22,6 +23,9 @@ export default function Wishlist() {
   const [loadingRemove, setLoadingRemove] = useState<string | null>(null);
   const [loadingCart, setLoadingCart] = useState<string | null>(null);
   const [loadingAddAll, setLoadingAddAll] = useState(false);
+
+  // ✅ Get cart store functions
+  const { addItem, isUpdating } = useCartStore();
 
   // Load wishlist items on component mount
   useEffect(() => {
@@ -65,23 +69,36 @@ export default function Wishlist() {
     }
   };
 
-  const moveToCart = async (id: string) => {
+  // ✅ Updated: Move to cart with proper cart store integration
+  const moveToCart = async (product: Product) => {
     try {
-      setLoadingCart(id);
-      // TODO: Replace this with a real API call to add item to cart
-      await new Promise((resolve) => setTimeout(resolve, 1200));
+      setLoadingCart(product.id);
+      
+      // Check if product is available
+      if (product.stockStatus === "Out of Stock") {
+        toast.error("Product is out of stock");
+        return;
+      }
 
-      toast.success("Item moved to cart");
+      // Add to cart using the cart store
+      await addItem(product, 1); // Default quantity: 1
+      
+      toast.success(`${product.name} added to cart`);
+      
       // Optionally remove from wishlist after adding to cart
-      handleRemoveFromWishlist(id);
+      // Uncomment the line below if you want to auto-remove from wishlist
+      // await handleRemoveFromWishlist(product.id);
+      
     } catch (error) {
       console.error("Error moving to cart:", error);
-      toast.error("Failed to move item to cart");
+      const errorMessage = error instanceof Error ? error.message : "Failed to add item to cart";
+      toast.error(errorMessage);
     } finally {
       setLoadingCart(null);
     }
   };
 
+  // ✅ Updated: Add all available items to cart
   const addAllToCart = async () => {
     try {
       setLoadingAddAll(true);
@@ -90,14 +107,39 @@ export default function Wishlist() {
           item.stockStatus === "In Stock" || item.stockStatus === "Low Stock"
       );
 
-      for (const item of inStockItems) {
-        await moveToCart(item.id);
+      if (inStockItems.length === 0) {
+        toast.error("No available items to add to cart");
+        return;
       }
 
-      toast.success("All available items moved to cart");
+      let successCount = 0;
+      let errorCount = 0;
+
+      // Process items sequentially to avoid overwhelming the API
+      for (const item of inStockItems) {
+        try {
+          await addItem(item, 1);
+          successCount++;
+          
+          // Optional: Add small delay between requests
+          await new Promise(resolve => setTimeout(resolve, 100));
+        } catch (error) {
+          console.error(`Failed to add ${item.name} to cart:`, error);
+          errorCount++;
+        }
+      }
+
+      if (successCount > 0) {
+        toast.success(`Added ${successCount} items to cart${errorCount > 0 ? ` (${errorCount} failed)` : ''}`);
+      }
+      
+      if (errorCount > 0 && successCount === 0) {
+        toast.error("Failed to add items to cart");
+      }
+
     } catch (error) {
       console.error("Error adding all to cart:", error);
-      toast.error("Failed to move all items to cart");
+      toast.error("Failed to add items to cart");
     } finally {
       setLoadingAddAll(false);
     }
@@ -213,6 +255,9 @@ export default function Wishlist() {
               <Share2 className="w-4 h-4 mr-2" />
               Share List
             </Button>
+          </div>
+          <div className="text-sm text-gray-600 dark:text-slate-400">
+            {sortedItems.length} {sortedItems.length === 1 ? 'item' : 'items'} • {inStockCount} available
           </div>
         </div>
       </div>
@@ -340,11 +385,12 @@ export default function Wishlist() {
                       size="sm"
                       disabled={
                         item.stockStatus === "Out of Stock" ||
-                        loadingCart === item.id
+                        loadingCart === item.id ||
+                        isUpdating
                       }
                       onClick={(e) => {
                         e.preventDefault();
-                        moveToCart(item.id);
+                        moveToCart(item);
                       }}
                       className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -376,21 +422,29 @@ export default function Wishlist() {
             Ready to checkout?
           </h3>
           <p className="text-sm text-gray-600 dark:text-slate-400">
-            Move all available items to your cart
+            {inStockCount > 0 
+              ? `Move ${inStockCount} available ${inStockCount === 1 ? 'item' : 'items'} to your cart`
+              : 'No available items to add to cart'
+            }
           </p>
         </div>
         <Button
           size="lg"
           className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
           onClick={addAllToCart}
-          disabled={inStockCount === 0 || loadingAddAll}
+          disabled={inStockCount === 0 || loadingAddAll || isUpdating}
         >
           {loadingAddAll ? (
             <Loader2 className="w-5 h-5 mr-2 animate-spin" />
           ) : (
             <ShoppingCart className="w-5 h-5 mr-2" />
           )}
-          {loadingAddAll ? "Adding..." : `Add All to Cart (${inStockCount})`}
+          {loadingAddAll 
+            ? "Adding..." 
+            : inStockCount > 0 
+              ? `Add All to Cart (${inStockCount})`
+              : 'No Items Available'
+          }
         </Button>
       </div>
     </div>
