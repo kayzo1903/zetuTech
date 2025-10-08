@@ -58,7 +58,7 @@ export async function getOrCreateCart(userId?: string, sessionId?: string) {
 }
 
 /**
- * Get cart items with minimal product data
+ * Get cart items with complete product data including pricing
  */
 export async function getCartItems(cartId: string): Promise<CartItem[]> {
   const items = await dbServer
@@ -81,6 +81,9 @@ export async function getCartItems(cartId: string): Promise<CartItem[]> {
         )`.as("image"),
         stock: product.stock,
         status: product.status,
+        originalPrice: product.originalPrice,
+        salePrice: product.salePrice,
+        hasDiscount: product.hasDiscount,
       },
     })
     .from(cartItem)
@@ -106,15 +109,15 @@ export async function getCartItems(cartId: string): Promise<CartItem[]> {
       image: item.product.image,
       stock: item.product.stock,
       status: item.product.status,
-      originalPrice: 0,
-      salePrice: null,
-      hasDiscount: false,
+      originalPrice: Number(item.product.originalPrice), // Convert decimal to number
+      salePrice: item.product.salePrice ? Number(item.product.salePrice) : null,
+      hasDiscount: item.product.hasDiscount,
     },
   }));
 }
 
 /**
- * Add item to cart with validation - FIXED DECIMAL HANDLING
+ * Add item to cart with validation - FIXED PRODUCT DATA HANDLING
  */
 export async function addItemToCart({
   userId,
@@ -138,13 +141,14 @@ export async function addItemToCart({
   // Get or create cart
   const activeCart = await getOrCreateCart(userId, sessionId);
 
-  // Check product existence and availability
+  // Check product existence and availability with ALL pricing data
   const [productData] = await dbServer
     .select({
       id: product.id,
       name: product.name,
       originalPrice: product.originalPrice,
       salePrice: product.salePrice,
+      hasDiscount: product.hasDiscount,
       stock: product.stock,
       status: product.status,
     })
@@ -156,7 +160,8 @@ export async function addItemToCart({
   }
 
   // Check if product is available for purchase
-  const availableStatuses = ["active", "published"];
+  // Based on your form, available statuses are: "Brand New", "Refurbished", "Used-Like New", "Used-Good", "Used-Fair"
+  const availableStatuses = ["brand new", "refurbished", "used-like new", "used-good", "used-fair"];
   if (!availableStatuses.includes(productData.status.toLowerCase())) {
     throw new Error("Product is not available for purchase");
   }
@@ -182,8 +187,10 @@ export async function addItemToCart({
       )
     );
 
-  // ✅ FIX: Convert decimal to string for database insertion
-  const finalPrice = (productData.salePrice ?? productData.originalPrice).toString();
+  // Calculate final price based on product pricing
+  const finalPrice = productData.hasDiscount && productData.salePrice 
+    ? productData.salePrice 
+    : productData.originalPrice;
 
   if (existingItems.length > 0) {
     // Update existing item
@@ -203,12 +210,12 @@ export async function addItemToCart({
       })
       .where(eq(cartItem.id, existingItem.id));
   } else {
-    // Add new item - ✅ FIX: price must be string for decimal column
+    // Add new item - price must be string for decimal column
     await dbServer.insert(cartItem).values({
       cartId: activeCart.id,
       productId,
       quantity,
-      price: finalPrice, // ✅ Now passing as string
+      price: finalPrice.toString(), // Convert to string for decimal column
       selectedAttributes: selectedAttributes
         ? JSON.stringify(selectedAttributes)
         : null,
@@ -220,7 +227,7 @@ export async function addItemToCart({
 }
 
 /**
- * Update cart item quantity
+ * Update cart item quantity with proper product validation
  */
 export async function updateCartItemQuantity(
   cartItemId: string,
@@ -231,7 +238,7 @@ export async function updateCartItemQuantity(
     return;
   }
 
-  // Get current cart item with minimal product data
+  // Get current cart item with complete product data
   const [currentItem] = await dbServer
     .select({
       cartItem: cartItem,
@@ -239,6 +246,9 @@ export async function updateCartItemQuantity(
         id: product.id,
         stock: product.stock,
         status: product.status,
+        originalPrice: product.originalPrice,
+        salePrice: product.salePrice,
+        hasDiscount: product.hasDiscount,
       },
     })
     .from(cartItem)
@@ -250,8 +260,8 @@ export async function updateCartItemQuantity(
     throw new Error("Cart item not found");
   }
 
-  // Check product availability
-  const availableStatuses = ["active", "published"];
+  // Check product availability based on your product statuses
+  const availableStatuses = ["brand new", "refurbished", "used-like new", "used-good", "used-fair"];
   if (!availableStatuses.includes(currentItem.product.status.toLowerCase())) {
     throw new Error("Product is no longer available");
   }
@@ -293,7 +303,7 @@ export async function clearCart(cartId: string) {
 }
 
 /**
- * Merge guest cart into user cart - FIXED DECIMAL HANDLING
+ * Merge guest cart into user cart - FIXED PRODUCT DATA HANDLING
  */
 export async function mergeCarts(guestSessionId: string, userId: string) {
   return await dbServer.transaction(async (tx) => {
@@ -362,4 +372,44 @@ export async function mergeCarts(guestSessionId: string, userId: string) {
       return guestItems;
     }
   });
+}
+
+/**
+ * Validate product before adding to cart
+ */
+export async function validateProductForCart(productId: string, quantity: number) {
+  const [productData] = await dbServer
+    .select({
+      id: product.id,
+      name: product.name,
+      originalPrice: product.originalPrice,
+      salePrice: product.salePrice,
+      hasDiscount: product.hasDiscount,
+      stock: product.stock,
+      status: product.status,
+    })
+    .from(product)
+    .where(eq(product.id, productId));
+
+  if (!productData) {
+    throw new Error("Product not found");
+  }
+
+  // Check product availability based on your form statuses
+  const availableStatuses = ["brand new", "refurbished", "used-like new", "used-good", "used-fair"];
+  if (!availableStatuses.includes(productData.status.toLowerCase())) {
+    throw new Error("Product is not available for purchase");
+  }
+
+  // Check stock availability
+  if (productData.stock < quantity) {
+    throw new Error(`Only ${productData.stock} items available in stock`);
+  }
+
+  return {
+    ...productData,
+    finalPrice: productData.hasDiscount && productData.salePrice 
+      ? productData.salePrice 
+      : productData.originalPrice
+  };
 }

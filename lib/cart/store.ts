@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Cart, CartItem, CartSummary, ProductAttributeSelection, CartProduct } from './types';
 import { Product } from '../types/product';
+import { getClientGuestSessionId } from '../server/cart/client-session-util';
 
 // Helper function to calculate cart summary
 const calculateSummary = (items: CartItem[]): CartSummary => {
@@ -86,6 +87,11 @@ export const useCartStore = create<CartState>()(
         set({ isLoading: true, error: null });
 
         try {
+          // Ensure guest session ID exists on client
+          if (typeof window !== 'undefined') {
+            getClientGuestSessionId();
+          }
+
           const response = await fetch('/api/cart', {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
@@ -178,6 +184,8 @@ export const useCartStore = create<CartState>()(
             error: error instanceof Error ? error.message : 'Failed to add item to cart',
             isUpdating: false,
           });
+          // Revert optimistic update
+          get().initializeCart();
         }
       },
 
@@ -214,6 +222,7 @@ export const useCartStore = create<CartState>()(
             error: error instanceof Error ? error.message : 'Failed to update quantity',
             isUpdating: false,
           });
+          get().initializeCart();
         }
       },
 
@@ -247,6 +256,7 @@ export const useCartStore = create<CartState>()(
             error: error instanceof Error ? error.message : 'Failed to remove item',
             isUpdating: false,
           });
+          get().initializeCart();
         }
       },
 

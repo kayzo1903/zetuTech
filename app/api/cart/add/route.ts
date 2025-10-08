@@ -1,16 +1,16 @@
 // app/api/cart/add/route.ts
-import { getServerSession } from '@/lib/server-session';
-import { addItemToCart } from '@/utils/cart-helper';
-import { getGuestSessionId } from '@/utils/cart-session';
 import { NextRequest, NextResponse } from 'next/server';
+import { getSessionIdFromRequest } from '@/lib/server/cart/session-util';
+import { addItemToCart } from '@/utils/cart-helper';
 
 
 export async function POST(request: NextRequest) {
   try {
+    const guestSessionId = await getSessionIdFromRequest(request);
     const body = await request.json();
+    
     const { productId, quantity, selectedAttributes } = body;
-
-    // Validation
+    
     if (!productId || !quantity) {
       return NextResponse.json(
         { success: false, error: 'Product ID and quantity are required' },
@@ -18,34 +18,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (quantity <= 0) {
-      return NextResponse.json(
-        { success: false, error: 'Quantity must be greater than 0' },
-        { status: 400 }
-      );
-    }
-
-    const session = await getServerSession();
-    let userId: string | undefined;
-    let sessionId: string | undefined;
-
-    if (session?.user?.id) {
-      userId = session.user.id;
-    } else {
-      sessionId = await getGuestSessionId();
-    }
-
     const items = await addItemToCart({
-      userId,
-      sessionId,
+      sessionId: guestSessionId,
       productId,
       quantity,
-      selectedAttributes,
+      selectedAttributes
     });
 
     return NextResponse.json({
       success: true,
-      items,
+      items
     });
   } catch (error) {
     console.error('Add to cart error:', error);
@@ -54,7 +36,7 @@ export async function POST(request: NextRequest) {
         success: false, 
         error: error instanceof Error ? error.message : 'Failed to add item to cart' 
       },
-      { status: 500 }
+      { status: 400 }
     );
   }
 }
