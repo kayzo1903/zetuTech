@@ -1,46 +1,50 @@
 // components/checkout/steps/review-step.tsx
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useCartStore } from '@/lib/cart/store';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Check, Edit2, MapPin, User, CreditCard } from 'lucide-react';
-import { toast } from 'sonner';
-import { ReviewStepProps } from '@/lib/types/checkout';
+import { useState } from "react";
+import { useCartStore } from "@/lib/cart/store";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Check, Edit2, MapPin, User, CreditCard } from "lucide-react";
+import { toast } from "sonner";
+import { ReviewStepProps } from "@/lib/types/checkout";
 
-
-export default function ReviewStep({ checkoutData, onConfirm, onBack }: ReviewStepProps) {
+export default function ReviewStep({
+  checkoutData,
+  onConfirm,
+  onBack,
+  isGuest = false,
+}: ReviewStepProps) {
   const { items, summary } = useCartStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // ✅ Fixed shipping logic
-  const isDarEsSalaam = checkoutData.contact?.region === 'Dar es Salaam';
+  const isDarEsSalaam = checkoutData.contact?.region === "Dar es Salaam";
   const shippingCost = isDarEsSalaam ? 0 : 15000;
-  
+
   const tax = summary.cartTotal * 0.18;
   const total = summary.cartTotal + shippingCost + tax;
 
-  const isDirectDelivery = checkoutData.delivery?.method === 'direct_delivery';
- // const isAgentPickup = checkoutData.delivery?.method === 'agent_pickup';
+  const isDirectDelivery = checkoutData.delivery?.method === "direct_delivery";
+  // const isAgentPickup = checkoutData.delivery?.method === 'agent_pickup';
 
   const handlePlaceOrder = async () => {
     setIsSubmitting(true);
-    
+
     try {
       // Simulate API call - will be connected to real API in Phase 2
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      toast.success('Order placed successfully!', {
-        description: 'You will receive a confirmation message shortly.'
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      toast.success("Order placed successfully!", {
+        description: "You will receive a confirmation message shortly.",
       });
-      
+
       await onConfirm();
     } catch (error) {
-        console.error(error)
-      toast.error('Failed to place order', {
-        description: 'Please try again or contact support.'
+      console.error(error);
+      toast.error("Failed to place order", {
+        description: "Please try again or contact support.",
       });
     } finally {
       setIsSubmitting(false);
@@ -55,6 +59,25 @@ export default function ReviewStep({ checkoutData, onConfirm, onBack }: ReviewSt
       <p className="text-gray-600 dark:text-gray-400 mb-6">
         Please review all information before confirming your order
       </p>
+
+      {/* Guest Notice */}
+      {isGuest && (
+        <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 rounded-lg">
+          <div className="flex items-start gap-3">
+            <div className="w-5 h-5 text-amber-600 mt-0.5">🔒</div>
+            <div>
+              <h4 className="font-medium text-amber-800 dark:text-amber-300">
+                Guest Checkout
+              </h4>
+              <p className="text-sm text-amber-700 dark:text-amber-400 mt-1">
+                You&apos;re checking out as a guest. Your order will be
+                processed normally, but you won&apos;t have access to order
+                history unless you create an account.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-6">
         {/* Contact Information */}
@@ -71,11 +94,17 @@ export default function ReviewStep({ checkoutData, onConfirm, onBack }: ReviewSt
               </Button>
             </div>
             <div className="space-y-1 text-sm">
-              <p><strong>Phone:</strong> {checkoutData.contact?.phone}</p>
+              <p>
+                <strong>Phone:</strong> {checkoutData.contact?.phone}
+              </p>
               {checkoutData.contact?.email && (
-                <p><strong>Email:</strong> {checkoutData.contact.email}</p>
+                <p>
+                  <strong>Email:</strong> {checkoutData.contact.email}
+                </p>
               )}
-              <p><strong>Region:</strong> {checkoutData.contact?.region}</p>
+              <p>
+                <strong>Region:</strong> {checkoutData.contact?.region}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -96,24 +125,36 @@ export default function ReviewStep({ checkoutData, onConfirm, onBack }: ReviewSt
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
                 <Badge variant={isDirectDelivery ? "default" : "secondary"}>
-                  {isDirectDelivery ? 'Direct Delivery' : 'Agent Pickup'}
+                  {isDirectDelivery ? "Direct Delivery" : "Agent Pickup"}
                 </Badge>
                 <span>
-                  {isDirectDelivery ? `TZS ${shippingCost.toLocaleString()}` : 'FREE'}
+                  {isDirectDelivery
+                    ? `TZS ${shippingCost.toLocaleString()}`
+                    : "FREE"}
                 </span>
               </div>
-              
+
               {isDirectDelivery ? (
                 <div>
-                  <p><strong>Address:</strong> {checkoutData.address?.address}</p>
-                  <p><strong>City:</strong> {checkoutData.address?.city}</p>
+                  <p>
+                    <strong>Address:</strong> {checkoutData.address?.address}
+                  </p>
+                  <p>
+                    <strong>City:</strong> {checkoutData.address?.city}
+                  </p>
                   {checkoutData.address?.notes && (
-                    <p><strong>Instructions:</strong> {checkoutData.address.notes}</p>
+                    <p>
+                      <strong>Instructions:</strong>{" "}
+                      {checkoutData.address.notes}
+                    </p>
                   )}
                 </div>
               ) : (
                 <div>
-                  <p><strong>Pickup Location:</strong> {checkoutData.delivery?.agentLocation}</p>
+                  <p>
+                    <strong>Pickup Location:</strong>{" "}
+                    {checkoutData.delivery?.agentLocation}
+                  </p>
                   <p className="text-amber-600 text-sm">
                     Please bring your ID for verification
                   </p>
@@ -138,13 +179,14 @@ export default function ReviewStep({ checkoutData, onConfirm, onBack }: ReviewSt
             </div>
             <div className="text-sm">
               <Badge variant="outline" className="mb-2">
-                {checkoutData.payment?.method === 'cash_delivery' ? 'Cash on Delivery' : 'Online Payment'}
+                {checkoutData.payment?.method === "cash_delivery"
+                  ? "Cash on Delivery"
+                  : "Online Payment"}
               </Badge>
               <p className="text-gray-600">
-                {checkoutData.payment?.method === 'cash_delivery' 
-                  ? 'Pay with cash when you receive your order'
-                  : 'Payment will be processed immediately'
-                }
+                {checkoutData.payment?.method === "cash_delivery"
+                  ? "Pay with cash when you receive your order"
+                  : "Payment will be processed immediately"}
               </p>
             </div>
           </CardContent>
@@ -155,8 +197,11 @@ export default function ReviewStep({ checkoutData, onConfirm, onBack }: ReviewSt
           <CardContent className="p-4">
             <h3 className="font-semibold mb-3">Order Summary</h3>
             <div className="space-y-3">
-              {items.map(item => (
-                <div key={item.id} className="flex justify-between items-center text-sm">
+              {items.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex justify-between items-center text-sm"
+                >
                   <div className="flex-1">
                     <p className="font-medium">{item.product.name}</p>
                     <p className="text-gray-500">
@@ -169,7 +214,7 @@ export default function ReviewStep({ checkoutData, onConfirm, onBack }: ReviewSt
                 </div>
               ))}
             </div>
-            
+
             <div className="border-t pt-3 mt-3 space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Subtotal</span>
@@ -178,7 +223,9 @@ export default function ReviewStep({ checkoutData, onConfirm, onBack }: ReviewSt
               <div className="flex justify-between text-sm">
                 <span>Shipping</span>
                 <span>
-                  {shippingCost === 0 ? 'Free' : `TZS ${shippingCost.toLocaleString()}`}
+                  {shippingCost === 0
+                    ? "Free"
+                    : `TZS ${shippingCost.toLocaleString()}`}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
@@ -205,13 +252,13 @@ export default function ReviewStep({ checkoutData, onConfirm, onBack }: ReviewSt
             <Check className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
             <div className="text-sm">
               <p className="font-medium text-blue-800 dark:text-blue-300">
-                By placing this order, you agree to our Terms of Service and Privacy Policy.
+                By placing this order, you agree to our Terms of Service and
+                Privacy Policy.
               </p>
               <p className="text-blue-700 dark:text-blue-400 mt-1">
-                {checkoutData.payment?.method === 'cash_delivery'
-                  ? 'Your order will be prepared and you will be contacted for delivery/pickup arrangements.'
-                  : 'Your payment will be processed and order confirmed immediately.'
-                }
+                {checkoutData.payment?.method === "cash_delivery"
+                  ? "Your order will be prepared and you will be contacted for delivery/pickup arrangements."
+                  : "Your payment will be processed and order confirmed immediately."}
               </p>
             </div>
           </div>

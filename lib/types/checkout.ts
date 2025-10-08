@@ -32,6 +32,7 @@ export interface ReviewStepProps {
   checkoutData: CheckoutData;
   onConfirm: () => Promise<void> | void;
   onBack: () => void;
+  isGuest?: boolean; // Add this prop
 }
 
 // Add to types/checkout.ts

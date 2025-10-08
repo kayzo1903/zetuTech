@@ -88,7 +88,7 @@ export const checkoutSchema = z.object({
 export type CheckoutData = z.infer<typeof checkoutSchema>;
 
 // ✅ ORDER CREATION SCHEMA
-export const orderCreateSchema = checkoutSchema.extend({
+export const orderCreateSchema = checkoutSchema.safeExtend({
   cartItems: z.array(z.object({
     productId: z.string().uuid(),
     productName: z.string().min(1),
@@ -104,6 +104,7 @@ export const orderCreateSchema = checkoutSchema.extend({
     tax: z.number().min(0),
     total: z.number().positive()
   })
+  
 });
 
 export type OrderCreateData = z.infer<typeof orderCreateSchema>;
