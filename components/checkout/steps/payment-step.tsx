@@ -7,13 +7,12 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { CreditCard, Smartphone, Wallet, Clock } from 'lucide-react';
+import { PaymentData } from '@/lib/types/checkout';
+import { paymentSchema } from '@/lib/validation-schemas/checkout';
 
 interface PaymentStepProps {
-  data: {
-    method: string;
-  };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onUpdate: (data: any) => void;
+  data: PaymentData;
+  onUpdate: (data: PaymentData) => void;
   onNext: () => void;
   onBack: () => void;
 }
@@ -54,22 +53,73 @@ const paymentMethods = [
 ];
 
 export default function PaymentStep({ data, onUpdate, onNext, onBack }: PaymentStepProps) {
-  const [formData, setFormData] = useState(data);
+  const [formData, setFormData] = useState<PaymentData>(data);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   const handleMethodChange = (method: string) => {
     const newData = { method };
     setFormData(newData);
+    
+    if (touched.method) {
+      validateField('method', method);
+    }
+    
     onUpdate(newData);
   };
 
-  const isFormValid = formData.method;
+  const handleBlur = (field: keyof PaymentData) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+    validateField(field, formData[field]);
+  };
+
+  const validateField = (field: keyof PaymentData, value: string) => {
+    const result = paymentSchema.pick({ [field]: true }).safeParse({ [field]: value });
+    
+    if (!result.success) {
+      const error = result.error.issues[0]?.message || 'Invalid value';
+      setErrors(prev => ({ ...prev, [field]: error }));
+    } else {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const result = paymentSchema.safeParse(formData);
+    
+    if (!result.success) {
+      const newErrors: Record<string, string> = {};
+      result.error.issues.forEach(issue => {
+        if (issue.path[0]) {
+          newErrors[issue.path[0] as string] = issue.message;
+        }
+      });
+      setErrors(newErrors);
+      return false;
+    }
+    
+    setErrors({});
+    return true;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isFormValid) {
+    
+    // Mark all fields as touched on submit
+    setTouched({
+      method: true
+    });
+
+    if (validateForm()) {
       onNext();
     }
   };
+
+  const isFormValid = paymentSchema.safeParse(formData).success;
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
@@ -102,13 +152,14 @@ export default function PaymentStep({ data, onUpdate, onNext, onBack }: PaymentS
                       : formData.method === method.id
                       ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                       : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
-                  }`}
+                  } ${errors.method ? 'border-red-500' : ''}`}
                   onClick={() => method.available && handleMethodChange(method.id)}
                 >
                   <RadioGroupItem 
                     value={method.id} 
                     id={method.id} 
                     disabled={!method.available}
+                    onBlur={() => handleBlur('method')}
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3">
@@ -138,6 +189,9 @@ export default function PaymentStep({ data, onUpdate, onNext, onBack }: PaymentS
               );
             })}
           </RadioGroup>
+          {errors.method && (
+            <p className="text-red-500 text-xs mt-2">{errors.method}</p>
+          )}
         </div>
 
         {/* Payment Information Box */}
@@ -159,6 +213,15 @@ export default function PaymentStep({ data, onUpdate, onNext, onBack }: PaymentS
                 </ul>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Validation Summary */}
+        {Object.keys(errors).length > 0 && (
+          <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 rounded-lg">
+            <p className="text-sm text-red-800 dark:text-red-300 font-medium">
+              Please fix the errors above to continue
+            </p>
           </div>
         )}
 

@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ContactData } from '@/lib/types/checkout';
+import { contactSchema } from '@/lib/validation-schemas/checkout';
 
 const TANZANIA_REGIONS = [
   'Dar es Salaam',
@@ -22,33 +24,82 @@ const TANZANIA_REGIONS = [
 ];
 
 interface ContactStepProps {
-  data: {
-    phone: string;
-    email: string;
-    region: string;
-  };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onUpdate: (data: any) => void;
+  data: ContactData;
+  onUpdate: (data: ContactData) => void;
   onNext: () => void;
 }
 
 export default function ContactStep({ data, onUpdate, onNext }: ContactStepProps) {
-  const [formData, setFormData] = useState(data);
+  const [formData, setFormData] = useState<ContactData>(data);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
-  const handleChange = (field: string, value: string) => {
+  const handleChange = (field: keyof ContactData, value: string) => {
     const newData = { ...formData, [field]: value };
     setFormData(newData);
+    
+    // Validate on change if field was touched
+    if (touched[field]) {
+      validateField(field, value);
+    }
+    
     onUpdate(newData);
   };
 
-  const isFormValid = formData.phone && formData.region;
+  const handleBlur = (field: keyof ContactData) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+    validateField(field, formData[field]);
+  };
+
+  const validateField = (field: keyof ContactData, value: string) => {
+    const result = contactSchema.pick({ [field]: true }).safeParse({ [field]: value });
+    
+    if (!result.success) {
+      const error = result.error.issues[0]?.message || 'Invalid value';
+      setErrors(prev => ({ ...prev, [field]: error }));
+    } else {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const result = contactSchema.safeParse(formData);
+    
+    if (!result.success) {
+      const newErrors: Record<string, string> = {};
+      result.error.issues.forEach(issue => {
+        if (issue.path[0]) {
+          newErrors[issue.path[0] as string] = issue.message;
+        }
+      });
+      setErrors(newErrors);
+      return false;
+    }
+    
+    setErrors({});
+    return true;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isFormValid) {
+    
+    // Mark all fields as touched on submit
+    setTouched({
+      phone: true,
+      email: true,
+      region: true
+    });
+
+    if (validateForm()) {
       onNext();
     }
   };
+
+  const isFormValid = contactSchema.safeParse(formData).success;
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
@@ -70,10 +121,14 @@ export default function ContactStep({ data, onUpdate, onNext }: ContactStepProps
             type="tel"
             value={formData.phone}
             onChange={(e) => handleChange('phone', e.target.value)}
+            onBlur={() => handleBlur('phone')}
             placeholder="+255 XXX XXX XXX"
-            className="mt-1"
+            className={`mt-1 ${errors.phone ? 'border-red-500' : ''}`}
             required
           />
+          {errors.phone && (
+            <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+          )}
           <p className="text-xs text-gray-500 mt-1">
             We&apos;ll call/SMS this number for delivery updates
           </p>
@@ -89,9 +144,13 @@ export default function ContactStep({ data, onUpdate, onNext }: ContactStepProps
             type="email"
             value={formData.email}
             onChange={(e) => handleChange('email', e.target.value)}
+            onBlur={() => handleBlur('email')}
             placeholder="your@email.com"
-            className="mt-1"
+            className={`mt-1 ${errors.email ? 'border-red-500' : ''}`}
           />
+          {errors.email && (
+            <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+          )}
           <p className="text-xs text-gray-500 mt-1">
             Optional - for order confirmation and receipts
           </p>
@@ -106,7 +165,10 @@ export default function ContactStep({ data, onUpdate, onNext }: ContactStepProps
             value={formData.region}
             onValueChange={(value) => handleChange('region', value)}
           >
-            <SelectTrigger className="mt-1">
+            <SelectTrigger 
+              className={`mt-1 ${errors.region ? 'border-red-500' : ''}`}
+              onBlur={() => handleBlur('region')}
+            >
               <SelectValue placeholder="Select your region" />
             </SelectTrigger>
             <SelectContent>
@@ -117,10 +179,22 @@ export default function ContactStep({ data, onUpdate, onNext }: ContactStepProps
               ))}
             </SelectContent>
           </Select>
+          {errors.region && (
+            <p className="text-red-500 text-xs mt-1">{errors.region}</p>
+          )}
           <p className="text-xs text-gray-500 mt-1">
             This determines delivery options available
           </p>
         </div>
+
+        {/* Validation Summary */}
+        {Object.keys(errors).length > 0 && (
+          <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 rounded-lg">
+            <p className="text-sm text-red-800 dark:text-red-300 font-medium">
+              Please fix the errors above to continue
+            </p>
+          </div>
+        )}
 
         {/* Action Buttons */}
         <div className="flex justify-end pt-4">
