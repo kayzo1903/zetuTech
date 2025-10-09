@@ -4,15 +4,18 @@ import { z } from 'zod';
 
 // ✅ CONTACT SCHEMA
 export const contactSchema = z.object({
-  phone: z.string()
-    .min(10, "Phone number must be at least 10 digits")
-    .regex(/^\+255[0-9]{9}$/, "Phone must be in format +255 XXX XXX XXX"),
-  email: z.string()
-    .email("Invalid email address")
+  phone: z
+    .string()
+    .min(13, 'Phone number must be in +255 format (e.g. +255712345678)')
+    .regex(/^\+255\d{9}$/, 'Phone number must be in +255 format (e.g. +255712345678)'),
+  email: z
+    .string()
+    .email('Invalid email address')
     .optional()
     .or(z.literal('')),
-  region: z.string()
-    .min(1, "Please select your region")
+  region: z
+    .string()
+    .min(1, 'Please select a region'),
 });
 
 export type ContactData = z.infer<typeof contactSchema>;

@@ -1,4 +1,3 @@
-// components/checkout/steps/contact-step.tsx
 'use client';
 
 import { useState } from 'react';
@@ -20,7 +19,7 @@ const TANZANIA_REGIONS = [
   'Kahama',
   'Tabora',
   'Zanzibar',
-  'Other'
+  'Other',
 ];
 
 interface ContactStepProps {
@@ -34,15 +33,22 @@ export default function ContactStep({ data, onUpdate, onNext }: ContactStepProps
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
+  // --- Helper: Format phone for readability ---
+  const formatPhone = (input: string): string => {
+    let digits = input.replace(/\D/g, ''); // remove non-digits
+    if (digits.startsWith('0')) digits = '255' + digits.slice(1);
+    else if (!digits.startsWith('255')) digits = '255' + digits;
+    digits = digits.slice(0, 12);
+    const formatted = `+${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6, 9)} ${digits.slice(9)}`.trim();
+    return formatted;
+  };
+
+  const cleanPhone = (value: string) => value.replace(/\D/g, '').replace(/^255/, '+255');
+
   const handleChange = (field: keyof ContactData, value: string) => {
     const newData = { ...formData, [field]: value };
     setFormData(newData);
-    
-    // Validate on change if field was touched
-    if (touched[field]) {
-      validateField(field, value);
-    }
-    
+    if (touched[field]) validateField(field, value);
     onUpdate(newData);
   };
 
@@ -52,8 +58,9 @@ export default function ContactStep({ data, onUpdate, onNext }: ContactStepProps
   };
 
   const validateField = (field: keyof ContactData, value: string) => {
-    const result = contactSchema.pick({ [field]: true }).safeParse({ [field]: value });
-    
+    const sanitized = field === 'phone' ? cleanPhone(value) : value;
+    const result = contactSchema.pick({ [field]: true }).safeParse({ [field]: sanitized });
+
     if (!result.success) {
       const error = result.error.issues[0]?.message || 'Invalid value';
       setErrors(prev => ({ ...prev, [field]: error }));
@@ -67,8 +74,12 @@ export default function ContactStep({ data, onUpdate, onNext }: ContactStepProps
   };
 
   const validateForm = (): boolean => {
-    const result = contactSchema.safeParse(formData);
-    
+    const sanitizedData = {
+      ...formData,
+      phone: cleanPhone(formData.phone),
+    };
+
+    const result = contactSchema.safeParse(sanitizedData);
     if (!result.success) {
       const newErrors: Record<string, string> = {};
       result.error.issues.forEach(issue => {
@@ -79,27 +90,21 @@ export default function ContactStep({ data, onUpdate, onNext }: ContactStepProps
       setErrors(newErrors);
       return false;
     }
-    
+
     setErrors({});
     return true;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Mark all fields as touched on submit
-    setTouched({
-      phone: true,
-      email: true,
-      region: true
-    });
-
-    if (validateForm()) {
-      onNext();
-    }
+    setTouched({ phone: true, email: true, region: true });
+    if (validateForm()) onNext();
   };
 
-  const isFormValid = contactSchema.safeParse(formData).success;
+  const isFormValid = contactSchema.safeParse({
+    ...formData,
+    phone: cleanPhone(formData.phone),
+  }).success;
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
@@ -120,9 +125,9 @@ export default function ContactStep({ data, onUpdate, onNext }: ContactStepProps
             id="phone"
             type="tel"
             value={formData.phone}
-            onChange={(e) => handleChange('phone', e.target.value)}
+            onChange={(e) => handleChange('phone', formatPhone(e.target.value))}
             onBlur={() => handleBlur('phone')}
-            placeholder="+255 XXX XXX XXX"
+            placeholder="+255 712 345 678"
             className={`mt-1 ${errors.phone ? 'border-red-500' : ''}`}
             required
           />
@@ -130,7 +135,7 @@ export default function ContactStep({ data, onUpdate, onNext }: ContactStepProps
             <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
           )}
           <p className="text-xs text-gray-500 mt-1">
-            We&apos;ll call/SMS this number for delivery updates
+            Use <strong>+255</strong> format, e.g. <strong>+255712345678</strong>
           </p>
         </div>
 
@@ -165,7 +170,7 @@ export default function ContactStep({ data, onUpdate, onNext }: ContactStepProps
             value={formData.region}
             onValueChange={(value) => handleChange('region', value)}
           >
-            <SelectTrigger 
+            <SelectTrigger
               className={`mt-1 ${errors.region ? 'border-red-500' : ''}`}
               onBlur={() => handleBlur('region')}
             >
@@ -183,7 +188,7 @@ export default function ContactStep({ data, onUpdate, onNext }: ContactStepProps
             <p className="text-red-500 text-xs mt-1">{errors.region}</p>
           )}
           <p className="text-xs text-gray-500 mt-1">
-            This determines delivery options available
+            This determines available delivery options
           </p>
         </div>
 

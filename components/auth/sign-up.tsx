@@ -8,19 +8,26 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { signIn } from "@/lib/auth-client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { useSearchParams} from "next/navigation";
 
-
-export default function SignUp() {
+export default function SignIn() {
   const [loading, setLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const searchParams = useSearchParams();
+
+  // ✅ Get callback URL from query or fallback to home
+  const callbackUrl = searchParams.get("callbackUrl") || "/";
+
+  useEffect(() => setMounted(true), []);
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
     await signIn.social({
       provider: "google",
-      callbackURL: "/",
+      callbackURL: callbackUrl, // ✅ use dynamic callback
       errorCallbackURL: "/auth/sign-in",
       fetchOptions: {
         onRequest: () => setLoading(true),
@@ -63,7 +70,7 @@ export default function SignUp() {
                 Welcome to zetu<span className="text-blue-600">Tech</span>
               </h1>
               <p className="text-gray-600 dark:text-gray-300 text-sm font-light">
-                create account to access your personalized dashboard
+                create your account to save you items
               </p>
             </motion.div>
           </CardHeader>
@@ -81,7 +88,6 @@ export default function SignUp() {
                 className="w-full h-14 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
               >
                 <div className="flex items-center justify-center gap-4">
-                  {/* Modern Google SVG */}
                   <svg
                     className="w-6 h-6"
                     viewBox="0 0 24 24"
@@ -155,27 +161,29 @@ export default function SignUp() {
       </motion.div>
 
       {/* Floating particles */}
-      <div className="absolute inset-0 pointer-events-none">
-        {[...Array(20)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-2 h-2 bg-blue-400 dark:bg-blue-600 rounded-full opacity-20"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              y: [0, -20, 0],
-              opacity: [0.2, 0.4, 0.2],
-            }}
-            transition={{
-              duration: 3 + Math.random() * 2,
-              repeat: Infinity,
-              delay: Math.random() * 2,
-            }}
-          />
-        ))}
-      </div>
+      {mounted && (
+        <div className="absolute inset-0 pointer-events-none">
+          {[...Array(20)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-2 h-2 bg-blue-400 dark:bg-blue-600 rounded-full opacity-20"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                y: [0, -20, 0],
+                opacity: [0.2, 0.4, 0.2],
+              }}
+              transition={{
+                duration: 3 + Math.random() * 2,
+                repeat: Infinity,
+                delay: Math.random() * 2,
+              }}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,7 +1,7 @@
-// app/checkout/page.tsx - Enhanced for guest support
+// app/checkout/page.tsx - Fixed version
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/lib/cart/store";
 import CheckoutProgress from "./checkout-progress";
@@ -11,16 +11,24 @@ import OrderSummary from "./order-summary";
 import AddressStep from "./steps/address-step";
 import PaymentStep from "./steps/payment-step";
 import ReviewStep from "./steps/review-step";
-import { AddressData, CheckoutData, ContactData, DeliveryData, PaymentData } from "@/lib/types/checkout";
+import {
+  AddressData,
+  CheckoutData,
+  ContactData,
+  DeliveryData,
+  PaymentData,
+} from "@/lib/types/checkout";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import { getClientGuestSessionId } from "@/lib/server/cart/client-session-util";
 
 export default function CheckoutPage() {
   const { items, summary, isLoading, clearCart } = useCartStore();
-  const { data: session } = authClient.useSession(); // or your auth context
+  const { data: session } = authClient.useSession();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
+  const [guestSessionId, setGuestSessionId] = useState<string>("");
+
   const [checkoutData, setCheckoutData] = useState<CheckoutData>({
     contact: { phone: "", email: "", region: "" },
     delivery: { method: "", agentLocation: "" },
@@ -28,8 +36,13 @@ export default function CheckoutPage() {
     payment: { method: "cash_delivery" },
   });
 
-  // Get guest session ID for guest orders
-  const guestSessionId = getClientGuestSessionId(); //whats plan here it was just declared 
+  // Initialize guest session ID on client side
+  useEffect(() => {
+    if (!session?.user) {
+      const sessionId = getClientGuestSessionId();
+      setGuestSessionId(sessionId);
+    }
+  }, [session?.user]);
 
   // Redirect if cart is empty
   if (!isLoading && items.length === 0) {
@@ -59,7 +72,12 @@ export default function CheckoutPage() {
       const shippingCost = isDarEsSalaam ? 0 : 15000;
 
       const orderData = {
-        contact: checkoutData.contact,
+        contact: {
+          ...checkoutData.contact,
+          phone: checkoutData.contact.phone
+            .replace(/\D/g, "")
+            .replace(/^255/, "+255"),
+        },
         delivery: checkoutData.delivery,
         address: checkoutData.address,
         payment: checkoutData.payment,
@@ -68,9 +86,12 @@ export default function CheckoutPage() {
           discount: summary.totalDiscount,
           shipping: shippingCost,
           tax: Math.round(summary.cartTotal * 0.18),
-          total: summary.cartTotal + shippingCost + Math.round(summary.cartTotal * 0.18),
+          total:
+            summary.cartTotal +
+            shippingCost +
+            Math.round(summary.cartTotal * 0.18),
         },
-        items: items.map((item) => ({
+        cartItems: items.map((item) => ({
           productId: item.productId,
           productName: item.product.name,
           quantity: item.quantity,
@@ -78,49 +99,66 @@ export default function CheckoutPage() {
           totalPrice: item.price * item.quantity,
           attributes: item.selectedAttributes,
         })),
-        
-        // Send user ID if logged in, otherwise rely on session
         userId: session?.user?.id || null,
-        // Include guest session ID for tracking
         guestSessionId: !session?.user ? guestSessionId : null,
       };
 
+
       // Call the order creation API
-      const response = await fetch('/api/orders/create', {
-        method: 'POST',
+      const response = await fetch("/api/orders/create", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(orderData),
       });
 
+
+      if (!response.ok) {
+        // Handle HTTP errors
+        if (response.status === 404) {
+          throw new Error(
+            "Order API endpoint not found. Please check the server."
+          );
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const result = await response.json();
 
       if (result.success) {
-        toast.success('Order placed successfully!');
-        
+        toast.success("Order placed successfully!");
+
         // Clear local cart state
         clearCart();
-        
-        // Redirect to success page with guest info
-        router.push(`/checkout/success?orderId=${result.order.id}&orderNumber=${result.order.orderNumber}&isGuest=${result.order.isGuest}`);
-      } else {
-        throw new Error(result.error || 'Failed to create order');
-      }
 
+        // Redirect to success page with guest info
+        router.push(
+          `/checkout/success?orderId=${result.order.id}&orderNumber=${result.order.orderNumber}&isGuest=${result.order.isGuest}`
+        );
+      } else {
+        throw new Error(result.error || "Failed to create order");
+      }
     } catch (error) {
-      console.error('Order creation error:', error);
-      toast.error('Failed to place order. Please try again.');
+      console.error("Order creation error:", error);
+      toast.error(
+        `Failed to place order: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
   };
 
+  // ... rest of your component remains the same
   const renderStep = () => {
     switch (currentStep) {
       case 1:
         return (
           <ContactStep
             data={checkoutData.contact}
-            onUpdate={(data: ContactData) => updateCheckoutData("contact", data)}
+            onUpdate={(data: ContactData) =>
+              updateCheckoutData("contact", data)
+            }
             onNext={nextStep}
           />
         );
@@ -129,7 +167,9 @@ export default function CheckoutPage() {
           <DeliveryStep
             data={checkoutData.delivery}
             contactData={checkoutData.contact}
-            onUpdate={(data: DeliveryData) => updateCheckoutData("delivery", data)}
+            onUpdate={(data: DeliveryData) =>
+              updateCheckoutData("delivery", data)
+            }
             onNext={nextStep}
             onBack={prevStep}
           />
@@ -139,7 +179,9 @@ export default function CheckoutPage() {
           <AddressStep
             data={checkoutData.address}
             deliveryData={checkoutData.delivery}
-            onUpdate={(data: AddressData) => updateCheckoutData("address", data)}
+            onUpdate={(data: AddressData) =>
+              updateCheckoutData("address", data)
+            }
             onNext={nextStep}
             onBack={prevStep}
           />
@@ -148,7 +190,9 @@ export default function CheckoutPage() {
         return (
           <PaymentStep
             data={checkoutData.payment}
-            onUpdate={(data: PaymentData) => updateCheckoutData("payment", data)}
+            onUpdate={(data: PaymentData) =>
+              updateCheckoutData("payment", data)
+            }
             onNext={nextStep}
             onBack={prevStep}
           />
@@ -159,7 +203,7 @@ export default function CheckoutPage() {
             checkoutData={checkoutData}
             onConfirm={handleOrderConfirmation}
             onBack={prevStep}
-            isGuest={!session?.user} // Pass guest status to review step
+            isGuest={!session?.user}
           />
         );
       default:
@@ -184,7 +228,16 @@ export default function CheckoutPage() {
           </div>
           {!session?.user && (
             <p className="text-sm text-gray-600 mt-2">
-              You&apos;re checking out as a guest. <button className="text-blue-600 hover:underline">Sign in</button> to save your order history.
+              You&apos;re checking out as a guest.{" "}
+              <button
+                className="text-blue-600 hover:underline"
+                onClick={() =>
+                  router.push("/auth/sign-in?callbackUrl=/checkout")
+                }
+              >
+                Sign in
+              </button>
+              to save your order history.
             </p>
           )}
         </div>
@@ -196,7 +249,10 @@ export default function CheckoutPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
           <div className="lg:col-span-2">{renderStep()}</div>
           <div className="lg:col-span-1">
-            <OrderSummary checkoutData={checkoutData} isGuest={!session?.user} />
+            <OrderSummary
+              checkoutData={checkoutData}
+              isGuest={!session?.user}
+            />
           </div>
         </div>
       </div>

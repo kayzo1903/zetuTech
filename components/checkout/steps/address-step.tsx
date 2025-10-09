@@ -97,7 +97,7 @@ export default function AddressStep({
             id="fullName"
             value={formData.fullName}
             onChange={(e) => handleChange('fullName', e.target.value)}
-            placeholder="John Doe"
+            placeholder="Nasibu Abduli"
             className="mt-1"
             required
           />
@@ -117,7 +117,7 @@ export default function AddressStep({
             onChange={(e) => handleChange('address', e.target.value)}
             placeholder={
               isDirectDelivery
-                ? 'Street address, building, floor, etc.'
+                ? 'Mf. Ubungo maji , ubungo ,  etc.'
                 : 'Your address (optional)'
             }
             className="mt-1"

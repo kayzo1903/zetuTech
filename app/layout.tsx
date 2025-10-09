@@ -10,6 +10,7 @@ import TanStackProviders from "@/lib/tanStackprovider";
 import WishlistProvider from "./wishlist/provider/wishlistProvider";
 import { Toaster } from "@/components/ui/sonner";
 import { CartProvider } from "@/components/provider/cart-provider";
+import { getServerSession } from "@/lib/server-session";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,11 +32,9 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const {session , isAdmin } = await getServerSession()
 
-  const isAdmin = session?.user?.role === "admin";
+  
 
   return (
     <html lang="en" suppressHydrationWarning>
