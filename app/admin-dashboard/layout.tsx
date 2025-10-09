@@ -13,8 +13,8 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+
+import { getServerSession } from "@/lib/server-session";
 import { redirect } from "next/navigation";
 
 export default async function AdminLayout({
@@ -22,17 +22,14 @@ export default async function AdminLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const { isAdmin, session } = await getServerSession();
 
-
-  if (!session || session.user?.role !== "admin") {
+  if (!session || isAdmin) {
     redirect("/");
   }
 
   return (
-    <main>
+    <main className="flex min-h-screen">
       <SidebarProvider
         style={
           {
@@ -60,7 +57,7 @@ export default async function AdminLayout({
               </BreadcrumbList>
             </Breadcrumb>
           </header>
-          {children}
+          <div className="p-4 flex-1">{children}</div>
         </SidebarInset>
       </SidebarProvider>
     </main>

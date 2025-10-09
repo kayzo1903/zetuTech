@@ -3,12 +3,12 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import Footer from "@/components/footer";
-import Header from "@/components/header";
 import TanStackProviders from "@/lib/tanStackprovider";
 import WishlistProvider from "./wishlist/provider/wishlistProvider";
 import { Toaster } from "@/components/ui/sonner";
 import { CartProvider } from "@/components/provider/cart-provider";
 import { getServerSession } from "@/lib/server-session";
+import ClientHeader from "@/components/clientHeader";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,40 +30,17 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const {session , isAdmin } = await getServerSession()
-
-  
+  const { session, isAdmin } = await getServerSession();
 
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <WishlistProvider>
             <TanStackProviders>
               <CartProvider>
-                <Header
-                  session={
-                    session
-                      ? {
-                          user: session.user
-                            ? {
-                                name: session.user.name,
-                                image: session.user.image ?? undefined,
-                                role: session.user.role ?? undefined,
-                              }
-                            : undefined,
-                        }
-                      : null
-                  }
-                  isAdmin={isAdmin}
-                />
+                {/* ✅ Header now controlled client-side */}
+                <ClientHeader session={session} isAdmin={isAdmin} />
                 {children}
               </CartProvider>
             </TanStackProviders>
