@@ -5,9 +5,8 @@ import { headers } from "next/headers";
 
 export async function getServerSession() {
   try {
-    const headersList = await headers();
     const session = await auth.api.getSession({
-      headers: headersList,
+      headers: await headers(),
     });
 
     return {
@@ -17,7 +16,6 @@ export async function getServerSession() {
       isAdmin: (session?.user as { role?: string })?.role === "admin",
       isAuthenticated: !!session?.user,
     };
-    
   } catch (error) {
     console.error("Error getting server session:", error);
     return {
@@ -29,4 +27,3 @@ export async function getServerSession() {
     };
   }
 }
-
