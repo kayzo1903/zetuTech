@@ -24,7 +24,7 @@ export default async function AdminLayout({
 }>) {
   const { isAdmin, session } = await getServerSession();
 
-  if (!session || isAdmin) {
+  if (!session || !isAdmin) {
     redirect("/");
   }
 
