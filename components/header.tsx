@@ -407,7 +407,7 @@ export default function Header({ session, isAdmin }: HeaderProps) {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href="/orders">My Orders</Link>
+                    <Link href="/account/orders">My Orders</Link>
                   </DropdownMenuItem>
 
                   {/* ✅ Wishlist in Dropdown with Count */}
@@ -447,7 +447,7 @@ export default function Header({ session, isAdmin }: HeaderProps) {
                   </DropdownMenuItem>
 
                   <DropdownMenuItem asChild>
-                    <Link href="/account">Account Settings</Link>
+                    <Link href="/account/setting">Account Settings</Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   {isAdmin && (

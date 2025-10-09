@@ -4,8 +4,6 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import Footer from "@/components/footer";
 import Header from "@/components/header";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
 import TanStackProviders from "@/lib/tanStackprovider";
 import WishlistProvider from "./wishlist/provider/wishlistProvider";
 import { Toaster } from "@/components/ui/sonner";

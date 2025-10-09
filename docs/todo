@@ -149,7 +149,7 @@ we will connect our webapp with cloudfare 3 for image system
 ## implementing a metadata to all page 🔴🔴
  > creating a metadata for page seo to all routes
 
-## Proceed to checkout Page
+## Proceed to checkout Page 🟢🟢
  > Designed checkout page structure with progress stepper
  > Built contact information step with region selection
  > Created delivery method step with region-based options
