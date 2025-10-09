@@ -15,14 +15,12 @@ export default async function Home() {
   ]);
 
   return (
-    <div className="w-full bg-gray-50 dark:bg-gray-900">
-      <main className="w-full">
+      <main className="w-full bg-gray-50 dark:bg-gray-900">
         <ZetutechHero />
         <NewArrivals products={newArrivalProducts} />
         <FeaturedProduct featuredProduct={featuredProduct}/>
         <InfinityProducts initialProducts={initialProducts} />
       </main>
-    </div>
   );
 }
 

@@ -105,6 +105,7 @@ export default function Header({ session, isAdmin }: HeaderProps) {
           // ✅ Reinitialize cart as guest after sign out
           setTimeout(() => {
             initializeCart();
+            router.refresh()
           }, 1000);
         },
       },

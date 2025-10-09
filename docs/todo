@@ -160,4 +160,9 @@ we will connect our webapp with cloudfare 3 for image system
  > Fixed TypeScript interfaces for all checkout components
  > Implemented proper shipping logic: free in Dar es Salaam, 15,000 TZS elsewhere
 
+## creating order page 🟢🟢
+> orderlist page
+> order detailed page 
+
+## admin customer orders page
  
