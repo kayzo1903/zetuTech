@@ -451,7 +451,7 @@ export async function POST(
 
     // Get presigned URL for upload
     const presignResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL}/api/r2-presign`,
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/r2-presign`,
       {
         method: "POST",
         headers: {

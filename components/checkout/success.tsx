@@ -85,56 +85,20 @@ export default function OrderSuccess() {
     }
   };
 
-  const generateReceipt = async () => {
-    if (!orderId) return;
+// In your success page - update the downloadReceipt function
+const downloadReceipt = async () => {
+  if (!orderData) return;
 
-    setIsGenerating(true);
-    setError(null);
+  setIsDownloading(true);
+  setError(null);
 
-    try {
-      const response = await fetch(`/api/orders/${orderId}/generate-receipt`, {
-        method: 'POST',
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        setVerificationLink(result.verifyLink);
-        // Update order data with new receipt info
-        setOrderData(prev => prev ? {
-          ...prev,
-          order: {
-            ...prev.order,
-            receiptUrl: result.receiptUrl,
-            verificationCode: result.verificationCode
-          }
-        } : null);
-        
-        // Download the receipt automatically after generation
-        await downloadReceipt();
-      } else {
-        setError(result.error || 'Failed to generate receipt');
-      }
-    } catch (error) {
-      console.error('Error generating receipt:', error);
-      setError('Failed to generate receipt. Please try again.');
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const downloadReceipt = async () => {
-    if (!orderData?.order.receiptUrl) {
-      // If no receipt exists, generate one first
-      await generateReceipt();
-      return;
-    }
-
-    setIsDownloading(true);
-    setError(null);
-
-    try {
-      // Since the receipt is stored in R2 with a public URL, we can download it directly
+  try {
+    console.log('📥 Starting download process...');
+    
+    // If receipt already exists and has a URL, download it directly
+    if (orderData.order.receiptUrl) {
+      console.log('📄 Downloading existing receipt:', orderData.order.receiptUrl);
+      
       const response = await fetch(orderData.order.receiptUrl);
       
       if (!response.ok) {
@@ -151,14 +115,78 @@ export default function OrderSuccess() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-
-    } catch (error) {
-      console.error('Error downloading receipt:', error);
-      setError('Failed to download receipt. Please try again.');
-    } finally {
-      setIsDownloading(false);
+      
+      console.log('✅ Receipt downloaded successfully');
+      return;
     }
-  };
+
+    // If no receipt exists, generate one first
+    console.log('🔄 No receipt found, generating new one...');
+    await generateReceipt();
+    
+  } catch (error) {
+    console.error('❌ Error downloading receipt:', error);
+    setError('Failed to download receipt. Please try again.');
+  } finally {
+    setIsDownloading(false);
+  }
+};
+
+// Also update the generateReceipt function to avoid loops
+const generateReceipt = async () => {
+  if (!orderId) return;
+
+  setIsGenerating(true);
+  setError(null);
+
+  try {
+    console.log('🔄 Generating new receipt...');
+    const response = await fetch(`/api/orders/${orderId}/generate-receipt`, {
+      method: 'POST',
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      setVerificationLink(result.verifyLink);
+      // Update order data with new receipt info
+      setOrderData(prev => prev ? {
+        ...prev,
+        order: {
+          ...prev.order,
+          receiptUrl: result.receiptUrl,
+          verificationCode: result.verificationCode
+        }
+      } : null);
+      
+      console.log('✅ Receipt generated successfully');
+      
+      // Auto-download the newly generated receipt
+      console.log('📥 Auto-downloading generated receipt...');
+      const downloadResponse = await fetch(result.receiptUrl);
+      if (downloadResponse.ok) {
+        const blob = await downloadResponse.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `zetutech-receipt-${orderData?.order.orderNumber || 'receipt'}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        console.log('✅ Generated receipt downloaded');
+      }
+    } else {
+      setError(result.error || 'Failed to generate receipt');
+    }
+  } catch (error) {
+    console.error('❌ Error generating receipt:', error);
+    setError('Failed to generate receipt. Please try again.');
+  } finally {
+    setIsGenerating(false);
+  }
+};
 
   const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat('en-TZ', {
