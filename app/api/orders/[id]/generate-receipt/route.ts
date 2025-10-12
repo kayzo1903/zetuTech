@@ -494,7 +494,7 @@ export async function POST(
       })
       .where(eq(order.id, orderId));
 
-    const verifyLink = `${process.env.NEXT_PUBLIC_APP_URL}/verify/${verificationCode}`;
+    const verifyLink = `${process.env.NEXT_PUBLIC_BASE_URL}/verify/${verificationCode}`;
 
     return NextResponse.json({
       success: true,

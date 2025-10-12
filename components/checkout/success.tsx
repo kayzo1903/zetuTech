@@ -1,7 +1,7 @@
 // app/checkout/success/page.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -54,17 +54,9 @@ export default function OrderSuccess() {
 
   const orderId = searchParams.get('orderId');
 
-  useEffect(() => {
-    if (!orderId) {
-      router.push('/');
-      return;
-    }
-
-    fetchOrderData();
-  }, [orderId, router]);
-
-  const fetchOrderData = async () => {
+  const fetchOrderData = useCallback(async () => {
     try {
+      console.log('🔄 Fetching order data...');
       const response = await fetch(`/api/orders/${orderId}/receipt-data`);
       const result = await response.json();
 
@@ -83,26 +75,67 @@ export default function OrderSuccess() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [orderId]);
 
-// In your success page - update the downloadReceipt function
-const downloadReceipt = async () => {
-  if (!orderData) return;
+  useEffect(() => {
+    if (!orderId) {
+      router.push('/');
+      return;
+    }
 
-  setIsDownloading(true);
-  setError(null);
+    fetchOrderData();
+  }, [orderId, router, fetchOrderData]);
 
-  try {
-    console.log('📥 Starting download process...');
-    
-    // If receipt already exists and has a URL, download it directly
-    if (orderData.order.receiptUrl) {
-      console.log('📄 Downloading existing receipt:', orderData.order.receiptUrl);
-      
-      const response = await fetch(orderData.order.receiptUrl);
+  const generateReceipt = useCallback(async (autoDownload = false) => {
+    if (!orderId || isGenerating) return;
+
+    setIsGenerating(true);
+    setError(null);
+
+    try {
+      console.log('🔄 Generating new receipt...');
+      const response = await fetch(`/api/orders/${orderId}/generate-receipt`, {
+        method: 'POST',
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setVerificationLink(result.verifyLink);
+        // Update order data with new receipt info
+        setOrderData(prev => prev ? {
+          ...prev,
+          order: {
+            ...prev.order,
+            receiptUrl: result.receiptUrl,
+            verificationCode: result.verificationCode
+          }
+        } : null);
+        
+        console.log('✅ Receipt generated successfully');
+        
+        // Auto-download only if requested
+        if (autoDownload && result.receiptUrl) {
+          await downloadReceiptDirectly(result.receiptUrl);
+        }
+      } else {
+        setError(result.error || 'Failed to generate receipt');
+      }
+    } catch (error) {
+      console.error('❌ Error generating receipt:', error);
+      setError('Failed to generate receipt. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [orderId, isGenerating]);
+
+  const downloadReceiptDirectly = async (receiptUrl: string) => {
+    try {
+      console.log('📥 Downloading receipt directly:', receiptUrl);
+      const response = await fetch(receiptUrl);
       
       if (!response.ok) {
-        throw new Error('Failed to download receipt');
+        throw new Error(`Failed to download receipt: ${response.status}`);
       }
 
       const blob = await response.blob();
@@ -110,83 +143,83 @@ const downloadReceipt = async () => {
       const a = document.createElement('a');
       a.style.display = 'none';
       a.href = url;
-      a.download = `zetutech-receipt-${orderData.order.orderNumber}.pdf`;
+      a.download = `zetutech-receipt-${orderData?.order.orderNumber || 'receipt'}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
       
       console.log('✅ Receipt downloaded successfully');
-      return;
+    } catch (error) {
+      console.error('❌ Error downloading receipt:', error);
+      throw error;
     }
+  };
 
-    // If no receipt exists, generate one first
-    console.log('🔄 No receipt found, generating new one...');
-    await generateReceipt();
-    
-  } catch (error) {
-    console.error('❌ Error downloading receipt:', error);
-    setError('Failed to download receipt. Please try again.');
-  } finally {
-    setIsDownloading(false);
-  }
-};
+  const downloadReceipt = async () => {
+    if (!orderData) return;
 
-// Also update the generateReceipt function to avoid loops
-const generateReceipt = async () => {
-  if (!orderId) return;
+    setIsDownloading(true);
+    setError(null);
 
-  setIsGenerating(true);
-  setError(null);
-
-  try {
-    console.log('🔄 Generating new receipt...');
-    const response = await fetch(`/api/orders/${orderId}/generate-receipt`, {
-      method: 'POST',
-    });
-
-    const result = await response.json();
-
-    if (result.success) {
-      setVerificationLink(result.verifyLink);
-      // Update order data with new receipt info
-      setOrderData(prev => prev ? {
-        ...prev,
-        order: {
-          ...prev.order,
-          receiptUrl: result.receiptUrl,
-          verificationCode: result.verificationCode
-        }
-      } : null);
+    try {
+      console.log('📥 Starting download process...');
       
-      console.log('✅ Receipt generated successfully');
-      
-      // Auto-download the newly generated receipt
-      console.log('📥 Auto-downloading generated receipt...');
-      const downloadResponse = await fetch(result.receiptUrl);
-      if (downloadResponse.ok) {
-        const blob = await downloadResponse.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = `zetutech-receipt-${orderData?.order.orderNumber || 'receipt'}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-        console.log('✅ Generated receipt downloaded');
+      // If receipt already exists and has a URL, download it directly
+      if (orderData.order.receiptUrl) {
+        console.log('📄 Downloading existing receipt:', orderData.order.receiptUrl);
+        await downloadReceiptDirectly(orderData.order.receiptUrl);
+        return;
       }
-    } else {
-      setError(result.error || 'Failed to generate receipt');
+
+      // If no receipt exists, generate one first WITH auto-download
+      console.log('🔄 No receipt found, generating new one with auto-download...');
+      await generateReceipt(true);
+      
+    } catch (error) {
+      console.error('❌ Error in download process:', error);
+      setError('Failed to download receipt. Please try again.');
+    } finally {
+      setIsDownloading(false);
     }
-  } catch (error) {
-    console.error('❌ Error generating receipt:', error);
-    setError('Failed to generate receipt. Please try again.');
-  } finally {
-    setIsGenerating(false);
-  }
-};
+  };
+
+  const handleGenerateOnly = async () => {
+    if (!orderId) return;
+    
+    setIsGenerating(true);
+    setError(null);
+    
+    try {
+      console.log('🔄 Generating receipt without download...');
+      const response = await fetch(`/api/orders/${orderId}/generate-receipt`, {
+        method: 'POST',
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setVerificationLink(result.verifyLink);
+        setOrderData(prev => prev ? {
+          ...prev,
+          order: {
+            ...prev.order,
+            receiptUrl: result.receiptUrl,
+            verificationCode: result.verificationCode
+          }
+        } : null);
+        
+        console.log('✅ Receipt generated successfully (no download)');
+      } else {
+        setError(result.error || 'Failed to generate receipt');
+      }
+    } catch (error) {
+      console.error('❌ Error generating receipt:', error);
+      setError('Failed to generate receipt. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat('en-TZ', {
@@ -320,7 +353,7 @@ const generateReceipt = async () => {
         </Card>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <Button asChild className="bg-blue-600 hover:bg-blue-700">
             <Link href={`/orders/${orderId}`}>
               View Order Details
@@ -331,19 +364,39 @@ const generateReceipt = async () => {
               Continue Shopping
             </Link>
           </Button>
-          <Button 
-            variant="ghost" 
-            className="flex items-center gap-2"
-            onClick={downloadReceipt}
-            disabled={isDownloading || isGenerating}
-          >
-            {(isDownloading || isGenerating) ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Download className="w-4 h-4" />
+          
+          {/* Receipt Actions */}
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button 
+              variant="ghost" 
+              className="flex items-center gap-2"
+              onClick={downloadReceipt}
+              disabled={isDownloading || isGenerating}
+            >
+              {(isDownloading || isGenerating) ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Download className="w-4 h-4" />
+              )}
+              {isGenerating ? 'Generating...' : isDownloading ? 'Downloading...' : 'Download Receipt'}
+            </Button>
+            
+            {!orderData.order.receiptUrl && (
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2"
+                onClick={handleGenerateOnly}
+                disabled={isGenerating}
+              >
+                {isGenerating ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <ExternalLink className="w-4 h-4" />
+                )}
+                {isGenerating ? 'Generating...' : 'Generate Only'}
+              </Button>
             )}
-            {isGenerating ? 'Generating...' : isDownloading ? 'Downloading...' : 'Download Receipt'}
-          </Button>
+          </div>
         </div>
 
         {/* Verification & Receipt Status */}
@@ -383,6 +436,9 @@ const generateReceipt = async () => {
             <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-center">
               <p className="text-sm text-blue-700 dark:text-blue-300">
                 📄 Generate a secure, verifiable receipt for your records
+              </p>
+              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                Choose &quot;Download Receipt&quot; to generate and download, or "Generate Only" to create without downloading.
               </p>
             </div>
           )}

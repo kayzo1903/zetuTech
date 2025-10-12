@@ -174,3 +174,10 @@ we will connect our webapp with cloudfare 3 for image system
 ## receipt system 
 > add column for receipt at orders
 > creating verification page of receipt
+> R2 bucket configured with public access
+> Environment variables set
+> CORS configured for R2
+> Database migrations applied
+> PDF generation tested
+> Verification links working
+> Mobile responsiveness verified
