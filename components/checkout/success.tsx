@@ -6,40 +6,209 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { CheckCircle, Phone, Download } from 'lucide-react';
+import { CheckCircle, Phone, Download, Loader2, Shield, ExternalLink } from 'lucide-react';
 
-interface OrderSuccessData {
-  orderNumber: string;
-  orderId: string;
-  total: string;
-  status: string;
+interface OrderData {
+  order: {
+    id: string;
+    orderNumber: string;
+    orderDate: string;
+    status: string;
+    subtotal: number;
+    shippingAmount: number;
+    taxAmount: number;
+    discountAmount: number;
+    totalAmount: number;
+    paymentMethod: string;
+    deliveryMethod: string;
+    customerPhone: string;
+    customerEmail?: string;
+    receiptUrl?: string;
+    verificationCode?: string;
+  };
+  items: Array<{
+    name: string;
+    quantity: number;
+    price: number;
+    total: number;
+  }>;
+  shippingAddress: {
+    fullName: string;
+    phone: string;
+    email?: string;
+    city: string;
+    region: string;
+    country: string;
+  } | null;
 }
 
 export default function OrderSuccess() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [orderData, setOrderData] = useState<OrderSuccessData | null>(null);
+  const [orderData, setOrderData] = useState<OrderData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [verificationLink, setVerificationLink] = useState<string | null>(null);
 
-  const orderNumber = searchParams.get('orderNumber');
   const orderId = searchParams.get('orderId');
 
   useEffect(() => {
-    if (!orderNumber || !orderId) {
+    if (!orderId) {
       router.push('/');
       return;
     }
 
-    // In a real app, you might fetch order details from API
-    setOrderData({
-      orderNumber,
-      orderId,
-      total: '0', // You would get this from the API
-      status: 'pending'
-    });
-  }, [orderNumber, orderId, router]);
+    fetchOrderData();
+  }, [orderId, router]);
+
+  const fetchOrderData = async () => {
+    try {
+      const response = await fetch(`/api/orders/${orderId}/receipt-data`);
+      const result = await response.json();
+
+      if (result.success) {
+        setOrderData(result.data);
+        // If receipt already exists, set verification link
+        if (result.data.order.verificationCode) {
+          setVerificationLink(`${window.location.origin}/verify/${result.data.order.verificationCode}`);
+        }
+      } else {
+        setError(result.error || 'Failed to load order details');
+      }
+    } catch (error) {
+      console.error('Error fetching order data:', error);
+      setError('Network error. Please check your connection.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const generateReceipt = async () => {
+    if (!orderId) return;
+
+    setIsGenerating(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/orders/${orderId}/generate-receipt`, {
+        method: 'POST',
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setVerificationLink(result.verifyLink);
+        // Update order data with new receipt info
+        setOrderData(prev => prev ? {
+          ...prev,
+          order: {
+            ...prev.order,
+            receiptUrl: result.receiptUrl,
+            verificationCode: result.verificationCode
+          }
+        } : null);
+        
+        // Download the receipt automatically after generation
+        await downloadReceipt();
+      } else {
+        setError(result.error || 'Failed to generate receipt');
+      }
+    } catch (error) {
+      console.error('Error generating receipt:', error);
+      setError('Failed to generate receipt. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const downloadReceipt = async () => {
+    if (!orderData?.order.receiptUrl) {
+      // If no receipt exists, generate one first
+      await generateReceipt();
+      return;
+    }
+
+    setIsDownloading(true);
+    setError(null);
+
+    try {
+      // Since the receipt is stored in R2 with a public URL, we can download it directly
+      const response = await fetch(orderData.order.receiptUrl);
+      
+      if (!response.ok) {
+        throw new Error('Failed to download receipt');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `zetutech-receipt-${orderData.order.orderNumber}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+    } catch (error) {
+      console.error('Error downloading receipt:', error);
+      setError('Failed to download receipt. Please try again.');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const formatCurrency = (amount: number): string => {
+    return new Intl.NumberFormat('en-TZ', {
+      style: 'currency',
+      currency: 'TZS',
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  const formatPaymentMethod = (method: string): string => {
+    const methods: { [key: string]: string } = {
+      'cash_delivery': 'Cash on Delivery',
+      'card': 'Credit/Debit Card',
+      'mobile_money': 'Mobile Money'
+    };
+    return methods[method] || method;
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
+          <p className="text-gray-600">Loading order details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && !orderData) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12">
+        <div className="max-w-2xl mx-auto px-4 text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Shield className="w-8 h-8 text-red-600" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Unable to Load Order
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
+          <Button asChild>
+            <Link href="/">Return to Home</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (!orderData) {
-    return <div>Loading...</div>;
+    return <div>Order not found</div>;
   }
 
   return (
@@ -64,7 +233,10 @@ export default function OrderSuccess() {
             <div className="text-center mb-6">
               <p className="text-sm text-gray-600 dark:text-gray-400">Order Number</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                #{orderData.orderNumber}
+                #{orderData.order.orderNumber}
+              </p>
+              <p className="text-sm text-gray-500 mt-2">
+                {new Date(orderData.order.orderDate).toLocaleDateString('en-TZ')}
               </p>
             </div>
 
@@ -73,7 +245,7 @@ export default function OrderSuccess() {
                 <Phone className="w-5 h-5 text-blue-600" />
                 <div>
                   <p className="font-medium text-sm">We&apos;ll contact you</p>
-                  <p className="text-sm text-gray-600">On your provided phone number</p>
+                  <p className="text-sm text-gray-600">On {orderData.order.customerPhone}</p>
                 </div>
               </div>
 
@@ -83,8 +255,37 @@ export default function OrderSuccess() {
                   <li>• We&apos;ll prepare your order within 24 hours</li>
                   <li>• You&apos;ll receive a call to confirm pickup/delivery details</li>
                   <li>• Bring your ID and order number for pickup</li>
-                  <li>• Pay with cash when you collect your items</li>
+                  <li>• Pay with {formatPaymentMethod(orderData.order.paymentMethod).toLowerCase()} when you collect your items</li>
                 </ul>
+              </div>
+
+              {/* Order Summary Preview */}
+              <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <p className="font-medium text-sm mb-2">Order Summary</p>
+                <div className="text-sm space-y-1">
+                  <div className="flex justify-between">
+                    <span>Items ({orderData.items.length}):</span>
+                    <span className="font-medium">{formatCurrency(orderData.order.subtotal)}</span>
+                  </div>
+                  {orderData.order.discountAmount > 0 && (
+                    <div className="flex justify-between text-red-600">
+                      <span>Discount:</span>
+                      <span>-{formatCurrency(orderData.order.discountAmount)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span>Shipping:</span>
+                    <span>{formatCurrency(orderData.order.shippingAmount)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Tax:</span>
+                    <span>{formatCurrency(orderData.order.taxAmount)}</span>
+                  </div>
+                  <div className="flex justify-between border-t pt-1 font-bold">
+                    <span>Total:</span>
+                    <span>{formatCurrency(orderData.order.totalAmount)}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -93,7 +294,7 @@ export default function OrderSuccess() {
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button asChild className="bg-blue-600 hover:bg-blue-700">
-            <Link href={`/orders/${orderData.orderId}`}>
+            <Link href={`/orders/${orderId}`}>
               View Order Details
             </Link>
           </Button>
@@ -102,10 +303,61 @@ export default function OrderSuccess() {
               Continue Shopping
             </Link>
           </Button>
-          <Button variant="ghost" className="flex items-center gap-2">
-            <Download className="w-4 h-4" />
-            Download Receipt
+          <Button 
+            variant="ghost" 
+            className="flex items-center gap-2"
+            onClick={downloadReceipt}
+            disabled={isDownloading || isGenerating}
+          >
+            {(isDownloading || isGenerating) ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4" />
+            )}
+            {isGenerating ? 'Generating...' : isDownloading ? 'Downloading...' : 'Download Receipt'}
           </Button>
+        </div>
+
+        {/* Verification & Receipt Status */}
+        <div className="mt-6 space-y-4">
+          {verificationLink && (
+            <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-green-800 dark:text-green-300">
+                    ✅ Receipt Generated & Verified
+                  </p>
+                  <p className="text-sm text-green-700 dark:text-green-400">
+                    Your receipt is secured with verification code
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={verificationLink} target="_blank">
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      Verify Online
+                    </Link>
+                  </Button>
+                  {orderData.order.receiptUrl && (
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={orderData.order.receiptUrl} target="_blank">
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        View PDF
+                      </Link>
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!orderData.order.receiptUrl && !isGenerating && (
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-center">
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                📄 Generate a secure, verifiable receipt for your records
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Support Information */}

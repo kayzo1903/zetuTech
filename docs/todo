@@ -170,3 +170,7 @@ we will connect our webapp with cloudfare 3 for image system
 >simple statics 
 >pending orders
 >analytics charts 
+
+## receipt system 
+> add column for receipt at orders
+> creating verification page of receipt

@@ -1,4 +1,5 @@
 import { sql } from "drizzle-orm";
+
 import {
   pgTable,
   text,
@@ -377,6 +378,10 @@ export const order = pgTable("order", {
   // Customer contact
   customerPhone: varchar("customer_phone", { length: 20 }).notNull(),
   customerEmail: varchar("customer_email", { length: 255 }),
+
+  //receipt-sytem
+  verificationCode: text("verification_code").unique(),
+  pdfFile: text("pdf_file"), // store the generated PDF here (BLOB)
   
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
