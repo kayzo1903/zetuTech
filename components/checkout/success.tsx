@@ -79,7 +79,7 @@ export default function OrderSuccess() {
 
               <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <p className="font-medium text-sm mb-1">What&apos;s Next?</p>
-                <ul className="text-sm text-gray-600 space-y-1">
+                <ul className="text-sm text-gray-600 space-y-1 dark:text-gray-200">
                   <li>• We&apos;ll prepare your order within 24 hours</li>
                   <li>• You&apos;ll receive a call to confirm pickup/delivery details</li>
                   <li>• Bring your ID and order number for pickup</li>

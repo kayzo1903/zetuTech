@@ -1,174 +1,213 @@
-// app/dashboard/orders/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHeader, TableHead, TableRow,
 } from "@/components/ui/table";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Search, Eye, Trash2, MoreHorizontal } from "lucide-react";
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Search, Eye, Trash2, Loader2 } from "lucide-react";
 
-// Mock order data
-const mockOrders = [
-  {
-    id: "ORD-001",
-    customerName: "John Doe",
-    customerEmail: "john@example.com",
-    totalAmount: "450000",
-    status: "Delivered",
-    items: 3,
-    createdAt: "2024-01-15",
-    paymentMethod: "Credit Card",
-  },
-  {
-    id: "ORD-002",
-    customerName: "Jane Smith",
-    customerEmail: "jane@example.com",
-    totalAmount: "1200000",
-    status: "Processing",
-    items: 2,
-    createdAt: "2024-01-14",
-    paymentMethod: "PayPal",
-  },
-  {
-    id: "ORD-003",
-    customerName: "Mike Johnson",
-    customerEmail: "mike@example.com",
-    totalAmount: "780000",
-    status: "Pending",
-    items: 1,
-    createdAt: "2024-01-13",
-    paymentMethod: "Bank Transfer",
-  },
-  {
-    id: "ORD-004",
-    customerName: "Sarah Wilson",
-    customerEmail: "sarah@example.com",
-    totalAmount: "2100000",
-    status: "Shipped",
-    items: 4,
-    createdAt: "2024-01-12",
-    paymentMethod: "Credit Card",
-  },
-  {
-    id: "ORD-005",
-    customerName: "David Brown",
-    customerEmail: "david@example.com",
-    totalAmount: "950000",
-    status: "Cancelled",
-    items: 2,
-    createdAt: "2024-01-11",
-    paymentMethod: "Cash on Delivery",
-  },
-];
+// Types
+interface AdminOrder {
+  id: string;
+  orderNumber: string;
+  status: string;
+  totalAmount: string;
+  customerPhone: string;
+  customerEmail?: string;
+  createdAt: string;
+  paymentStatus: string;
+  itemsCount: number;
+  userId?: string;
+  userName?: string;
+}
 
+interface OrdersResponse {
+  success: boolean;
+  orders: AdminOrder[];
+  pagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+interface ServerSession {
+  isAdmin: boolean;
+  user: { id: string; name: string; email: string; role: string } | null;
+}
+
+interface AdminOrdersListProps {
+  serverSession?: ServerSession;
+}
+
+// Status styles
 const ORDER_STATUS = {
-  Pending: "bg-yellow-100 text-yellow-800",
-  Processing: "bg-blue-100 text-blue-800",
-  Shipped: "bg-purple-100 text-purple-800",
-  Delivered: "bg-green-100 text-green-800",
-  Cancelled: "bg-red-100 text-red-800",
-  Refunded: "bg-gray-100 text-gray-800",
+  pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  confirmed: "bg-blue-100 text-blue-800 border-blue-200",
+  processing: "bg-orange-100 text-orange-800 border-orange-200",
+  shipped: "bg-purple-100 text-purple-800 border-purple-200",
+  delivered: "bg-green-100 text-green-800 border-green-200",
+  cancelled: "bg-red-100 text-red-800 border-red-200",
+  refunded: "bg-gray-100 text-gray-800 border-gray-200",
 } as const;
 
-export default function OrdersList() {
-  const [orders, setOrders] = useState(mockOrders);
+const PAYMENT_STATUS = {
+  pending: "bg-yellow-100 text-yellow-800",
+  unpaid: "bg-red-100 text-red-800",
+  paid: "bg-green-100 text-green-800",
+  refunded: "bg-gray-100 text-gray-800",
+} as const;
+
+export default function AdminOrdersList({ serverSession }: AdminOrdersListProps) {
+  const router = useRouter();
+  const [orders, setOrders] = useState<AdminOrder[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [pagination, setPagination] = useState({ page: 1, limit: 10, totalPages: 0 });
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
-  // Filter orders based on search term and filters
-  const filteredOrders = orders.filter((order) => {
-    const matchesSearch = 
-      order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customerEmail.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === "all" || order.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  });
+  // 🕒 Debounce Search (prevents spam requests)
+  useEffect(() => {
+    const timeout = setTimeout(() => setDebouncedSearch(searchTerm), 500);
+    return () => clearTimeout(timeout);
+  }, [searchTerm]);
 
-  const handleDelete = (id: string) => {
-    setOrders(orders.filter(order => order.id !== id));
+  // 🧠 Fetch Orders (stable callback to avoid infinite re-renders)
+  const fetchOrders = useCallback(async () => {
+    if (!serverSession?.isAdmin) return;
+
+    try {
+      setLoading(true);
+      const params = new URLSearchParams({
+        page: pagination.page.toString(),
+        limit: pagination.limit.toString(),
+        ...(debouncedSearch && { search: debouncedSearch }),
+        ...(statusFilter !== "all" && { status: statusFilter }),
+      });
+
+      const res = await fetch(`/api/admin/orders?${params}`);
+      const data: OrdersResponse = await res.json();
+
+      if (data.success) {
+        setOrders(data.orders);
+        if (data.pagination) setPagination(data.pagination);
+      } else {
+        toast.error("Failed to fetch orders");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Error fetching orders");
+    } finally {
+      setLoading(false);
+    }
+  }, [serverSession?.isAdmin, pagination.page, debouncedSearch, statusFilter]);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
+
+  // 🗑 Delete order
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await fetch(`/api/admin/orders/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Order deleted");
+        setOrders((prev) => prev.filter((o) => o.id !== id));
+      } else {
+        toast.error(data.error || "Delete failed");
+      }
+    } catch (err) {
+      console.error(err)
+      toast.error("Delete failed");
+      
+    } finally {
+      setDeleteDialogOpen(false);
+      setOrderToDelete(null);
+    }
   };
 
-  const formatPrice = (price: string) => {
-    return `TZS ${parseInt(price).toLocaleString()}`;
+  const formatPrice = (amt: string) => `TZS ${parseFloat(amt).toLocaleString()}`;
+  const formatDate = (dateStr: string) =>
+    new Date(dateStr).toLocaleDateString("en-TZ", { year: "numeric", month: "short", day: "numeric" });
+
+  const getCustomerName = (order: AdminOrder) =>
+    order.userName || order.customerEmail?.split("@")[0] || "Guest";
+
+  // 🧭 Pagination handler
+  const handlePageChange = (newPage: number) => {
+    if (newPage !== pagination.page) {
+      setPagination((prev) => ({ ...prev, page: newPage }));
+    }
   };
+
+  // 🚫 Access control
+  if (!serverSession) return <div className="p-6">Loading...</div>;
+  if (!serverSession.isAdmin)
+    return (
+      <div className="p-6 text-center space-y-3">
+        <h2 className="text-2xl font-bold">Access Denied</h2>
+        <p className="text-gray-600">Admin privileges required</p>
+        <Button onClick={() => router.push("/dashboard")}>Go Back</Button>
+      </div>
+    );
 
   return (
-    <div className="p-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Orders</h1>
-          <p className="text-gray-600">Manage customer orders</p>
-        </div>
-      </div>
+    <div className="p-6 space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+        <h1 className="text-2xl font-semibold">Orders Management</h1>
 
-      {/* Filters and Search */}
-      <div className="rounded-lg border p-4 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+        <div className="flex gap-3 w-full sm:w-auto">
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
             <Input
+              className="pl-9"
               placeholder="Search orders..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
             />
           </div>
-          
+
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by status" />
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Filter" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="Pending">Pending</SelectItem>
-              <SelectItem value="Processing">Processing</SelectItem>
-              <SelectItem value="Shipped">Shipped</SelectItem>
-              <SelectItem value="Delivered">Delivered</SelectItem>
-              <SelectItem value="Cancelled">Cancelled</SelectItem>
-              <SelectItem value="Refunded">Refunded</SelectItem>
+              <SelectItem value="all">All</SelectItem>
+              {Object.keys(ORDER_STATUS).map((status) => (
+                <SelectItem key={status} value={status}>
+                  {status}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      {/* Orders Table */}
-      <div className="rounded-lg border">
+      {/* Table */}
+      <div className="rounded-lg border shadow-sm overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Order ID</TableHead>
+              <TableHead>Order</TableHead>
               <TableHead>Customer</TableHead>
+              <TableHead>Phone</TableHead>
               <TableHead>Items</TableHead>
-              <TableHead>Amount</TableHead>
+              <TableHead>Total</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Payment</TableHead>
               <TableHead>Date</TableHead>
@@ -176,86 +215,59 @@ export default function OrdersList() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredOrders.length === 0 ? (
+            {loading ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-gray-500">
-                  No orders found matching your criteria
+                <TableCell colSpan={9} className="text-center py-8">
+                  <Loader2 className="mx-auto h-5 w-5 animate-spin text-gray-400" />
+                  <p className="text-sm text-gray-500 mt-2">Loading orders...</p>
+                </TableCell>
+              </TableRow>
+            ) : orders.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={9} className="text-center py-8 text-gray-500">
+                  No orders found
                 </TableCell>
               </TableRow>
             ) : (
-              filteredOrders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell className="font-medium">{order.id}</TableCell>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{order.customerName}</div>
-                      <div className="text-sm text-gray-500">{order.customerEmail}</div>
-                    </div>
+              orders.map((order) => (
+                <TableRow key={order.id} className="hover:bg-gray-50/10 transition">
+                  <TableCell className="font-mono">
+                    {order.orderNumber}
+                    {!order.userId && <Badge className="ml-2">Guest</Badge>}
                   </TableCell>
-                  <TableCell>{order.items} items</TableCell>
-                  <TableCell className="font-semibold">{formatPrice(order.totalAmount)}</TableCell>
+                  <TableCell>{getCustomerName(order)}</TableCell>
+                  <TableCell>{order.customerPhone}</TableCell>
+                  <TableCell>{order.itemsCount}</TableCell>
+                  <TableCell>{formatPrice(order.totalAmount)}</TableCell>
                   <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={ORDER_STATUS[order.status as keyof typeof ORDER_STATUS]}
-                    >
+                    <Badge className={ORDER_STATUS[order.status as keyof typeof ORDER_STATUS]}>
                       {order.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>{order.paymentMethod}</TableCell>
-                  <TableCell>{order.createdAt}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        onClick={() => {
-                          // Handle view order details
-                          console.log("View order:", order.id);
-                        }}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This action cannot be undone. This will permanently
-                              delete order {order.id} and remove it from the system.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDelete(order.id)}
-                              className="bg-red-600 hover:bg-red-700"
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                      >
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </div>
+                  <TableCell>
+                    <Badge className={PAYMENT_STATUS[order.paymentStatus as keyof typeof PAYMENT_STATUS]}>
+                      {order.paymentStatus}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{formatDate(order.createdAt)}</TableCell>
+                  <TableCell className="text-right flex gap-2 justify-end">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => router.push(`/admin-dashboard/orders/${order.id}`)}
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => {
+                        setOrderToDelete(order.id);
+                        setDeleteDialogOpen(true);
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
@@ -265,19 +277,38 @@ export default function OrdersList() {
       </div>
 
       {/* Pagination */}
-      <div className="flex justify-between items-center mt-6">
-        <p className="text-sm text-gray-600">
-          Showing {filteredOrders.length} of {orders.length} orders
-        </p>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" disabled>
-            Previous
-          </Button>
-          <Button variant="outline" size="sm">
-            Next
-          </Button>
+      {pagination.totalPages > 1 && (
+        <div className="flex justify-center gap-2">
+          {Array.from({ length: pagination.totalPages }).map((_, idx) => (
+            <Button
+              key={idx}
+              size="sm"
+              variant={pagination.page === idx + 1 ? "default" : "outline"}
+              onClick={() => handlePageChange(idx + 1)}
+            >
+              {idx + 1}
+            </Button>
+          ))}
         </div>
-      </div>
+      )}
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Order?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. The order and its records will be permanently removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => orderToDelete && handleDelete(orderToDelete)}>
+              Confirm Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

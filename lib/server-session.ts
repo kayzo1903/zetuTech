@@ -1,12 +1,14 @@
-// lib/server-session.ts
-
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 
 export async function getServerSession() {
   try {
+    // Call headers() synchronously at the start
+    const requestHeaders = await headers();
+
+    // Now pass it safely to your auth function
     const session = await auth.api.getSession({
-      headers: await headers(),
+      headers: requestHeaders,
     });
 
     return {

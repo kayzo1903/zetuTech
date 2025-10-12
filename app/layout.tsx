@@ -25,6 +25,9 @@ export const metadata: Metadata = {
   description: "online store for selling tech gadgets and laptops",
 };
 
+
+export const dynamic = "force-dynamic";
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -52,3 +55,5 @@ export default async function RootLayout({
     </html>
   );
 }
+
+
