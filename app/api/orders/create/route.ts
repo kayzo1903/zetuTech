@@ -11,12 +11,9 @@ export async function POST(request: NextRequest) {
     const sessionId = await getSessionIdFromRequest(request);
     const body = await request.json();
 
-    console.log('🔍 Received order data:', body);
-
     // Validate the request data
     const validationResult = orderCreateSchema.safeParse(body);
     if (!validationResult.success) {
-      console.log('❌ Validation failed:', validationResult.error.issues);
       return NextResponse.json(
         { 
           success: false, 
@@ -30,7 +27,6 @@ export async function POST(request: NextRequest) {
     const orderData = validationResult.data;
     const orderNumber = generateOrderNumber();
 
-    console.log('🔄 Starting database transaction...');
 
     return await dbServer.transaction(async (tx) => {
       try {
@@ -53,7 +49,6 @@ export async function POST(request: NextRequest) {
           customerEmail: orderData.contact.email || null,
         }).returning();
 
-        console.log('✅ Order created:', newOrder.id);
 
         // Create order address
         await tx.insert(orderAddress).values({
@@ -69,7 +64,6 @@ export async function POST(request: NextRequest) {
           notes: orderData.address.notes || '',
         });
 
-        console.log('✅ Order address created');
 
         // Create order items - FIXED: Using cartItems from validated data
         const orderItems = orderData.cartItems.map(item => ({
@@ -82,7 +76,6 @@ export async function POST(request: NextRequest) {
 
         console.log('📦 Creating order items:', orderItems.length);
         await tx.insert(orderItem).values(orderItems);
-        console.log('✅ Order items created');
 
         // Create initial status history
         await tx.insert(orderStatusHistory).values({
@@ -91,26 +84,21 @@ export async function POST(request: NextRequest) {
           notes: 'Order created successfully',
         });
 
-        console.log('✅ Status history created');
 
         // Clear the cart (works for both user and guest)
         if (body.userId) {
           // Clear user cart
-          console.log('🛒 Clearing user cart for user:', body.userId);
           const [userCart] = await tx.select().from(cart).where(eq(cart.userId, body.userId));
           if (userCart) {
             await tx.delete(cartItem).where(eq(cartItem.cartId, userCart.id));
-            console.log('✅ User cart cleared');
           }
         } else {
           // Clear guest cart using session ID
-          console.log('🛒 Clearing guest cart for session:', sessionId);
           const [guestCart] = await tx.select().from(cart).where(eq(cart.sessionId, sessionId));
           if (guestCart) {
             await tx.delete(cartItem).where(eq(cartItem.cartId, guestCart.id));
             console.log('✅ Guest cart cleared');
           } else {
-            console.log('❌ No guest cart found for session:', sessionId);
           }
         }
 
