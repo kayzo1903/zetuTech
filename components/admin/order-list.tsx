@@ -114,7 +114,7 @@ export default function AdminOrdersList({ serverSession }: AdminOrdersListProps)
     } finally {
       setLoading(false);
     }
-  }, [serverSession?.isAdmin, pagination.page, debouncedSearch, statusFilter]);
+  }, [serverSession?.isAdmin, pagination.page, pagination.limit, debouncedSearch, statusFilter]);
 
   useEffect(() => {
     fetchOrders();
