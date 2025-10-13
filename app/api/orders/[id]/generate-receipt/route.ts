@@ -443,56 +443,60 @@ export async function POST(
       drawText(note, 50, yPosition + index * 12, index === 0 ? 10 : 8);
     });
 
- // ========== UPLOAD TO R2 ==========
-const pdfBytes = await pdfDoc.save();
-const fileName = `receipts/${orderData.orderNumber}-${verificationCode}.pdf`;
+    // ========== UPLOAD TO R2 ==========
+    const pdfBytes = await pdfDoc.save();
+    const fileName = `receipts/${orderData.orderNumber}-${verificationCode}.pdf`;
 
-// Get presigned URL
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://zetutech.vercel.app';
-const formattedBaseUrl = baseUrl.includes('://') ? baseUrl : `https://${baseUrl}`;
+    // Get presigned URL
+    const baseUrl =
+      process.env.NEXT_PUBLIC_BASE_URL ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      "https://zetutech.vercel.app";
+    const formattedBaseUrl = baseUrl.includes("://")
+      ? baseUrl
+      : `https://${baseUrl}`;
 
-console.log('🔄 Requesting presigned URL...');
-const presignResponse = await fetch(`${formattedBaseUrl}/api/r2-presign`, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    key: fileName,
-    contentType: "application/pdf",
-  }),
-});
+    const presignResponse = await fetch(`${formattedBaseUrl}/api/r2-presign`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        key: fileName,
+        contentType: "application/pdf",
+      }),
+    });
 
-if (!presignResponse.ok) {
-  throw new Error(`Failed to get upload URL: ${presignResponse.status}`);
-}
+    if (!presignResponse.ok) {
+      throw new Error(`Failed to get upload URL: ${presignResponse.status}`);
+    }
 
-const { uploadUrl, publicUrl } = await presignResponse.json();
+    const { uploadUrl, publicUrl } = await presignResponse.json();
 
-if (!uploadUrl) {
-  throw new Error('No upload URL received from presign endpoint');
-}
+    if (!uploadUrl) {
+      throw new Error("No upload URL received from presign endpoint");
+    }
 
+    const pdfBuffer = Buffer.from(pdfBytes);
 
-const pdfBuffer = Buffer.from(pdfBytes)
+    const uploadResponse = await fetch(uploadUrl, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/pdf",
+      },
+      body: pdfBuffer, // Use Blob instead of Uint8Array
+    });
 
-const uploadResponse = await fetch(uploadUrl, {
-  method: "PUT",
-  headers: {
-    "Content-Type": "application/pdf",
-  },
-  body: pdfBuffer, // Use Blob instead of Uint8Array
-});
+    console.log("📡 Upload response status:", uploadResponse.status);
 
-console.log('📡 Upload response status:', uploadResponse.status);
+    if (!uploadResponse.ok) {
+      const uploadError = await uploadResponse.text();
+      throw new Error(
+        `Failed to upload PDF to R2: ${(uploadResponse.status, uploadError)}`
+      );
+    }
 
-if (!uploadResponse.ok) {
-  const uploadError = await uploadResponse.text();
-  throw new Error(`Failed to upload PDF to R2: ${uploadResponse.status}`);
-}
-
-console.log('✅ PDF uploaded successfully');
-
+    console.log("✅ PDF uploaded successfully");
 
     // Store verification code and PDF URL in database
     await dbServer
@@ -512,10 +516,13 @@ console.log('✅ PDF uploaded successfully');
       verificationCode,
       receiptUrl: publicUrl,
     });
-  } catch (error) {
-    console.error("Error generating receipt:", error);
+  } catch (err) {
+    console.error("RECEIPT ERROR:", err);
     return NextResponse.json(
-      { success: false, error: "Failed to generate receipt" },
+      {
+        success: false,
+        error: `Failed to generate receipt: ${(err as Error).message}`,
+      },
       { status: 500 }
     );
   }
