@@ -63,7 +63,7 @@ export default function OrderSuccess() {
 
   const fetchOrderData = useCallback(async () => {
     try {
-      console.log("🔄 Fetching order data...");
+     
       const response = await fetch(`/api/orders/${orderId}/receipt-data`);
       const result = await response.json();
 
@@ -103,7 +103,7 @@ export default function OrderSuccess() {
       setError(null);
 
       try {
-        console.log("🔄 Generating new receipt...");
+    
         const response = await fetch(
           `/api/orders/${orderId}/generate-receipt`,
           {
