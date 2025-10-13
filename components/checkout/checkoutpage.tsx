@@ -28,6 +28,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [guestSessionId, setGuestSessionId] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState(false); // Add loading state
 
   const [checkoutData, setCheckoutData] = useState<CheckoutData>({
     contact: { phone: "", email: "", region: "" },
@@ -45,16 +46,11 @@ export default function CheckoutPage() {
   }, [session?.user]);
 
   // Redirect if cart is empty
-  if (!isLoading && items.length === 0) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Your cart is empty</h1>
-          <p>Add some products to proceed to checkout</p>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (!isLoading && items.length === 0 && currentStep === 1) {
+      router.push("/cart");
+    }
+  }, [isLoading, items.length, router, currentStep]);
 
   const updateCheckoutData = (
     step: keyof CheckoutData,
@@ -67,6 +63,10 @@ export default function CheckoutPage() {
   const prevStep = () => setCurrentStep((prev) => prev - 1);
 
   const handleOrderConfirmation = async () => {
+    if (isSubmitting) return; // Prevent double submission
+    
+    setIsSubmitting(true);
+    
     try {
       const isDarEsSalaam = checkoutData.contact?.region === "Dar es Salaam";
       const shippingCost = isDarEsSalaam ? 0 : 15000;
@@ -103,6 +103,7 @@ export default function CheckoutPage() {
         guestSessionId: !session?.user ? guestSessionId : null,
       };
 
+      console.log("🔄 Creating order...", orderData);
 
       // Call the order creation API
       const response = await fetch("/api/orders/create", {
@@ -112,7 +113,6 @@ export default function CheckoutPage() {
         },
         body: JSON.stringify(orderData),
       });
-
 
       if (!response.ok) {
         // Handle HTTP errors
@@ -125,6 +125,7 @@ export default function CheckoutPage() {
       }
 
       const result = await response.json();
+      console.log("✅ Order creation response:", result);
 
       if (result.success) {
         toast.success("Order placed successfully!");
@@ -132,24 +133,26 @@ export default function CheckoutPage() {
         // Clear local cart state
         clearCart();
 
-        // Redirect to success page with guest info
-        router.push(
-          `/checkout/success?orderId=${result.order.id}&orderNumber=${result.order.orderNumber}&isGuest=${result.order.isGuest}`
-        );
+        // ✅ FIXED: Direct redirect to success page
+        const successUrl = `/checkout/success?orderId=${result.order.id}&orderNumber=${result.order.orderNumber}&isGuest=${!session?.user}`;
+        
+        router.push(successUrl);
+        // Don't set loading to false here since we're navigating away
+        
       } else {
         throw new Error(result.error || "Failed to create order");
       }
     } catch (error) {
-      console.error("Order creation error:", error);
+      console.error("❌ Order creation error:", error);
       toast.error(
         `Failed to place order: ${
           error instanceof Error ? error.message : "Unknown error"
         }`
       );
+      setIsSubmitting(false); // Only reset if error occurs
     }
   };
 
-  // ... rest of your component remains the same
   const renderStep = () => {
     switch (currentStep) {
       case 1:
@@ -210,6 +213,18 @@ export default function CheckoutPage() {
         return null;
     }
   };
+
+  // Show loading if cart is empty and redirecting
+  if (!isLoading && items.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Your Have sucessfull Place Order</h1>
+          <p>Redirecting to orderdetailpage...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">

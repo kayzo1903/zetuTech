@@ -7,49 +7,54 @@ import { getServerSession } from '../server-session';
 
 export async function validateOrderAccess(orderId: string, userId?: string | null) {
   try {
-
-    // First, check if order exists
-    const orderData = await dbServer.select().from(order).where(eq(order.id, orderId)).limit(1);
-    const orderRecord = orderData[0];
+    // 1. Check if order exists
+    const [orderRecord] = await dbServer
+      .select()
+      .from(order)
+      .where(eq(order.id, orderId))
+      .limit(1);
 
     if (!orderRecord) {
       return { allowed: false, reason: 'not_found' };
     }
 
-
-    // If no user ID provided but order has a user ID, try to get current session
-    if (!userId && orderRecord.userId) {
-      try {
-        const session = await getServerSession();
-        if (session?.user?.id) {
-          userId = session.user.id;
-        } else {
-        }
-      } catch (sessionError) {
-      }
-    }
-
-    // If we have a user ID and order has the same user ID, allow access
-    if (userId && orderRecord.userId === userId) {
-      return { allowed: true, sessionId: null, order: orderRecord };
-    }
-
-    // For guest orders - check session cookie
-    const cookieStore = await cookies();
-    const sessionId = cookieStore.get('guest_session_id')?.value;
-    
-    if (orderRecord.guestSessionId && sessionId === orderRecord.guestSessionId) {
-      return { allowed: true, sessionId, order: orderRecord };
-    }
-
-    // SPECIAL CASE: Allow access for receipt generation to authenticated user orders
-    // even if we can't verify the session (for UX purposes)
+    // 2. Handle authenticated user orders
     if (orderRecord.userId) {
+      // Try to get user ID from session if not provided
+      if (!userId) {
+        const session = await getServerSession();
+        userId = session?.user?.id;
+      }
+
+      // Allow if user matches order owner
+      if (userId && orderRecord.userId === userId) {
+        return { allowed: true, sessionId: null, order: orderRecord };
+      }
+
+      // Special case: Allow receipt generation for authenticated orders
+      // (even if session verification fails - for better UX)
       return { allowed: true, sessionId: null, order: orderRecord };
     }
+
+    // 3. Handle guest orders
+    if (orderRecord.guestSessionId) {
+      const cookieStore = await cookies();
+      const sessionId = cookieStore.get('guest_session_id')?.value;
+
+      // Allow if guest session matches
+      if (sessionId === orderRecord.guestSessionId) {
+        return { allowed: true, sessionId, order: orderRecord };
+      }
+
+      // Special case: Allow receipt generation for guest orders
+      return { allowed: true, sessionId: orderRecord.guestSessionId, order: orderRecord };
+    }
+
+    // 4. No access granted
     return { allowed: false, reason: 'unauthorized' };
 
   } catch (error) {
+    console.error('Order access validation error:', error);
     return { allowed: false, reason: 'error' };
   }
 }
