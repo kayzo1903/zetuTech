@@ -181,3 +181,7 @@ we will connect our webapp with cloudfare 3 for image system
 > PDF generation tested
 > Verification links working
 > Mobile responsiveness verified
+
+## controling logs on production
+>creating util function
+>import on loot-layout

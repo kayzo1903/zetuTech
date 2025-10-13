@@ -1,4 +1,3 @@
-// app/api/orders/[orderId]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { dbServer } from "@/db/db-server";
 import {
@@ -9,7 +8,7 @@ import {
   product,
   productImage,
 } from "@/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, asc } from "drizzle-orm";
 import { getServerSession } from "@/lib/server-session";
 
 export async function GET(
@@ -51,6 +50,7 @@ export async function GET(
         price: orderItem.price,
         attributes: orderItem.attributes,
         product: {
+          id: product.id,
           name: product.name,
           slug: product.slug,
         },
@@ -59,24 +59,24 @@ export async function GET(
       .innerJoin(product, eq(orderItem.productId, product.id))
       .where(eq(orderItem.orderId, orderId));
 
-    // Get product images for items
+    // Get first image for each product (ordered by `order` column if available)
     const itemsWithImages = await Promise.all(
       orderItems.map(async (item) => {
-        const images = await dbServer
+        const [image] = await dbServer
           .select({
             url: productImage.url,
             alt: productImage.alt,
           })
           .from(productImage)
           .where(eq(productImage.productId, item.productId))
-          .orderBy(productImage.order)
+          .orderBy(asc(productImage.order))
           .limit(1);
 
         return {
           ...item,
           product: {
             ...item.product,
-            image: images[0] || null,
+            image: image || null,
           },
         };
       })

@@ -4,6 +4,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { authClient } from "@/lib/auth-client";
 import {
   Card,
@@ -27,13 +28,13 @@ import {
   ArrowLeft,
   ShoppingBag,
 } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Order, OrderResponse } from "@/lib/types/orders";
+import { OrderDetailSkeleton } from "./detsilSkeleton";
 
 export default function OrderDetail() {
   const params = useParams();
   const router = useRouter();
-  const { data: session, isPending : sessionLoading } = authClient.useSession();
+  const { data: session, isPending: sessionLoading } = authClient.useSession();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -43,7 +44,7 @@ export default function OrderDetail() {
     if (session?.user && orderId) {
       fetchOrder();
     }
-  });
+  }, [session?.user, orderId]);
 
   const fetchOrder = async () => {
     try {
@@ -54,15 +55,14 @@ export default function OrderDetail() {
       if (result.success) {
         setOrder(result.order);
       } else {
-        console.error('Failed to fetch order:');
-        // Redirect if order not found or unauthorized
+        console.error("Failed to fetch order:");
         if (response.status === 404 || response.status === 401) {
-          router.push('/account/orders');
+          router.push("/account/orders");
         }
       }
     } catch (error) {
-      console.error('Error fetching order:', error);
-      router.push('/account/orders');
+      console.error("Error fetching order:", error);
+      router.push("/account/orders");
     } finally {
       setLoading(false);
     }
@@ -70,15 +70,15 @@ export default function OrderDetail() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'delivered':
+      case "delivered":
         return <CheckCircle className="w-5 h-5 text-green-600" />;
-      case 'shipped':
+      case "shipped":
         return <Truck className="w-5 h-5 text-blue-600" />;
-      case 'processing':
-      case 'confirmed':
+      case "processing":
+      case "confirmed":
         return <Package className="w-5 h-5 text-orange-600" />;
-      case 'cancelled':
-      case 'refunded':
+      case "cancelled":
+      case "refunded":
         return <XCircle className="w-5 h-5 text-red-600" />;
       default:
         return <Clock className="w-5 h-5 text-yellow-600" />;
@@ -87,23 +87,30 @@ export default function OrderDetail() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'delivered': return 'bg-green-100 text-green-800 border-green-200';
-      case 'shipped': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'processing': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'confirmed': return 'bg-purple-100 text-purple-800 border-purple-200';
-      case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
-      case 'refunded': return 'bg-gray-100 text-gray-800 border-gray-200';
-      default: return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case "delivered":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "shipped":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "processing":
+        return "bg-orange-100 text-orange-800 border-orange-200";
+      case "confirmed":
+        return "bg-purple-100 text-purple-800 border-purple-200";
+      case "cancelled":
+        return "bg-red-100 text-red-800 border-red-200";
+      case "refunded":
+        return "bg-gray-100 text-gray-800 border-gray-200";
+      default:
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-TZ', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    return new Date(dateString).toLocaleDateString("en-TZ", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -113,20 +120,42 @@ export default function OrderDetail() {
 
   const getStatusProgress = (status: string) => {
     const steps = [
-      { key: 'pending', label: 'Order Placed' },
-      { key: 'confirmed', label: 'Confirmed' },
-      { key: 'processing', label: 'Processing' },
-      { key: 'shipped', label: 'Shipped' },
-      { key: 'delivered', label: 'Delivered' },
+      { key: "pending", label: "Order Placed" },
+      { key: "confirmed", label: "Confirmed" },
+      { key: "processing", label: "Processing" },
+      { key: "shipped", label: "Shipped" },
+      { key: "delivered", label: "Delivered" },
     ];
 
-    const currentIndex = steps.findIndex(step => step.key === status);
-    
+    const currentIndex = steps.findIndex((step) => step.key === status);
+
     return steps.map((step, index) => ({
       ...step,
       completed: index <= currentIndex,
       current: index === currentIndex,
     }));
+  };
+
+  // Function to get product image URL
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const getProductImage = (item: any) => {
+    // Check if product has images array
+    if (item.product?.images && Array.isArray(item.product.images) && item.product.images.length > 0) {
+      return item.product.images[0];
+    }
+    
+    // Check if product has single image
+    if (item.product?.images && typeof item.product.images === 'string') {
+      return item.product.images;
+    }
+    
+    // Check if product has image object with url
+    if (item.product?.image?.url) {
+      return item.product.image.url;
+    }
+    
+    // Return null if no image found
+    return null;
   };
 
   if (sessionLoading || loading) {
@@ -163,7 +192,8 @@ export default function OrderDetail() {
               Order Not Found
             </h3>
             <p className="text-gray-500 dark:text-gray-400 text-center mb-4">
-              The order you&apos;re looking for doesn&apos;t exist or you don&apos;t have permission to view it.
+              The order you&apos;re looking for doesn&apos;t exist or you
+              don&apos;t have permission to view it.
             </p>
             <Link href="/account/orders">
               <Button>Back to Orders</Button>
@@ -187,7 +217,7 @@ export default function OrderDetail() {
               Back to Orders
             </Button>
           </Link>
-          
+
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
@@ -197,9 +227,11 @@ export default function OrderDetail() {
                 Placed on {formatDate(order.createdAt)}
               </p>
             </div>
-            <Badge 
-              variant="outline" 
-              className={`flex items-center gap-2 text-lg px-4 py-2 ${getStatusColor(order.status)}`}
+            <Badge
+              variant="outline"
+              className={`flex items-center gap-2 text-lg px-4 py-2 ${getStatusColor(
+                order.status
+              )}`}
             >
               {getStatusIcon(order.status)}
               <span className="capitalize font-semibold">{order.status}</span>
@@ -214,36 +246,43 @@ export default function OrderDetail() {
             <Card>
               <CardHeader>
                 <CardTitle>Order Status</CardTitle>
-                <CardDescription>
-                  Track your order progress
-                </CardDescription>
+                <CardDescription>Track your order progress</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {statusSteps.map((step, index) => (
                     <div key={step.key} className="flex items-center gap-4">
-                      <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                        step.completed 
-                          ? 'bg-green-100 text-green-600' 
-                          : step.current
-                          ? 'bg-blue-100 text-blue-600'
-                          : 'bg-gray-100 text-gray-400'
-                      }`}>
+                      <div
+                        className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                          step.completed
+                            ? "bg-green-100 text-green-600"
+                            : step.current
+                            ? "bg-blue-100 text-blue-600"
+                            : "bg-gray-100 text-gray-400"
+                        }`}
+                      >
                         {step.completed ? (
                           <CheckCircle className="w-4 h-4" />
                         ) : (
-                          <span className="text-sm font-medium">{index + 1}</span>
+                          <span className="text-sm font-medium">
+                            {index + 1}
+                          </span>
                         )}
                       </div>
                       <div className="flex-1">
-                        <p className={`font-medium ${
-                          step.current ? 'text-blue-600' : 'text-gray-900 dark:text-white'
-                        }`}>
+                        <p
+                          className={`font-medium ${
+                            step.current
+                              ? "text-blue-600"
+                              : "text-gray-900 dark:text-white"
+                          }`}
+                        >
                           {step.label}
                         </p>
                         {step.current && order.statusHistory?.[0] && (
                           <p className="text-sm text-gray-500 mt-1">
-                            Updated: {formatDate(order.statusHistory[0].createdAt)}
+                            Updated:{" "}
+                            {formatDate(order.statusHistory[0].createdAt)}
                           </p>
                         )}
                       </div>
@@ -258,36 +297,69 @@ export default function OrderDetail() {
               <CardHeader>
                 <CardTitle>Order Items</CardTitle>
                 <CardDescription>
-                  {order.items.length} item{order.items.length !== 1 ? 's' : ''} in your order
+                  {order.items.length} item{order.items.length !== 1 ? "s" : ""}{" "}
+                  in your order
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {order.items.map((item) => (
-                    <div key={item.id} className="flex items-center gap-4 p-4 border rounded-lg">
-                      <div className="flex-shrink-0 w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
-                        <ShoppingBag className="w-6 h-6 text-gray-400" />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-gray-900 dark:text-white">
-                          {item.productName}
-                        </h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Qty: {item.quantity} × {formatCurrency(item.price)}
-                        </p>
-                        {item.attributes && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            {JSON.parse(item.attributes).color && `Color: ${JSON.parse(item.attributes).color}`}
+                  {order.items.map((item) => {
+                    const imageUrl = getProductImage(item);
+                    
+                    return (
+                      <div
+                        key={item.id}
+                        className="flex items-center gap-4 p-4 border rounded-lg"
+                      >
+                        <Link
+                          href={`/products/${item.product?.slug}/${item.productId}`}
+                          className="flex-shrink-0 w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden"
+                        >
+                          {imageUrl ? (
+                            <Image
+                              src={imageUrl}
+                              alt={item.productName}
+                              width={64}
+                              height={64}
+                              className="w-full h-full object-cover rounded-md"
+                              onError={(e) => {
+                                // Fallback if image fails to load
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <ShoppingBag className="w-6 h-6 text-gray-400" />
+                          )}
+                        </Link>
+
+                        <div className="flex-1">
+                          <Link
+                            href={`/products/${item.product?.slug}/${item.productId}`}
+                            className="font-semibold text-gray-900 dark:text-white hover:text-blue-600 transition-colors"
+                          >
+                            {item.productName}
+                          </Link>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Qty: {item.quantity} × {formatCurrency(item.price)}
                           </p>
-                        )}
+                          {item.attributes && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              {JSON.parse(item.attributes).color &&
+                                `Color: ${JSON.parse(item.attributes).color}`}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="text-right">
+                          <p className="font-semibold text-gray-900 dark:text-white">
+                            {formatCurrency(
+                              (parseFloat(item.price) * item.quantity).toString()
+                            )}
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-gray-900 dark:text-white">
-                          {formatCurrency((parseFloat(item.price) * item.quantity).toString())}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
@@ -304,7 +376,10 @@ export default function OrderDetail() {
                 <CardContent>
                   <div className="space-y-3">
                     {order.statusHistory.map((history) => (
-                      <div key={history.id} className="flex items-start gap-3 p-3 border rounded-lg">
+                      <div
+                        key={history.id}
+                        className="flex items-start gap-3 p-3 border rounded-lg"
+                      >
                         {getStatusIcon(history.status)}
                         <div className="flex-1">
                           <p className="font-medium text-gray-900 dark:text-white capitalize">
@@ -346,10 +421,9 @@ export default function OrderDetail() {
                 <div className="flex justify-between">
                   <span>Shipping</span>
                   <span>
-                    {parseFloat(order.shippingAmount) === 0 
-                      ? 'Free' 
-                      : formatCurrency(order.shippingAmount)
-                    }
+                    {parseFloat(order.shippingAmount) === 0
+                      ? "Free"
+                      : formatCurrency(order.shippingAmount)}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -373,10 +447,12 @@ export default function OrderDetail() {
                   <Truck className="w-4 h-4 text-gray-400" />
                   <div>
                     <p className="font-medium capitalize">
-                      {order.deliveryMethod.replace('_', ' ')}
+                      {order.deliveryMethod.replace("_", " ")}
                     </p>
                     {order.agentLocation && (
-                      <p className="text-sm text-gray-600">{order.agentLocation}</p>
+                      <p className="text-sm text-gray-600">
+                        {order.agentLocation}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -391,7 +467,7 @@ export default function OrderDetail() {
               <CardContent className="space-y-3">
                 <div className="flex items-center gap-3">
                   <User className="w-4 h-4 text-gray-400" />
-                  <span>{order.address?.fullName || 'N/A'}</span>
+                  <span>{order.address?.fullName || "N/A"}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <Phone className="w-4 h-4 text-gray-400" />
@@ -432,75 +508,6 @@ export default function OrderDetail() {
                 </CardContent>
               </Card>
             )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Skeleton Loader for Order Detail
-function OrderDetailSkeleton() {
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        <div className="mb-6">
-          <Skeleton className="h-9 w-28 mb-4" />
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <Skeleton className="h-8 w-48 mb-2" />
-              <Skeleton className="h-4 w-64" />
-            </div>
-            <Skeleton className="h-8 w-24" />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <Card>
-              <CardHeader>
-                <Skeleton className="h-6 w-32 mb-2" />
-                <Skeleton className="h-4 w-48" />
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {[1, 2, 3, 4, 5].map(i => (
-                  <div key={i} className="flex items-center gap-4">
-                    <Skeleton className="w-8 h-8 rounded-full" />
-                    <div className="flex-1 space-y-2">
-                      <Skeleton className="h-4 w-32" />
-                      <Skeleton className="h-3 w-48" />
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <Skeleton className="h-6 w-32 mb-2" />
-                <Skeleton className="h-4 w-48" />
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {[1, 2, 3].map(i => (
-                  <Skeleton key={i} className="h-20 w-full" />
-                ))}
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="space-y-6">
-            {[1, 2, 3, 4].map(i => (
-              <Card key={i}>
-                <CardHeader>
-                  <Skeleton className="h-6 w-32" />
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {[1, 2, 3].map(j => (
-                    <Skeleton key={j} className="h-4 w-full" />
-                  ))}
-                </CardContent>
-              </Card>
-            ))}
           </div>
         </div>
       </div>

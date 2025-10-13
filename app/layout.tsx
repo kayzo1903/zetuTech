@@ -9,6 +9,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { CartProvider } from "@/components/provider/cart-provider";
 import { getServerSession } from "@/lib/server-session";
 import ClientHeader from "@/components/clientHeader";
+import "@/lib/safeconsole";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

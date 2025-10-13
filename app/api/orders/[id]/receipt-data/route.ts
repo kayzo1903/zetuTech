@@ -13,12 +13,10 @@ export async function GET(
      const { id } = await params;
      const orderId = id
     
-     console.log('📋 Fetching receipt data for order:', orderId);
 
     // Validate UUID format
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(orderId)) {
-      console.log('❌ Invalid order ID format:', orderId);
       return NextResponse.json(
         { success: false, error: "Invalid order ID" },
         { status: 400 }
@@ -27,7 +25,6 @@ export async function GET(
 
     // Validate order access - allow access for receipt generation
     const accessValidation = await validateOrderAccess(orderId, null);
-    console.log('🔐 Access validation result:', accessValidation);
     
     if (!accessValidation.allowed) {
       return NextResponse.json(
@@ -46,14 +43,12 @@ export async function GET(
       .limit(1);
 
     if (!orderData) {
-      console.log('❌ Order not found in database:', orderId);
       return NextResponse.json(
         { success: false, error: "Order not found" },
         { status: 404 }
       );
     }
 
-    console.log('✅ Found order:', orderData.orderNumber);
 
     // 2. Get order items with product details
     const orderItems = await dbServer
@@ -73,7 +68,6 @@ export async function GET(
       .innerJoin(product, eq(orderItem.productId, product.id))
       .where(eq(orderItem.orderId, orderId));
 
-    console.log('📦 Found order items:', orderItems.length);
 
     // 3. Get shipping address
     const [shippingAddress] = await dbServer
@@ -87,7 +81,6 @@ export async function GET(
       )
       .limit(1);
 
-    console.log('🏠 Found shipping address:', !!shippingAddress);
 
     // Safe parsing of attributes
     const parseAttributes = (attributes: string | null) => {
@@ -141,7 +134,6 @@ export async function GET(
       } : null
     };
 
-    console.log('✅ Successfully formatted receipt data');
 
     return NextResponse.json({
       success: true,
@@ -149,7 +141,7 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error("❌ Error fetching order data:", error);
+    console.error(error)
     return NextResponse.json(
       { success: false, error: "Failed to fetch order data" },
       { status: 500 }
