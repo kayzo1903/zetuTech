@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/radio-group"
 import { DeliveryData } from '@/lib/types/checkout';
 import { deliverySchema } from '@/lib/validation-schemas/checkout';
+import { DAR_ES_SALAAM_AGENTS, OTHER_REGION_AGENTS } from '@/lib/delivery/address';
 
 interface DeliveryStepProps {
   data: DeliveryData;
@@ -22,20 +23,8 @@ interface DeliveryStepProps {
   onBack: () => void;
 }
 
-const DAR_ES_SALAAM_AGENTS = [
-  { id: 'posta', name: 'Central Posta', address: 'Posta Mpya, Dar es Salaam' },
-  { id: 'kariakoo', name: 'Kariakoo Market', address: 'Kariakoo, Dar es Salaam' },
-  { id: 'mbezi', name: 'Mbezi Luis', address: 'Mbezi Luis, Dar es Salaam' }
-];
 
-const OTHER_REGION_AGENTS: Record<string, Array<{id: string, name: string, address: string}>> = {
-  'Arusha': [
-    { id: 'arusha_central', name: 'Arusha Central', address: 'Soko Kuu, Arusha' }
-  ],
-  'Mwanza': [
-    { id: 'mwanza_central', name: 'Mwanza Central', address: 'City Center, Mwanza' }
-  ],
-};
+
 
 export default function DeliveryStep({ data, contactData, onUpdate, onNext, onBack }: DeliveryStepProps) {
   const [formData, setFormData] = useState<DeliveryData>(data);

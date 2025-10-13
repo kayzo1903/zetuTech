@@ -7,20 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ContactData } from '@/lib/types/checkout';
 import { contactSchema } from '@/lib/validation-schemas/checkout';
+import { TANZANIA_REGIONS } from '@/lib/delivery/address';
 
-const TANZANIA_REGIONS = [
-  'Dar es Salaam',
-  'Arusha',
-  'Mwanza',
-  'Dodoma',
-  'Mbeya',
-  'Morogoro',
-  'Tanga',
-  'Kahama',
-  'Tabora',
-  'Zanzibar',
-  'Other',
-];
 
 interface ContactStepProps {
   data: ContactData;
