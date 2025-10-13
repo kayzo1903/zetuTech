@@ -417,8 +417,7 @@ export async function POST(
     );
     drawText(
       `Verify at: ${
-        process.env.NEXT_PUBLIC_APP_URL || "https://zetutech.co.tz"
-      }/verify/${verificationCode}`,
+        process.env.NEXT_PUBLIC_APP_URL}/verify/${verificationCode}`,
       60,
       yPosition + 25,
       8
