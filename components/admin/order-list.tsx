@@ -79,6 +79,7 @@ export default function AdminOrdersList({ serverSession }: AdminOrdersListProps)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [deletingOrders, setDeletingOrders] = useState<Set<string>>(new Set()); // Track deleting orders
 
   // 🕒 Debounce Search (prevents spam requests)
   useEffect(() => {
@@ -122,6 +123,9 @@ export default function AdminOrdersList({ serverSession }: AdminOrdersListProps)
 
   // 🗑 Delete order
   const handleDelete = async (id: string) => {
+    // Add to deleting set to disable button
+    setDeletingOrders(prev => new Set(prev).add(id));
+
     try {
       const res = await fetch(`/api/admin/orders/${id}`, { method: "DELETE" });
       const data = await res.json();
@@ -132,12 +136,17 @@ export default function AdminOrdersList({ serverSession }: AdminOrdersListProps)
         toast.error(data.error || "Delete failed");
       }
     } catch (err) {
-      console.error(err)
+      console.error(err);
       toast.error("Delete failed");
-      
     } finally {
       setDeleteDialogOpen(false);
       setOrderToDelete(null);
+      // Remove from deleting set
+      setDeletingOrders(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(id);
+        return newSet;
+      });
     }
   };
 
@@ -154,6 +163,9 @@ export default function AdminOrdersList({ serverSession }: AdminOrdersListProps)
       setPagination((prev) => ({ ...prev, page: newPage }));
     }
   };
+
+  // Check if an order is currently being deleted
+  const isDeleting = (orderId: string) => deletingOrders.has(orderId);
 
   // 🚫 Access control
   if (!serverSession) return <div className="p-6">Loading...</div>;
@@ -229,48 +241,57 @@ export default function AdminOrdersList({ serverSession }: AdminOrdersListProps)
                 </TableCell>
               </TableRow>
             ) : (
-              orders.map((order) => (
-                <TableRow key={order.id} className="hover:bg-gray-50/10 transition">
-                  <TableCell className="font-mono">
-                    {order.orderNumber}
-                    {!order.userId && <Badge className="ml-2">Guest</Badge>}
-                  </TableCell>
-                  <TableCell>{getCustomerName(order)}</TableCell>
-                  <TableCell>{order.customerPhone}</TableCell>
-                  <TableCell>{order.itemsCount}</TableCell>
-                  <TableCell>{formatPrice(order.totalAmount)}</TableCell>
-                  <TableCell>
-                    <Badge className={ORDER_STATUS[order.status as keyof typeof ORDER_STATUS]}>
-                      {order.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={PAYMENT_STATUS[order.paymentStatus as keyof typeof PAYMENT_STATUS]}>
-                      {order.paymentStatus}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{formatDate(order.createdAt)}</TableCell>
-                  <TableCell className="text-right flex gap-2 justify-end">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => router.push(`/admin-dashboard/orders/${order.id}`)}
-                    >
-                      <Eye className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => {
-                        setOrderToDelete(order.id);
-                        setDeleteDialogOpen(true);
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
+              orders.map((order) => {
+                const isOrderDeleting = isDeleting(order.id);
+                return (
+                  <TableRow key={order.id} className="hover:bg-gray-50/10 transition">
+                    <TableCell className="font-mono">
+                      {order.orderNumber}
+                      {!order.userId && <Badge className="ml-2">Guest</Badge>}
+                    </TableCell>
+                    <TableCell>{getCustomerName(order)}</TableCell>
+                    <TableCell>{order.customerPhone}</TableCell>
+                    <TableCell>{order.itemsCount}</TableCell>
+                    <TableCell>{formatPrice(order.totalAmount)}</TableCell>
+                    <TableCell>
+                      <Badge className={ORDER_STATUS[order.status as keyof typeof ORDER_STATUS]}>
+                        {order.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={PAYMENT_STATUS[order.paymentStatus as keyof typeof PAYMENT_STATUS]}>
+                        {order.paymentStatus}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{formatDate(order.createdAt)}</TableCell>
+                    <TableCell className="text-right flex gap-2 justify-end">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => router.push(`/admin-dashboard/orders/${order.id}`)}
+                        disabled={isOrderDeleting}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => {
+                          setOrderToDelete(order.id);
+                          setDeleteDialogOpen(true);
+                        }}
+                        disabled={isOrderDeleting}
+                      >
+                        {isOrderDeleting ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
@@ -302,9 +323,22 @@ export default function AdminOrdersList({ serverSession }: AdminOrdersListProps)
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => orderToDelete && handleDelete(orderToDelete)}>
-              Confirm Delete
+            <AlertDialogCancel disabled={orderToDelete ? isDeleting(orderToDelete) : false}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => orderToDelete && handleDelete(orderToDelete)}
+              disabled={orderToDelete ? isDeleting(orderToDelete) : false}
+              className="flex items-center gap-2"
+            >
+              {orderToDelete && isDeleting(orderToDelete) ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Confirm Delete"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

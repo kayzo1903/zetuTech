@@ -145,3 +145,72 @@ export async function GET(
     );
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ orderId: string }> }
+) {
+  try {
+    const { orderId } = await params;
+    const { session, isAdmin } = await getServerSession();
+
+    // Check admin authorization
+    if (!session || !isAdmin) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    // First, check if order exists
+    const [existingOrder] = await dbServer
+      .select({ id: order.id })
+      .from(order)
+      .where(eq(order.id, orderId))
+      .limit(1);
+
+    if (!existingOrder) {
+      return NextResponse.json(
+        { success: false, error: "Order not found" },
+        { status: 404 }
+      );
+    }
+
+    // Use transaction to delete all related records
+    await dbServer.transaction(async (tx) => {
+      // Delete order status history
+      await tx
+        .delete(orderStatusHistory)
+        .where(eq(orderStatusHistory.orderId, orderId));
+
+      // Delete order addresses
+      await tx
+        .delete(orderAddress)
+        .where(eq(orderAddress.orderId, orderId));
+
+      // Delete order items
+      await tx
+        .delete(orderItem)
+        .where(eq(orderItem.orderId, orderId));
+
+      // Finally delete the order
+      await tx
+        .delete(order)
+        .where(eq(order.id, orderId));
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: "Order deleted successfully",
+    });
+  } catch (error) {
+    console.error("Admin order delete error:", error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: "Failed to delete order",
+      },
+      { status: 500 }
+    );
+  }
+}
