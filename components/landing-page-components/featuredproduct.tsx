@@ -1,10 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Zap,
   Shield,
@@ -24,6 +22,7 @@ import {
 import { Product } from "@/lib/types/product";
 import WishlistButton from "@/app/wishlist/components/wishlist-button";
 import { toast } from "sonner";
+import { ProductActionButtons } from "../cart-system/product-action-btn";
 
 interface FeaturedProductProps {
   featuredProduct: Product | null;
@@ -84,7 +83,7 @@ export default function FeaturedProduct({
   const shareProduct = () => {
     // Construct the product URL using slug and id
     const productUrl = `${window.location.origin}/products/${featuredProduct.slug}/${featuredProduct.id}`;
-    
+
     const shareData = {
       title: featuredProduct.name,
       text: featuredProduct.description || "Check out this amazing product!",
@@ -250,22 +249,11 @@ export default function FeaturedProduct({
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-3 mb-6">
-                <Button
-                  asChild
-                  size="lg"
-                  className="flex-1 bg-blue-600 hover:bg-blue-700"
-                >
-                  <Link href={`/checkout?product=${featuredProduct.id}`}>
-                    {featuredProduct.stock === 0 ? "Out of Stock" : "Buy Now"}
-                  </Link>
-                </Button>
-                <Button asChild size="lg" variant="outline" className="flex-1">
-                  <Link
-                    href={`/products/${featuredProduct.slug}/${featuredProduct.id}`}
-                  >
-                    View Details
-                  </Link>
-                </Button>
+                <ProductActionButtons
+                  product={featuredProduct}
+                  layout="horizontal"
+                  className="mt-4"
+                />
               </div>
 
               {/* Accordions */}

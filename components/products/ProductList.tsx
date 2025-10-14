@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { X, Filter, ChevronDown, ChevronUp } from "lucide-react";
 import { ProductsListProps, SearchParams } from "@/lib/types/product";
 import { PRODUCT_TYPES } from "@/lib/validation-schemas/product-type";
-import ProductCard from "../../../components/cards/productlistCard";
+import ProductCard from "../cards/productlistCard";
 import { useDebounce } from "@/hooks/debounce";
 
 export default function ProductsList({ initialData }: ProductsListProps) {

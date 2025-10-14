@@ -171,7 +171,7 @@ we will connect our webapp with cloudfare 3 for image system
 >pending orders
 >analytics charts 
 
-## receipt system 
+## receipt system ✅✅
 > add column for receipt at orders
 > creating verification page of receipt
 > R2 bucket configured with public access
@@ -182,6 +182,9 @@ we will connect our webapp with cloudfare 3 for image system
 > Verification links working
 > Mobile responsiveness verified
 
-## controling logs on production
+## controling logs on production 🔴🔴
 >creating util function
 >import on loot-layout
+
+## creating buy direct btn
+> creat a direct btn to checkout product

@@ -13,7 +13,7 @@ import { useWishlistStore } from "@/store/wishlist-store";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { AddToCartButton } from "../cart-system/cart-add-btn";
+import { ProductActionButtons } from "../cart-system/product-action-btn";
 
 interface ProductCardProps {
   product: Product;
@@ -210,11 +210,11 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
           <div className="mt-auto">
             <div className="flex flex-col md:flex-row items-start md:items-center gap-2 mb-2">
               <span className="text-sm md:text-lg font-bold text-gray-900 dark:text-white">
-               Tsh  {formatNumber(displayPrice)}
+                Tsh {formatNumber(displayPrice)}
               </span>
               {product.hasDiscount && salePrice && (
                 <span className="text-sm text-gray-500 dark:text-gray-400 line-through">
-                Tsh  {formatNumber(originalPrice)}
+                  Tsh {formatNumber(originalPrice)}
                 </span>
               )}
             </div>
@@ -231,10 +231,10 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
 
       {/* Add to Cart Button */}
       <div className="p-4 pt-0">
-        <AddToCartButton
+        <ProductActionButtons
           product={product}
-          className="max-w-xs"
-          showQuantity={false}
+          layout="vertical" 
+          className="mt-4"
         />
       </div>
     </motion.div>

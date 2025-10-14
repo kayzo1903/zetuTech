@@ -2,8 +2,8 @@
 import { Suspense } from "react";
 import { PRODUCT_TYPES } from "@/lib/validation-schemas/product-type";
 import { getProducts } from "@/app/products/libs/servers/getProduct";
-import ProductsLoading from "./components/productListLoading";
-import ProductsList from "./components/ProductList";
+import ProductsLoading from "../../components/products/productListLoading";
+import ProductsList from "../../components/products/ProductList";
 
 
 // Define SearchParams with Record utility

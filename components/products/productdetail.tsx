@@ -18,7 +18,7 @@ import { Product } from "@/lib/types/product";
 import WishlistButton from "@/app/wishlist/components/wishlist-button";
 import { toast } from "sonner";
 import ProductCard from "@/components/cards/productlistCard";
-import { AddToCartButton } from "@/components/cart-system/cart-add-btn";
+import { ProductActionButtons } from "../cart-system/product-action-btn";
 
 interface ProductDetailProps {
   productData: Product;
@@ -233,15 +233,14 @@ export default function ProductDetail({
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
               <div className="flex space-x-4">
                 <div className="mt-4">
-                  <AddToCartButton
+                  <ProductActionButtons
                     product={productData}
-                    className="w-full"
-                    showQuantity={true}
+                    layout="horizontal"
+                    className="mt-4"
                   />
                 </div>
 
                 {/* button buy now*/}
-
               </div>
             </div>
 
