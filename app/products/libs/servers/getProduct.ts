@@ -1,4 +1,4 @@
-// lib/server/getProduct.ts
+// lib/server/getProduct.ts - UPDATED VERSION
 import { and, eq, sql, ilike } from "drizzle-orm";
 import { dbServer } from "@/db/db-server";
 import { product, productCategory, productImage } from "@/db/schema";
@@ -7,9 +7,7 @@ import {
   PRODUCT_CATEGORIES,
 } from "@/lib/validation-schemas/product-type";
 
-// Update the function signature
 export async function getProducts(searchParams: Record<string, string | undefined>) {
-  // Normalization handles undefined values safely
   const normalizedParams = {
     productType: searchParams.productType || searchParams.type || "all",
     category: searchParams.category || searchParams.cat || "all",
@@ -103,9 +101,7 @@ export async function getProducts(searchParams: Record<string, string | undefine
         warrantyPeriod: product.warrantyPeriod,
         warrantyDetails: product.warrantyDetails,
         images: sql<string[]>`ARRAY_AGG(DISTINCT ${productImage.url})`,
-        categories: sql<
-          string[]
-        >`ARRAY_AGG(DISTINCT ${productCategory.category})`,
+        categories: sql<string[]>`ARRAY_AGG(DISTINCT ${productCategory.category})`,
         createdAt: product.createdAt,
         updatedAt: product.updatedAt,
       })
@@ -129,16 +125,21 @@ export async function getProducts(searchParams: Record<string, string | undefine
 
     const totalCount = Number(countResult[0]?.count || 0);
 
-    // Available Brands
+    // Available Brands - FIXED QUERY
     const brandsResult = await dbServer
       .select({ brand: product.brand })
       .from(product)
-      .leftJoin(productCategory, eq(productCategory.productId, product.id)) // <-- FIX
-      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .where(and(
+        sql`${product.status} != 'Draft'`,
+        sql`${product.stockStatus} != 'Archived'`
+      ))
       .groupBy(product.brand);
 
-    const brands = brandsResult.map((r) => r.brand).filter(Boolean) as string[];
+    const brands = brandsResult
+      .map((r) => r.brand)
+      .filter((brand): brand is string => Boolean(brand) && brand !== "");
 
+    // FIXED: Ensure consistent response structure
     return {
       products: products.map((p) => ({
         ...p,
@@ -148,9 +149,9 @@ export async function getProducts(searchParams: Record<string, string | undefine
         updatedAt: p.updatedAt?.toISOString(),
       })),
       filters: {
-        brands,
-        productTypes: PRODUCT_TYPES,
-        categories: PRODUCT_CATEGORIES,
+        brands: brands || [], // Ensure brands is always an array
+        productTypes: PRODUCT_TYPES || [],
+        categories: PRODUCT_CATEGORIES || [],
       },
       pagination: {
         page,
@@ -163,12 +164,14 @@ export async function getProducts(searchParams: Record<string, string | undefine
     };
   } catch (error) {
     console.error("❌ getProducts error:", error);
+    
+    // FIXED: Return proper structure even on error
     return {
       products: [],
       filters: {
         brands: [],
-        productTypes: PRODUCT_TYPES,
-        categories: PRODUCT_CATEGORIES,
+        productTypes: PRODUCT_TYPES || [],
+        categories: PRODUCT_CATEGORIES || [],
       },
       pagination: {
         page: 1,

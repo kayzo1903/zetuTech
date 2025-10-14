@@ -3,7 +3,8 @@ import { Suspense } from "react";
 import { PRODUCT_TYPES } from "@/lib/validation-schemas/product-type";
 import { getProducts } from "@/app/products/libs/servers/getProduct";
 import ProductsLoading from "../../components/products/productListLoading";
-import ProductsList from "../../components/products/ProductList";
+import DiscoverPage from "@/components/products/ProductList";
+
 
 
 // Define SearchParams with Record utility
@@ -48,7 +49,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
 
   return (
     <Suspense fallback={<ProductsLoading />}>
-      <ProductsList initialData={data} searchParams={resolved} />
+      <DiscoverPage initialData={data} searchParams={resolved} />
     </Suspense>
   );
 }
