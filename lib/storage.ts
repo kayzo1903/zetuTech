@@ -1,6 +1,6 @@
 export async function uploadImageToStorage(file: File, path: string): Promise<string> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
     // Step 1: Get presigned URL
     const resp = await fetch(`${baseUrl}/api/r2-presign`, {
