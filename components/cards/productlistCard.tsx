@@ -234,7 +234,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
         <ProductActionButtons
           product={product}
           layout="vertical" 
-          className="mt-4"
+          className="mt-1"
         />
       </div>
     </motion.div>
