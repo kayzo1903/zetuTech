@@ -117,13 +117,16 @@ we will connect our webapp with cloudfare 3 for image system
 > connecting a product type and categories of zetutech hero with a real links
 
 ## redesign a product-list ✅✅
+
 > implementing real fiters from the productlist and simplfies that
 
 ## redesign a dashboard 🔴🔴
+
 > change side bar style to mode dynamic
 
 ## implementing wish list functionality ✅✅
-> creating a wishlist page //app/page.tsx 
+
+> creating a wishlist page //app/page.tsx
 > creating a components //app/components/wishlist
 > creating a dumy data first for demostration
 > introduce a table at db
@@ -132,7 +135,8 @@ we will connect our webapp with cloudfare 3 for image system
 > fetching a wishlist at a table
 
 ## implemting cart-items and final ordering ✅✅
-> creating table in db for cart & cartitems 
+
+> creating table in db for cart & cartitems
 > creatig types
 > Cart Helper Functions
 > Create API Endpoints
@@ -145,33 +149,37 @@ we will connect our webapp with cloudfare 3 for image system
 > Wishlist Integration
 > Product Page Integration
 
-
 ## implementing a metadata to all page 🔴🔴
- > creating a metadata for page seo to all routes
+
+> creating a metadata for page seo to all routes
 
 ## Proceed to checkout Page 🟢🟢
- > Designed checkout page structure with progress stepper
- > Built contact information step with region selection
- > Created delivery method step with region-based options
- > Developed address information step for delivery/pickup
- > Built payment method step focusing on cash on delivery 
- > Created review and confirm step with order summary 
- > Added order confirmation success page
- > Fixed TypeScript interfaces for all checkout components
- > Implemented proper shipping logic: free in Dar es Salaam, 15,000 TZS elsewhere
+
+> Designed checkout page structure with progress stepper
+> Built contact information step with region selection
+> Created delivery method step with region-based options
+> Developed address information step for delivery/pickup
+> Built payment method step focusing on cash on delivery
+> Created review and confirm step with order summary
+> Added order confirmation success page
+> Fixed TypeScript interfaces for all checkout components
+> Implemented proper shipping logic: free in Dar es Salaam, 15,000 TZS elsewhere
 
 ## creating order page ✅✅
+
 > orderlist page
-> order detailed page 
-> ordering actions 
+> order detailed page
+> ordering actions
 
 ## Admin home layout dashboard🟢🟢
->quick action
->simple statics 
->pending orders
->analytics charts 
+
+> quick action
+> simple statics
+> pending orders
+> analytics charts
 
 ## receipt system ✅✅
+
 > add column for receipt at orders
 > creating verification page of receipt
 > R2 bucket configured with public access
@@ -183,8 +191,21 @@ we will connect our webapp with cloudfare 3 for image system
 > Mobile responsiveness verified
 
 ## controling logs on production 🔴🔴
->creating util function
->import on loot-layout
 
-## creating buy direct btn
+> creating util function
+> import on loot-layout
+
+## creating buy direct btn ✅✅
+
 > creat a direct btn to checkout product
+
+## redesign a discovering products page
+
+> creating a very responsive design
+
+## completing a search page
+
+> design a search page
+> design a search route
+> design a loading state
+> design a result components

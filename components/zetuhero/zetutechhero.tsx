@@ -1,6 +1,6 @@
 "use client";
 
-import React, { JSX } from "react";
+import React, { JSX, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,8 +13,19 @@ import {
   TOP_CATEGORIES,
   TOP_PRODUCT_TYPES,
 } from "@/lib/data/hero-data";
+import { useRouter } from "next/router";
 
 export default function ZetutechHero(): JSX.Element {
+  const [searchQuery, setSearchQuery] = useState("");
+  const router = useRouter();
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+    }
+  };
+
   return (
     <section className="w-full max-w-7xl mx-auto px-4 pt-8">
       {/* HERO TOP BANNER */}
@@ -57,11 +68,16 @@ export default function ZetutechHero(): JSX.Element {
 
             {/* Search - visible only on medium+ screens */}
             <div className="ml-2 hidden md:inline-block">
-              <form className="flex items-center bg-gray-100 dark:bg-white/5 rounded-md p-1 pr-2">
+              <form
+                onSubmit={handleSearch}
+                className="flex items-center bg-gray-100 dark:bg-white/5 rounded-md p-1 pr-2"
+              >
                 <Input
                   aria-label="search"
                   placeholder="Search products, brands or types"
                   className="bg-transparent placeholder:text-gray-400 dark:placeholder:text-slate-300 text-gray-900 dark:text-white"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 />
                 <Button type="submit" size="sm" className="ml-2">
                   Search
@@ -213,10 +229,8 @@ export default function ZetutechHero(): JSX.Element {
                 </div>
               </div>
               <div>
-                <Button
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                >
-                 Shop Accessories
+                <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                  Shop Accessories
                 </Button>
               </div>
             </CardContent>
