@@ -1,9 +1,8 @@
 // app/api/products/route.ts
+export const runtime = "nodejs";
 import { NextRequest, NextResponse } from "next/server";
 import { productSchema } from "@/lib/validation-schemas/products-schema";
 import { revalidatePath } from "next/cache";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
 import { uploadImageToStorage } from "@/lib/storage";
 
 import {
@@ -19,15 +18,14 @@ import { STOCK_STATUS } from "@/lib/validation-schemas/products-schema";
 import { slugify } from "@/lib/slugify";
 import { generateUniqueSKU } from "@/lib/sku-generator";
 import { sql, SQL, desc } from "drizzle-orm";
+import { getServerSession } from "@/lib/server-session";
 
 export async function POST(request: NextRequest) {
   try {
     // Check authentication
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const {session , isAdmin } = await getServerSession()
 
-    if (!session || !session.user) {
+    if (!session || !isAdmin) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
