@@ -13,7 +13,7 @@ import {
   TOP_CATEGORIES,
   TOP_PRODUCT_TYPES,
 } from "@/lib/data/hero-data";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 export default function ZetutechHero(): JSX.Element {
   const [searchQuery, setSearchQuery] = useState("");
