@@ -241,7 +241,7 @@ export default function PaymentStep({ data, onUpdate, onNext, onBack }: PaymentS
           <Button
             type="submit"
             disabled={!isFormValid}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-blue-500 hover:bg-blue-700"
           >
             Review Order
           </Button>

@@ -259,7 +259,7 @@ export default function DeliveryStep({ data, contactData, onUpdate, onNext, onBa
           <Button
             type="submit"
             disabled={!isFormValid}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-blue-500 hover:bg-blue-700"
           >
             Continue to Address
           </Button>

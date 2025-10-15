@@ -23,8 +23,7 @@ export default function ReviewStep({
   const isDarEsSalaam = checkoutData.contact?.region === "Dar es Salaam";
   const shippingCost = isDarEsSalaam ? 0 : 15000;
 
-  const tax = summary.cartTotal * 0.18;
-  const total = summary.cartTotal + shippingCost + tax;
+  const total = summary.cartTotal + shippingCost 
 
   const isDirectDelivery = checkoutData.delivery?.method === "direct_delivery";
   // const isAgentPickup = checkoutData.delivery?.method === 'agent_pickup';
@@ -79,7 +78,7 @@ export default function ReviewStep({
         </div>
       )}
 
-      <div className="space-y-6">
+      <div className="space-y-6 text-2xl">
         {/* Contact Information */}
         <Card>
           <CardContent className="p-4">
@@ -88,10 +87,7 @@ export default function ReviewStep({
                 <User className="w-4 h-4" />
                 Contact Information
               </h3>
-              <Button variant="ghost" size="sm" className="h-8">
-                <Edit2 className="w-3 h-3 mr-1" />
-                Edit
-              </Button>
+             
             </div>
             <div className="space-y-1 text-sm">
               <p>
@@ -117,10 +113,7 @@ export default function ReviewStep({
                 <MapPin className="w-4 h-4" />
                 Delivery Information
               </h3>
-              <Button variant="ghost" size="sm" className="h-8">
-                <Edit2 className="w-3 h-3 mr-1" />
-                Edit
-              </Button>
+             
             </div>
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
@@ -172,10 +165,7 @@ export default function ReviewStep({
                 <CreditCard className="w-4 h-4" />
                 Payment Method
               </h3>
-              <Button variant="ghost" size="sm" className="h-8">
-                <Edit2 className="w-3 h-3 mr-1" />
-                Edit
-              </Button>
+             
             </div>
             <div className="text-sm">
               <Badge variant="outline" className="mb-2">
@@ -229,8 +219,8 @@ export default function ReviewStep({
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span>Tax (18%)</span>
-                <span>TZS {Math.round(tax).toLocaleString()}</span>
+                <span>Tax </span>
+                <span> - </span>
               </div>
               {summary.totalDiscount > 0 && (
                 <div className="flex justify-between text-sm text-green-600">

@@ -416,7 +416,7 @@ export async function POST(
       true
     );
     drawText(
-      `Verify at: ${process.env.NEXT_PUBLIC_APP_URL}/verify/${verificationCode}`,
+      `Verify at: https://zetuTech.co.tz/verify/${verificationCode}`,
       60,
       yPosition + 25,
       8
@@ -428,7 +428,7 @@ export async function POST(
     yPosition += 20;
 
     const footerNotes = [
-      "Thank you for choosing ZETU TECH!",
+      "Thank you for choosing zetuTech",
       "• We will contact you within 24 hours to confirm pickup/delivery details",
       "• Please bring your ID and order number when collecting your items",
       "• For any questions, contact: +255 123 456 789 or support@zetutech.co.tz",
@@ -487,7 +487,6 @@ export async function POST(
       body: pdfBuffer, // Use Blob instead of Uint8Array
     });
 
-    console.log("📡 Upload response status:", uploadResponse.status);
 
     if (!uploadResponse.ok) {
       const uploadError = await uploadResponse.text();
@@ -496,7 +495,6 @@ export async function POST(
       );
     }
 
-    console.log("✅ PDF uploaded successfully");
 
     // Store verification code and PDF URL in database
     await dbServer

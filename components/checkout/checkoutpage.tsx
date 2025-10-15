@@ -85,11 +85,11 @@ export default function CheckoutPage() {
           subtotal: summary.originalTotal,
           discount: summary.totalDiscount,
           shipping: shippingCost,
-          tax: Math.round(summary.cartTotal * 0.18),
+          tax: 0 ,
           total:
             summary.cartTotal +
             shippingCost +
-            Math.round(summary.cartTotal * 0.18),
+            0,
         },
         cartItems: items.map((item) => ({
           productId: item.productId,
@@ -102,8 +102,6 @@ export default function CheckoutPage() {
         userId: session?.user?.id || null,
         guestSessionId: !session?.user ? guestSessionId : null,
       };
-
-      console.log("🔄 Creating order...", orderData);
 
       // Call the order creation API
       const response = await fetch("/api/orders/create", {

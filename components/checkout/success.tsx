@@ -372,7 +372,7 @@ export default function OrderSuccess() {
                   </div>
                   <div className="flex justify-between">
                     <span>Tax:</span>
-                    <span>{formatCurrency(orderData.order.taxAmount)}</span>
+                    <span> - </span>
                   </div>
                   <div className="flex justify-between border-t pt-1 font-bold">
                     <span>Total:</span>

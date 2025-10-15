@@ -21,8 +21,8 @@ export default function OrderSummary({
   const isDarEsSalaam = checkoutData.contact?.region === "Dar es Salaam";
   const shippingCost = isDarEsSalaam ? 0 : 15000;
 
-  const tax = summary.cartTotal * 0.18; // 18% VAT
-  const total = summary.cartTotal + shippingCost + tax;
+  const tax = null
+  const total = summary.cartTotal + shippingCost 
 
   return (
     <Card className="sticky top-6">
@@ -104,8 +104,8 @@ export default function OrderSummary({
           </div>
 
           <div className="flex justify-between text-sm">
-            <span>Tax (18% VAT)</span>
-            <span>TZS {Math.round(tax).toLocaleString()}</span>
+            <span>Tax </span>
+            <span> - </span>
           </div>
 
           {summary.totalDiscount > 0 && (

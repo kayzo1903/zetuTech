@@ -72,7 +72,7 @@ export function CartDrawer() {
             <div className="border-t pt-4 space-y-4">
               <CartSummary />
               
-              <div className="space-y-2">
+              <div className="space-y-2 px-2">
                 {/* ✅ ADD THIS: View Full Cart Button */}
                 <Button 
                   variant="outline"
