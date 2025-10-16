@@ -32,7 +32,6 @@ import {
   ChevronUp,
   Loader2,
   Menu,
-  X,
 } from "lucide-react";
 import { OrderDetail, OrderResponse } from "@/lib/types/admin-orders-details";
 import {
@@ -139,6 +138,7 @@ export default function OrderDetails() {
 
   useEffect(() => {
     fetchOrder();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId]);
 
   // Sticky header effect

@@ -143,6 +143,7 @@ export default function OrderSuccess() {
         setIsGenerating(false);
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [orderId, isGenerating]
   );
 

@@ -21,7 +21,6 @@ export default function OrderSummary({
   const isDarEsSalaam = checkoutData.contact?.region === "Dar es Salaam";
   const shippingCost = isDarEsSalaam ? 0 : 15000;
 
-  const tax = null
   const total = summary.cartTotal + shippingCost 
 
   return (

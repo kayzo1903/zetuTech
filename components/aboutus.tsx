@@ -10,7 +10,7 @@ export default function AboutUs() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            About ZetuTech
+            About zetuTech
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             Your trusted partner for quality laptops and exceptional service in Tanzania.
@@ -194,7 +194,7 @@ export default function AboutUs() {
                   Core Values
                 </h2>
                 <p className="text-gray-600 dark:text-gray-300 mb-4">
-                  Our values guide everything we do at ZetuTech, from selecting products to serving our customers.
+                  Our values guide everything we do at zetuTech, from selecting products to serving our customers.
                 </p>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">

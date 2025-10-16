@@ -4,13 +4,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  MapPin,
-  Phone,
-  Mail,
-  Clock,
-  Send,
-} from "lucide-react";
+import { MapPin, Phone, Mail, Clock, Send, MessageCircle } from "lucide-react";
+import AboutUs from "./aboutus";
 
 export default function Contacts() {
   const [formData, setFormData] = useState({
@@ -20,35 +15,65 @@ export default function Contacts() {
     message: "",
   });
 
-interface ContactFormData {
+  interface ContactFormData {
     name: string;
     email: string;
     subject: string;
     message: string;
-}
+  }
 
-const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev: ContactFormData) => ({ ...prev, [name]: value }));
-};
+  };
 
-const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log("Form submitted:", formData);
     // TODO: connect to backend or email service
-};
+  };
+
+  // WhatsApp direct chat function
+  const openWhatsApp = () => {
+    const phoneNumber = "255712345678"; // Your WhatsApp business number
+    const message =
+      "Hello! I'm interested in your products and would like to get more information.";
+    const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
+      message
+    )}`;
+    window.open(url, "_blank");
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-6 sm:px-10">
-      <div className="max-w-6xl mx-auto">
+    <div className="max-w-7xl mx-auto  min-h-screen  py-12 px-6 sm:px-10">
+      {/* Floating WhatsApp Button */}
+      <div className="fixed bottom-6 right-6 z-50 animate-bounce">
+        <Button
+          onClick={openWhatsApp}
+          className="bg-green-500 hover:bg-green-600 text-white rounded-full p-4 shadow-lg transition-all duration-300 hover:scale-110"
+          size="lg"
+        >
+          <MessageCircle className="w-6 h-6" />
+          <span className="sr-only">Chat on WhatsApp</span>
+        </Button>
+
+        {/* Optional: Tooltip on hover */}
+        <div className="absolute right-16 top-1/2 transform -translate-y-1/2 bg-gray-900 text-white text-sm px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
+          Chat with us on WhatsApp!
+        </div>
+      </div>
+
+      <div className="mx-auto">
         {/* Page Header */}
         <header className="mb-10 text-center">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Contact Us
           </h1>
           <p className="mt-3 text-gray-600 dark:text-gray-400 max-w-xl mx-auto">
-            Have questions or need assistance? We&apos;re here to help! 
-            Get in touch with us via phone, email, or the form below.
+            Have questions or need assistance? We&apos;re here to help! Get in
+            touch with us via phone, email, WhatsApp, or the form below.
           </p>
         </header>
 
@@ -82,7 +107,9 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
                   <p className="text-gray-900 dark:text-white font-medium">
                     Phone
                   </p>
-                  <p className="text-gray-600 dark:text-gray-400">+255 712 345 678</p>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    +255 712 345 678
+                  </p>
                 </div>
               </li>
 
@@ -114,6 +141,29 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
                   <p className="text-gray-600 dark:text-gray-400">
                     Sat: 10:00 AM - 4:00 PM
                   </p>
+                </div>
+              </li>
+
+              {/* WhatsApp Quick Action */}
+              <li className="flex items-start">
+                <div className="flex-shrink-0">
+                  <MessageCircle className="w-6 h-6 text-green-500" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-gray-900 dark:text-white font-medium">
+                    WhatsApp
+                  </p>
+                  <p className="text-gray-600 dark:text-gray-400 mb-2">
+                    Quick chat support
+                  </p>
+                  <Button
+                    onClick={openWhatsApp}
+                    className="bg-green-500 hover:bg-green-600 text-white text-sm"
+                    size="sm"
+                  >
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Start Chat
+                  </Button>
                 </div>
               </li>
             </ul>
@@ -229,6 +279,10 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
             title="Muuza Location Map"
           ></iframe>
         </div>
+      </div>
+
+      <div className="mx-auto">
+        <AboutUs />
       </div>
     </div>
   );

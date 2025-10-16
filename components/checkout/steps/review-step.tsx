@@ -6,7 +6,7 @@ import { useCartStore } from "@/lib/cart/store";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, Edit2, MapPin, User, CreditCard } from "lucide-react";
+import { Check, MapPin, User, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import { ReviewStepProps } from "@/lib/types/checkout";
 

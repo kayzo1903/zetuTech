@@ -44,6 +44,7 @@ export default function OrderDetail() {
     if (session?.user && orderId) {
       fetchOrder();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user, orderId]);
 
   const fetchOrder = async () => {

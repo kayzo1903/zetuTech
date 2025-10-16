@@ -448,7 +448,10 @@ export default function Header({ session, isAdmin }: HeaderProps) {
                   </DropdownMenuItem>
 
                   <DropdownMenuItem asChild>
-                    <Link href="/account/setting">Account Settings</Link>
+                    <Link href="/contact">Contacts Us</Link>
+                  </DropdownMenuItem>
+                   <DropdownMenuItem asChild>
+                    <Link href="/support">Support</Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   {isAdmin && (
