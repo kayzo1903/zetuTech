@@ -145,7 +145,7 @@ export async function POST(
       color: rgb(0.9, 0.9, 0.9),
     });
 
-    drawText("ZETU TECH", width / 2 - 45, 60, 22, true, [0.2, 0.4, 0.8]);
+    drawText("zetuTech", width / 2 - 45, 60, 22, true, [0.2, 0.4, 0.8]);
     drawText(
       "Your Trusted Technology Partner",
       width / 2 - 85,
