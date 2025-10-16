@@ -34,7 +34,7 @@ export function CartDrawer() {
           <CartBadge />
         </Button>
       </SheetTrigger>
-      <SheetContent className="flex flex-col w-full sm:max-w-md">
+      <SheetContent className="flex flex-col w-full sm:max-w-md bg-white dark:bg-gray-800">
         <SheetHeader>
           <SheetTitle className="flex items-center justify-between">
             <span>Shopping Cart ({summary.totalItems})</span>

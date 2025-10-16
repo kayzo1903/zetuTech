@@ -122,7 +122,7 @@ export default function CartList() {
     return (
       <div className="max-w-7xl min-h-screen mx-auto px-4 sm:px-6">
         <div className="text-center py-8 sm:py-16">
-          <div className="w-16 h-16 sm:w-24 sm:h-24 mx-auto mb-4 sm:mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+          <div className="w-16 h-16 sm:w-24 sm:h-24 mx-auto mb-4 sm:mb-6 rounded-full flex items-center justify-center">
             <ShoppingBag className="w-8 h-8 sm:w-12 sm:h-12 text-gray-400" />
           </div>
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">
@@ -134,7 +134,7 @@ export default function CartList() {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
             <Link href="/products" className="flex-1 sm:flex-none">
-              <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-base">
+              <Button className="w-full bg-blue-500 hover:bg-blue-700 text-white text-sm sm:text-base">
                 Start Shopping
               </Button>
             </Link>
