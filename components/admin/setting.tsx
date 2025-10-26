@@ -16,12 +16,9 @@ import {
   MapPin, 
   Clock, 
   MessageCircle, 
-  Globe, 
   Users, 
   Settings,
-  Shield,
   FileText,
-  ShoppingBag,
   Plus,
   Trash2
 } from 'lucide-react';
