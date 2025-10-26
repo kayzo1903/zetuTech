@@ -9,7 +9,7 @@ import {
   product,
   productCategory,
   productImage,
-  productAttribute,
+  productAttribute
 } from "@/db/schema";
 import { ZodError } from "zod";
 import { v4 as uuidv4 } from "uuid";
@@ -171,7 +171,6 @@ export async function POST(request: NextRequest) {
             id: uuidv4(),
             productId: productResult.id,
             url,
-            storageKey: url.split("/").slice(-1)[0], // <-- TEMP FIX
             alt: `${validatedData.name} - Image ${index + 1}`,
             title: `${validatedData.name} - Image ${index + 1}`,
             order: index,

@@ -1,4 +1,5 @@
 import { AppSidebar } from "@/components/app-sidebar";
+import { ModeToggle } from "@/components/modetoggle";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -56,6 +57,7 @@ export default async function AdminLayout({
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
+            <ModeToggle />
           </header>
           <div className="p-4 flex-1">{children}</div>
         </SidebarInset>
