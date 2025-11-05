@@ -206,3 +206,97 @@ Future Tools	Stripe, Analytics, CMS Integration
 
 ---
 
+
+---
+
+🛠 Getting Started
+
+Requirements
+
+- Node.js 20+
+- pnpm or npm (project includes both lockfiles; use one consistently)
+
+Install
+
+```bash
+pnpm install
+# or
+npm install
+```
+
+Environment Variables
+
+Create a `.env.local` with the following (examples):
+
+```bash
+# Database
+DATABASE_URL="postgres://user:password@host:port/db"
+
+# Storage (Cloudflare R2)
+R2_ACCOUNT_ID=""
+R2_ACCESS_KEY_ID=""
+R2_SECRET_ACCESS_KEY=""
+R2_PUBLIC_BUCKET_URL=""
+
+# Auth (better-auth)
+AUTH_SECRET="a-long-random-string"
+
+# Sentry
+SENTRY_DSN=""
+NEXT_PUBLIC_SENTRY_DSN=""
+# Optional for CI source map upload
+# SENTRY_AUTH_TOKEN=""
+# SENTRY_ORG="zetutech"
+# SENTRY_PROJECT="javascript-nextjs"
+```
+
+Development
+
+```bash
+pnpm dev
+# or
+npm run dev
+```
+
+Build & Start
+
+```bash
+pnpm build && pnpm start
+# or
+npm run build && npm start
+```
+
+Database (Drizzle)
+
+- Migrations live in `drizzle/` and `migrations/`.
+- Generate and push using drizzle-kit as needed.
+
+```bash
+# example (adjust to your workflow)
+pnpm drizzle:generate
+pnpm drizzle:push
+```
+
+Sentry Setup
+
+- Client and server are initialized in `instrumentation-client.ts` and `sentry.*.config.ts`.
+- `next.config.ts` wraps Next config with `withSentryConfig`.
+- To speed up local builds, you can skip source map upload:
+
+```powershell
+$env:SENTRY_SKIP_SOURCEMAPS_UPLOAD='1'; npm run build
+```
+
+Edge Runtime Note
+
+- Middleware runs on the Edge runtime. Node APIs are not allowed there.
+- Admin route protection is enforced in `app/admin-dashboard/layout.tsx`; `middleware.ts` no longer imports `better-auth` to avoid Edge runtime warnings.
+
+Current Core Versions
+
+- Next.js 15.5.x, React 19, TypeScript 5
+- TailwindCSS 4, shadcn/ui
+- Drizzle ORM, Neon Postgres
+- better-auth
+- Sentry (`@sentry/nextjs`)
+- Recharts, TanStack Query/Table
