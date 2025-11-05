@@ -21,7 +21,7 @@ Database	Drizzle ORM + Neon PostgreSQL	Type-safe relational data handling
 Storage	Cloudflare R2	Efficient image and file storage
 Deployment	Vercel	Scalable hosting with edge functions
 Validation	Zod	Schema validation for forms and API inputs
-Translations	next-intl	Multi-language support (English & Swahili)
+Translations	—	(Currently not enabled)
 
 
 
@@ -98,7 +98,7 @@ Drizzle ORM – Type-safe database queries and migrations
 
 PostgreSQL (Neon) – Cloud-hosted relational database
 
-Auth.js (Better Auth) – Secure authentication and session handling
+better-auth – Secure authentication and session handling
 
 Zod – Schema validation for both frontend and backend inputs
 
@@ -181,7 +181,7 @@ API Integration – Linking backend logic to frontend components
 
 Chart.js or Recharts – For dashboard analytics
 
-Prisma (alternative ORM) – Possible integration for more complex data models
+Prisma (alternative ORM) – Not used; Drizzle is the ORM. Sentry excludes Prisma integration.
 
 Stripe or Paystack – Payment integration
 
