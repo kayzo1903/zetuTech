@@ -1,6 +1,10 @@
 import {withSentryConfig} from "@sentry/nextjs";
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  compiler: {
+    // Strip console calls in production, but keep errors and warnings
+    removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error", "warn"] } : false,
+  },
   images: {
     remotePatterns: [
       // ✅ Optional: your old R2.dev endpoint (if still used)
