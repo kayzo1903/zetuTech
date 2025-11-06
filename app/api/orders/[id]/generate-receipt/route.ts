@@ -164,7 +164,7 @@ export async function POST(
     );
 
     // Receipt title
-    drawText("ORDER RECEIPT", width / 2 - 50, 140, 16, true);
+    drawText("ORDER INVOICE", width / 2 - 50, 140, 16, true);
 
     let yPosition = 170;
 
@@ -389,7 +389,7 @@ export async function POST(
 
     // ========== VERIFICATION SECTION ==========
     drawText(
-      "RECEIPT VERIFICATION",
+      "INVOICE VERIFICATION",
       width / 2 - 65,
       yPosition,
       12,
@@ -409,7 +409,7 @@ export async function POST(
     });
 
     drawText(
-      `Verification Code: ${verificationCode}`,
+      `Invoice Code: ${verificationCode}`,
       60,
       yPosition + 10,
       10,
@@ -445,7 +445,7 @@ export async function POST(
 
     // ========== UPLOAD TO R2 ==========
     const pdfBytes = await pdfDoc.save();
-    const fileName = `receipts/${orderData.orderNumber}-${verificationCode}.pdf`;
+    const fileName = `invoices/${orderData.orderNumber}-${verificationCode}.pdf`;
 
     // Get presigned URL
     const baseUrl =
@@ -509,13 +509,13 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      message: "Receipt generated successfully",
+      message: "Invoice generated successfully",
       verifyLink,
       verificationCode,
       receiptUrl: publicUrl,
     });
   } catch (err) {
-    console.error("RECEIPT ERROR:", err);
+    console.error("INVOICE ERROR:", err);
     return NextResponse.json(
       {
         success: false,
