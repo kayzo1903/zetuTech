@@ -17,7 +17,7 @@ export default function Maintainance({
   showProgressBar = true,
 }: MaintenancePageProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-blue-900 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-blue-900 flex items-center justify-center px-4 py-8">
       <div className="max-w-lg w-full bg-white rounded-2xl shadow-2xl p-8 text-center">
         {/* ZetuTech Logo Placeholder */}
         <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-6">
