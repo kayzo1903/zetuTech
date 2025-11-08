@@ -2,7 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  // Maintenance mode flag - set this to true to enable maintenance mode
+  const MAINTENANCE_MODE = process.env.MAINTENANCE_MODE 
+  
+  // Paths that should be accessible during maintenance (optional)
+  const MAINTENANCE_ALLOWED_PATHS = [
+    '/maintenance', '/'
+  ];
+
+  // Check if maintenance mode is enabled and current path is not allowed
+  if (MAINTENANCE_MODE && !MAINTENANCE_ALLOWED_PATHS.includes(request.nextUrl.pathname)) {
+    // Redirect to maintenance page
+    return NextResponse.redirect(new URL('/maintenance', request.url));
+  }
 
   // Check for existing cookie
   const sessionCookie = request.cookies.get("guest_session_id");
@@ -30,6 +42,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/admin-dashboard/:path*",
+    // Apply to all routes except specific files
+    "/((?!_next/static|_next/image|favicon.ico|images|icons).*)",
   ],
 };
