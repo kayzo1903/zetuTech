@@ -59,7 +59,7 @@ export default function AdminSettings() {
   });
 
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
-    siteName: 'ZetuTech',
+    siteName: 'zetuTech',
     siteDescription: 'Your trusted local laptop store in Tanzania',
     currency: 'TZS',
     maintenanceMode: false
