@@ -103,3 +103,15 @@ export const featuredProduct = pgTable("featured_product", {
     .$onUpdate(() => new Date())
     .notNull(),
 });
+
+export const productAttribute = pgTable("product_attribute", {
+  id: uuid("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  productId: uuid("product_id")
+    .notNull()
+    .references(() => product.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 100 }).notNull(),
+  value: text("value").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
