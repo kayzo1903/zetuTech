@@ -450,6 +450,7 @@ export async function POST(
     // Get presigned URL
     const baseUrl =
       process.env.NEXT_PUBLIC_BASE_URL ||
+      process.env.NEXT_PUBLIC_APP_URL ||
       "https://zetutech.vercel.app";
     const formattedBaseUrl = baseUrl.includes("://")
       ? baseUrl
