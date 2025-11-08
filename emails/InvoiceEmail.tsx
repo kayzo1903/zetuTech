@@ -9,17 +9,17 @@ interface InvoiceItem {
 
 interface InvoiceEmailProps {
   name: string;
-  orderNumber: string;
+  invoiceId: string;
   items: InvoiceItem[];
   total: number;
 }
 
-export default function InvoiceEmail({ name, orderNumber , items, total }: InvoiceEmailProps) {
+export default function InvoiceEmail({ name, invoiceId, items, total }: InvoiceEmailProps) {
   return (
-    <EmailLayout preview={`Your ZetuTech invoice #${orderNumber}`}>
+    <EmailLayout preview={`Your ZetuTech invoice #${invoiceId}`}>
       <Text style={{ fontSize: "18px", fontWeight: "600" }}>Hello {name},</Text>
       <Text>
-        Here&apos;s your invoice from <strong>zetuTech</strong>:
+        Here&apos;s your invoice from <strong>ZetuTech</strong>:
       </Text>
 
       {/* Invoice Items - Mobile Friendly */}
@@ -58,7 +58,7 @@ export default function InvoiceEmail({ name, orderNumber , items, total }: Invoi
       {/* Call to Action */}
       <Section style={{ marginTop: "20px", textAlign: "center" }}>
         <Button
-          href={`https://zetutech.co.tz/invoices/${orderNumber}`}
+          href={`https://zetutech.co.tz/invoices/${invoiceId}`}
           style={{
             display: "inline-block",
             padding: "12px 24px",
