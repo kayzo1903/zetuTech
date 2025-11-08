@@ -1,46 +1,65 @@
 // app/admin/components/SiteSettingsTab.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Save, Settings } from 'lucide-react';
+import { Save, Settings, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { SiteSettings } from './types';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { SiteSettingsSchema } from './validation';
 
 interface SiteSettingsTabProps {
   siteSettings: SiteSettings;
   setSiteSettings: (settings: SiteSettings) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onSave: (type: 'contact' | 'support' | 'site_settings', data: any) => Promise<boolean>;
 }
 
-export default function SiteSettingsTab({ siteSettings, setSiteSettings }: SiteSettingsTabProps) {
+export default function SiteSettingsTab({ siteSettings, setSiteSettings, onSave }: SiteSettingsTabProps) {
   const [isSaving, setIsSaving] = useState(false);
 
-  const saveData = async (key: string, data: unknown) => {
+  // Initialize react-hook-form with Zod validation
+  const form = useForm<SiteSettings>({
+    resolver: zodResolver(SiteSettingsSchema),
+    defaultValues: siteSettings,
+    mode: 'onChange',
+  });
+
+  // Reset form when siteSettings prop changes
+  useEffect(() => {
+    form.reset(siteSettings);
+  }, [siteSettings, form]);
+
+  const handleSaveSiteSettings = async (data: SiteSettings) => {
+    setIsSaving(true);
+    
     try {
-      localStorage.setItem(key, JSON.stringify(data));
-      return true;
+      const success = await onSave('site_settings', data);
+      
+      if (success) {
+        setSiteSettings(data);
+        form.reset(data); // Reset form state to mark as clean
+        toast.success('Site settings updated successfully');
+      } else {
+        toast.error('Failed to update site settings');
+      }
     } catch (error) {
-      console.error('Error saving data:', error);
-      return false;
+      console.error('Error saving site settings:', error);
+      toast.error('Failed to update site settings');
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const handleSaveSiteSettings = async () => {
-    setIsSaving(true);
-    const success = await saveData('admin-site-settings', siteSettings);
-    setIsSaving(false);
-    
-    if (success) {
-      toast.success('Site settings updated successfully');
-    } else {
-      toast.error('Failed to update site settings');
-    }
-  };
+  // Check if form has errors
+  const hasErrors = Object.keys(form.formState.errors).length > 0;
 
   return (
     <Card>
@@ -53,66 +72,146 @@ export default function SiteSettingsTab({ siteSettings, setSiteSettings }: SiteS
           Configure general site settings and preferences
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="siteName">Site Name</Label>
-              <Input
-                id="siteName"
-                value={siteSettings.siteName}
-                onChange={(e) => setSiteSettings({ ...siteSettings, siteName: e.target.value })}
-                placeholder="Your site name"
-              />
-            </div>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSaveSiteSettings)} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Left Column */}
+              <div className="space-y-4">
+                {/* Site Name Field */}
+                <FormField
+                  control={form.control}
+                  name="siteName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Site Name</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Your site name"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        The name of your website that appears in the browser tab
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <div className="space-y-2">
-              <Label htmlFor="siteDescription">Site Description</Label>
-              <Textarea
-                id="siteDescription"
-                value={siteSettings.siteDescription}
-                onChange={(e) => setSiteSettings({ ...siteSettings, siteDescription: e.target.value })}
-                placeholder="Brief description of your site"
-                rows={3}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="currency">Currency</Label>
-              <Input
-                id="currency"
-                value={siteSettings.currency}
-                onChange={(e) => setSiteSettings({ ...siteSettings, currency: e.target.value })}
-                placeholder="TZS"
-              />
-            </div>
-
-            <div className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
-              <div className="space-y-0.5">
-                <Label htmlFor="maintenance">Maintenance Mode</Label>
-                <p className="text-sm text-gray-500">Temporarily disable the site</p>
+                {/* Site Description Field */}
+                <FormField
+                  control={form.control}
+                  name="siteDescription"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Site Description</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Brief description of your site"
+                          rows={3}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        A short description that appears in search engines and social media
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-              <Switch
-                id="maintenance"
-                checked={siteSettings.maintenanceMode}
-                onCheckedChange={(checked) => setSiteSettings({ ...siteSettings, maintenanceMode: checked })}
-              />
-            </div>
-          </div>
-        </div>
 
-        <div className="flex justify-end pt-4">
-          <Button 
-            onClick={handleSaveSiteSettings} 
-            disabled={isSaving}
-            className="flex items-center gap-2"
-          >
-            <Save className="w-4 h-4" />
-            {isSaving ? 'Saving...' : 'Save Site Settings'}
-          </Button>
-        </div>
+              {/* Right Column */}
+              <div className="space-y-4">
+                {/* Currency Field */}
+                <FormField
+                  control={form.control}
+                  name="currency"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Currency</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="TZS"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        The currency code used for pricing (e.g., TZS, USD, EUR)
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Maintenance Mode Field */}
+                <FormField
+                  control={form.control}
+                  name="maintenanceMode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">Maintenance Mode</FormLabel>
+                          <FormDescription>
+                            Temporarily disable the site for maintenance
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* Save Button and Status */}
+            <div className="flex flex-col gap-4 pt-4">
+              {/* Save Button */}
+              <div className="flex justify-end">
+                <Button 
+                  type="submit"
+                  disabled={isSaving || hasErrors || !form.formState.isDirty}
+                  className="flex items-center gap-2"
+                >
+                  {isSaving ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      Save Site Settings
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {/* Form Status Messages */}
+              {hasErrors && (
+                <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 p-3 rounded-lg">
+                  <AlertCircle className="w-4 h-4" />
+                  Please fix all validation errors before saving
+                </div>
+              )}
+
+              {form.formState.isDirty && !hasErrors && (
+                <div className="flex items-center gap-2 text-sm text-blue-600 bg-blue-50 p-3 rounded-lg">
+                  <AlertCircle className="w-4 h-4" />
+                  You have unsaved changes
+                </div>
+              )}
+            </div>
+          </form>
+        </Form>
       </CardContent>
     </Card>
   );

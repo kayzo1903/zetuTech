@@ -65,19 +65,24 @@ export default function AdminSettings() {
     maintenanceMode: false
   });
 
-  // Load data from localStorage on component mount
+  // Load data from API on component mount
   useEffect(() => {
-    const loadData = () => {
+    const loadData = async () => {
       try {
-        const savedContactInfo = localStorage.getItem('admin-contact-info');
-        const savedSupportInfo = localStorage.getItem('admin-support-info');
-        const savedSiteSettings = localStorage.getItem('admin-site-settings');
+        const response = await fetch('/api/business-info');
+        const result = await response.json();
 
-        if (savedContactInfo) setContactInfo(JSON.parse(savedContactInfo));
-        if (savedSupportInfo) setSupportInfo(JSON.parse(savedSupportInfo));
-        if (savedSiteSettings) setSiteSettings(JSON.parse(savedSiteSettings));
+        if (result.success) {
+          setContactInfo(result.data.contactInfo);
+          setSupportInfo(result.data.supportInfo);
+          setSiteSettings(result.data.siteSettings);
+        } else {
+          console.error('Failed to load data:', result.error);
+          // Keep using default values if API fails
+        }
       } catch (error) {
         console.error('Error loading admin data:', error);
+        // Keep using default values if API fails
       } finally {
         setIsLoading(false);
       }
@@ -85,6 +90,31 @@ export default function AdminSettings() {
 
     loadData();
   }, []);
+
+  // Save data to API
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const saveData = async (type: 'contact' | 'support' | 'site_settings', data: any): Promise<boolean> => {
+    try {
+      const response = await fetch(`/api/business-info/${type}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error saving data:', error);
+      return false;
+    }
+  };
 
   if (isLoading) {
     return (
@@ -134,6 +164,7 @@ export default function AdminSettings() {
             <ContactInfoTab 
               contactInfo={contactInfo}
               setContactInfo={setContactInfo}
+              onSave={saveData}
             />
           </TabsContent>
 
@@ -141,6 +172,7 @@ export default function AdminSettings() {
             <SupportInfoTab 
               supportInfo={supportInfo}
               setSupportInfo={setSupportInfo}
+              onSave={saveData}
             />
           </TabsContent>
 
@@ -148,6 +180,7 @@ export default function AdminSettings() {
             <FAQTab 
               supportInfo={supportInfo}
               setSupportInfo={setSupportInfo}
+              onSave={saveData}
             />
           </TabsContent>
 
@@ -155,6 +188,7 @@ export default function AdminSettings() {
             <SiteSettingsTab 
               siteSettings={siteSettings}
               setSiteSettings={setSiteSettings}
+              onSave={saveData}
             />
           </TabsContent>
         </Tabs>
