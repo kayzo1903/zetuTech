@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
             type: "invoice",
             to: orderData.contact.email,
             data: {
-              invoiceId: `INV-${new Date().getFullYear()}-${String(newOrder.id)}`,
+              invoiceId: `INV-${new Date().getFullYear()}-${String(newOrder.orderNumber)}`,
               orderId: newOrder.orderNumber,
               date: new Date().toISOString(),
               customerName: orderData.address.fullName,
