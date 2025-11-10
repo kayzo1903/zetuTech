@@ -11,32 +11,28 @@ const rateLimiter = new RateLimiterMemory({
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const response = NextResponse.next();
 
-  // --- FORBID /sms-test for non-localhost requests ---
-  if (pathname.startsWith("/sms-test")) {
-    const ip =
-      request.headers.get("x-forwarded-for") ||
-      request.headers.get("x-real-ip") ||
-      "127.0.0.1";
+  // --- DETECT LOCALHOST (DEV MODE) ---
+  const host = request.headers.get("host") || "";
+  const isLocal =
+    host.includes("localhost") ||
+    host.includes("127.0.0.1") ||
+    process.env.NODE_ENV !== "production";
 
-    // Normalize IP for local development checks
-    const localIps = ["127.0.0.1", "::1", "localhost"];
-
-    const isLocal = localIps.some((local) => ip.includes(local));
-
-    if (!isLocal) {
-      return new NextResponse(
-        JSON.stringify({
-          error: "Access to /sms-test is allowed only from localhost.",
-        }),
-        {
-          status: 403,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+  // --- IF NOT LOCALHOST → redirect all to /maintenance ---
+  if (!isLocal) {
+    // Allow the maintenance page itself
+    if (pathname === "/maintenance") {
+      return NextResponse.next();
     }
+
+    // Redirect all other routes to /maintenance
+    const maintenanceUrl = new URL("/maintenance", request.url);
+    return NextResponse.redirect(maintenanceUrl);
   }
+
+  // --- Continue normal behavior locally ---
+  const response = NextResponse.next();
 
   // --- GUEST SESSION HANDLER ---
   const sessionCookie = request.cookies.get("guest_session_id");
