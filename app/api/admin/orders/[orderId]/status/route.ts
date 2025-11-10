@@ -1,7 +1,7 @@
 // app/api/admin/orders/[orderId]/status/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { dbServer } from "@/db/db-server";
-import { order, orderStatusHistory } from "@/db/schema";
+import { order, orderStatusHistory, orderAddress } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { getServerSession } from "@/lib/server-session";
@@ -82,12 +82,14 @@ export async function PATCH(
     // Start database transaction
     return await dbServer.transaction(async (tx) => {
       try {
-        // 1. Check if order exists and get current status
+        // 1. Check if order exists and get current status with customer info
         const [existingOrder] = await tx
           .select({
             id: order.id,
             currentStatus: order.status,
             orderNumber: order.orderNumber,
+            customerEmail: order.customerEmail,
+            customerPhone: order.customerPhone,
           })
           .from(order)
           .where(eq(order.id, orderId))
@@ -174,10 +176,47 @@ export async function PATCH(
           createdAt: new Date(),
         });
 
-        // 6. Return success response
+        // 6. Send email notification to customer if email exists
+        if (existingOrder.customerEmail) {
+          try {
+            // Get customer name from order address
+            const [shippingAddress] = await tx
+              .select({
+                fullName: orderAddress.fullName,
+              })
+              .from(orderAddress)
+              .where(eq(orderAddress.orderId, orderId))
+              .limit(1);
+
+            const customerName = shippingAddress?.fullName || "Customer";
+
+            // Send email notification
+            await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/email/send`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                type: "order-update",
+                to: existingOrder.customerEmail,
+                data: {
+                  name: customerName,
+                  orderId: existingOrder.orderNumber,
+                  status: status,
+                },
+              }),
+            });
+          } catch (emailError) {
+            console.error("Failed to send email notification:", emailError);
+            // Don't fail the entire request if email fails
+          }
+        }
+
+        // 7. Return success response
         return NextResponse.json({
           success: true,
           message: `Order status updated successfully to "${status}"`,
+          emailSent: !!existingOrder.customerEmail,
           order: {
             id: updatedOrder.id,
             orderNumber: updatedOrder.orderNumber,
@@ -219,41 +258,3 @@ export async function PATCH(
     );
   }
 }
-
-// Optional: GET endpoint to retrieve status history
-// export async function GET(request: NextRequest, { params }: RouteParams) {
-//   try {
-//     const { session, isAdmin } = await getServerSession();
-
-//     if (!session || !isAdmin) {
-//       return NextResponse.json(
-//         { success: false, error: "Unauthorized" },
-//         { status: 401 }
-//       );
-//     }
-
-//     const orderId = params.orderId;
-
-//     const statusHistory = await dbServer
-//       .select({
-//         id: orderStatusHistory.id,
-//         status: orderStatusHistory.status,
-//         notes: orderStatusHistory.notes,
-//         createdAt: orderStatusHistory.createdAt,
-//       })
-//       .from(orderStatusHistory)
-//       .where(eq(orderStatusHistory.orderId, orderId))
-//       .orderBy(orderStatusHistory.createdAt);
-
-//     return NextResponse.json({
-//       success: true,
-//       statusHistory,
-//     });
-//   } catch (error) {
-//     console.error("Status history fetch error:", error);
-//     return NextResponse.json(
-//       { success: false, error: "Failed to fetch status history" },
-//       { status: 500 }
-//     );
-//   }
-// }

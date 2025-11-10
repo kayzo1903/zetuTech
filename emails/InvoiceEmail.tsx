@@ -1,91 +1,183 @@
-import { Text, Button, Section, Column, Row } from "@react-email/components";
+// emails/InvoiceEmail.tsx
+import * as React from "react";
+import {
+  Text,
+  Section,
+  Link,
+  Hr,
+  Row,
+  Column,
+} from "@react-email/components";
 import EmailLayout from "./components/emaillayout";
 
-interface InvoiceItem {
-  name: string;
-  quantity: number;
-  price: number;
-}
 
 interface InvoiceEmailProps {
-  name: string;
   invoiceId: string;
-  items: InvoiceItem[];
+  orderId: string;
+  date: string;
+  customerName: string;
+  customerEmail?: string;
+  items: {
+    name: string;
+    quantity: number;
+    price: number;
+  }[];
+  subtotal: number;
+  shipping: number;
+  tax: number;
   total: number;
+  paymentMethod: string;
 }
 
-export default function InvoiceEmail({ name, invoiceId, items, total }: InvoiceEmailProps) {
+export default function InvoiceEmail({
+  invoiceId,
+  orderId,
+  date,
+  customerName,
+  customerEmail,
+  items,
+  subtotal,
+  shipping,
+  tax,
+  total,
+  paymentMethod,
+}: InvoiceEmailProps) {
   return (
-    <EmailLayout preview={`Your ZetuTech invoice #${invoiceId}`}>
-      <Text style={{ fontSize: "18px", fontWeight: "600" }}>Hello {name},</Text>
-      <Text>
-        Here&apos;s your invoice from <strong>ZetuTech</strong>:
+    <EmailLayout 
+      preview="Your ZetuTech Invoice" 
+      title={`Invoice #${invoiceId}`}
+    >
+      <Text style={heading}>Invoice #{invoiceId}</Text>
+      <Text style={subheading}>
+        Hi {customerName}, here&apos;s your invoice for order #{orderId} placed on{" "}
+        {new Date(date).toLocaleDateString()}.
       </Text>
-
-      {/* Invoice Items - Mobile Friendly */}
-      <Section style={{ marginTop: "16px", border: "1px solid #e5e7eb", borderRadius: "8px" }}>
-        {/* Header */}
-        <Row style={{ backgroundColor: "#f3f4f6", padding: "12px 8px" }}>
-          <Column style={{ fontWeight: "600", fontSize: "14px" }}>Item</Column>
-          <Column style={{ fontWeight: "600", fontSize: "14px", textAlign: "center", width: "60px" }}>Qty</Column>
-          <Column style={{ fontWeight: "600", fontSize: "14px", textAlign: "right", width: "100px" }}>Price (TZS)</Column>
+      
+      <Section style={section}>
+        <Row style={{ fontWeight: "bold", borderBottom: "1px solid #ddd" }}>
+          <Column style={{ width: "60%" }}>Item</Column>
+          <Column style={{ width: "20%", textAlign: "center" }}>Qty</Column>
+          <Column style={{ width: "20%", textAlign: "right" }}>Price</Column>
         </Row>
 
-        {/* Items */}
-        {items.map((item, index) => (
-          <Row 
-            key={item.name} 
-            style={{ 
-              padding: "12px 8px", 
-              borderBottom: index < items.length - 1 ? "1px solid #e5e7eb" : "none",
-              backgroundColor: index % 2 === 0 ? "#ffffff" : "#fafafa"
-            }}
-          >
-            <Column style={{ fontSize: "14px" }}>{item.name}</Column>
-            <Column style={{ fontSize: "14px", textAlign: "center", width: "60px" }}>{item.quantity}</Column>
-            <Column style={{ fontSize: "14px", textAlign: "right", width: "100px" }}>{item.price.toLocaleString()}</Column>
+        {items.map((item, i) => (
+          <Row key={i} style={{ borderBottom: "1px solid #eee", padding: "6px 0" }}>
+            <Column style={{ width: "60%" }}>{item.name}</Column>
+            <Column style={{ width: "20%", textAlign: "center" }}>{item.quantity}</Column>
+            <Column style={{ width: "20%", textAlign: "right" }}>
+              {item.price.toLocaleString()} TZS
+            </Column>
           </Row>
         ))}
       </Section>
-
-      {/* Total */}
-      <Section style={{ marginTop: "16px", textAlign: "right" }}>
-        <Text style={{ fontSize: "16px", fontWeight: "700" }}>
-          Total: {total.toLocaleString()} TZS
-        </Text>
+      
+      <Section style={totalsSection}>
+        <Row>
+          <Column style={label}>Subtotal:</Column>
+          <Column style={value}>{subtotal.toLocaleString()} TZS</Column>
+        </Row>
+        <Row>
+          <Column style={label}>Shipping:</Column>
+          <Column style={value}>{shipping.toLocaleString()} TZS</Column>
+        </Row>
+        <Row>
+          <Column style={label}>Tax:</Column>
+          <Column style={value}>{tax.toLocaleString()} TZS</Column>
+        </Row>
+        <Hr />
+        <Row>
+          <Column style={labelTotal}>Total:</Column>
+          <Column style={valueTotal}>{total.toLocaleString()} TZS</Column>
+        </Row>
       </Section>
+      
+      <Text style={paymentInfo}>
+        Payment Method: <strong>{paymentMethod.replace("_", " ").toUpperCase()}</strong>
+      </Text>
 
-      {/* Call to Action */}
-      <Section style={{ marginTop: "20px", textAlign: "center" }}>
-        <Button
-          href={`https://zetutech.co.tz/invoices/${invoiceId}`}
-          style={{
-            display: "inline-block",
-            padding: "12px 24px",
-            backgroundColor: "#2563eb",
-            color: "#ffffff",
-            borderRadius: "8px",
-            textDecoration: "none",
-            fontWeight: "600",
-            fontSize: "16px",
-          }}
-        >
-          View Invoice
-        </Button>
-      </Section>
+      {customerEmail && (
+        <Text style={note}>A copy of this invoice has been sent to {customerEmail}.</Text>
+      )}
 
-      {/* Fallback for very basic email clients */}
-      <Section style={{ display: "none", maxHeight: "0", overflow: "hidden" }}>
-        <Text style={{ fontSize: "14px", fontWeight: "600" }}>Invoice Items:</Text>
-        {items.map((item, index) => (
-          <Text key={item.name} style={{ fontSize: "12px" }}>
-            {index + 1}. {item.name} - Qty: {item.quantity} - Price: {item.price.toLocaleString()} TZS
-          </Text>
-        ))}
-        <Text style={{ fontSize: "14px", fontWeight: "700" }}>
-          Total: {total.toLocaleString()} TZS
-        </Text>
-      </Section>
+      <Hr />
+      <Text style={footer}>
+        Thank you for shopping with <strong>ZetuTech</strong> — Smart Tech, Smart Living.
+        <br />
+        <Link href="https://zetutech.co.tz" style={link}>
+          Visit our store →
+        </Link>
+      </Text>
     </EmailLayout>
   );
 }
+
+// 🖌️ Styles
+const heading = {
+  fontSize: "20px",
+  fontWeight: "bold",
+  marginBottom: "10px",
+  textAlign: "center" as const,
+};
+
+const subheading = {
+  color: "#444",
+  fontSize: "14px",
+  textAlign: "center" as const,
+  marginBottom: "20px",
+};
+
+const section = {
+  marginBottom: "20px",
+};
+
+const totalsSection = {
+  marginTop: "20px",
+};
+
+const label = { 
+  width: "70%", 
+  textAlign: "right" as const, 
+  paddingRight: "10px", 
+  color: "#333" 
+};
+
+const value = { 
+  width: "30%", 
+  textAlign: "right" as const, 
+  fontWeight: "bold" 
+};
+
+const labelTotal = { 
+  ...label, 
+  fontSize: "16px", 
+  fontWeight: "bold" 
+};
+
+const valueTotal = { 
+  ...value, 
+  fontSize: "16px", 
+  color: "#16a34a" 
+};
+
+const paymentInfo = { 
+  textAlign: "center" as const, 
+  marginTop: "15px", 
+  fontSize: "14px" 
+};
+
+const note = { 
+  textAlign: "center" as const, 
+  color: "#666", 
+  fontSize: "13px" 
+};
+
+const footer = { 
+  textAlign: "center" as const, 
+  fontSize: "12px", 
+  color: "#888" 
+};
+
+const link = { 
+  color: "#3b82f6", 
+  textDecoration: "none" 
+};

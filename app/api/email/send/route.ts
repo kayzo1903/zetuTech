@@ -62,7 +62,7 @@ export async function POST(req: Request) {
   }
 
   await resend.emails.send({
-    from: "ZetuTech <no-reply@zetutech.co.tz>",
+    from: "ZetuTech <no-reply@updates.zetutech.co.tz>",
     to,
     subject,
     html: await html,

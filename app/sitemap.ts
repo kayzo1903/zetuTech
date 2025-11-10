@@ -4,9 +4,9 @@ import { product, productCategory } from "@/db/schema";
 import { isNotNull } from "drizzle-orm";
 
 function getBaseUrl(): string {
-	const fromEnv = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || "";
+	const fromEnv = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || "";
 	if (fromEnv) return fromEnv.replace(/\/$/, "");
-	return "https://example.com";
+	return "https://zetutech.co.tz";
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

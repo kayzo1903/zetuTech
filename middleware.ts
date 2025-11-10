@@ -1,31 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
+import { RateLimiterMemory } from "rate-limiter-flexible";
+
+// --- Rate limiter setup ---
+// 10 requests per 30 seconds per IP address
+const rateLimiter = new RateLimiterMemory({
+  points: 10, // number of requests allowed
+  duration: 30, // per 30 seconds
+});
 
 export async function middleware(request: NextRequest) {
-  // Maintenance mode flag - set this to true to enable maintenance mode
-  const MAINTENANCE_MODE = process.env.MAINTENANCE_MODE 
-  
-  // Paths that should be accessible during maintenance (optional)
-  const MAINTENANCE_ALLOWED_PATHS = [
-    '/maintenance', '/'
-  ];
-
-  // Check if maintenance mode is enabled and current path is not allowed
-  if (MAINTENANCE_MODE && !MAINTENANCE_ALLOWED_PATHS.includes(request.nextUrl.pathname)) {
-    // Redirect to maintenance page
-    return NextResponse.redirect(new URL('/maintenance', request.url));
-  }
-
-  // Check for existing cookie
-  const sessionCookie = request.cookies.get("guest_session_id");
-  
-  // Create response object
+  const { pathname } = request.nextUrl;
   const response = NextResponse.next();
 
-  // Set guest session cookie if it doesn't exist
+  // --- GUEST SESSION HANDLER ---
+  const sessionCookie = request.cookies.get("guest_session_id");
   if (!sessionCookie) {
     const sessionId = uuidv4();
-    
     response.cookies.set({
       name: "guest_session_id",
       value: sessionId,
@@ -35,14 +26,38 @@ export async function middleware(request: NextRequest) {
     });
   }
 
-  // Note: Admin protection is enforced in `app/admin-dashboard/layout.tsx` on the server.
+  // --- RATE LIMITER for sensitive API routes ---
+  const protectedRoutes = ["/api/auth", "/api/orders", "/api/email"];
+  const isProtected = protectedRoutes.some((route) =>
+    pathname.startsWith(route)
+  );
 
+  if (isProtected) {
+    const ip = request.headers.get("x-forwarded-for") || "127.0.0.1";
+
+    try {
+      await rateLimiter.consume(ip);
+    } catch {
+      // Too many requests
+      return new NextResponse(
+        JSON.stringify({ error: "Too many requests. Please slow down." }),
+        {
+          status: 429,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    }
+  }
+
+  // Admin protection handled separately in layout.tsx
   return response;
 }
 
+// --- Apply middleware globally except for static assets ---
 export const config = {
   matcher: [
-    // Apply to all routes except specific files
     "/((?!_next/static|_next/image|favicon.ico|images|icons).*)",
   ],
 };

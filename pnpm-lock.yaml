@@ -137,6 +137,9 @@ importers:
       pdf-lib:
         specifier: ^1.17.1
         version: 1.17.1
+      rate-limiter-flexible:
+        specifier: ^8.2.0
+        version: 8.2.0
       react:
         specifier: ^19.1.0
         version: 19.1.0
@@ -4408,6 +4411,9 @@ packages:
 
   randombytes@2.1.0:
     resolution: {integrity: sha512-vYl3iOX+4CKUWuxGi9Ukhie6fsqXqS9FE2Zaic4tNFD2N2QQaXOMFbuKK4QmDHC0JO6B1Zp41J0LpT0oR68amQ==}
+
+  rate-limiter-flexible@8.2.0:
+    resolution: {integrity: sha512-lzpvMBP6GpCJftWP90RHzhCAAPFnO3BKaE6STNc6tPsu/uF6Y7kZDczV45a4Ms/H+5G2qqPFp8kg0l8gxCxcsw==}
 
   react-dom@19.1.0:
     resolution: {integrity: sha512-Xs1hdnE+DyKgeHJeJznQmYMIBG3TKIHJJT95Q58nHLSrElKlGQqDTR2HQ9fx5CN/Gk6Vh/kupBTDLU11/nDk/g==}
@@ -9702,6 +9708,8 @@ snapshots:
   randombytes@2.1.0:
     dependencies:
       safe-buffer: 5.2.1
+
+  rate-limiter-flexible@8.2.0: {}
 
   react-dom@19.1.0(react@19.1.0):
     dependencies:
