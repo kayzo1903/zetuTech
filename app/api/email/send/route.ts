@@ -7,6 +7,7 @@ import WelcomeEmail from "@/emails/welcomeEmail";
 import InvoiceEmail from "@/emails/InvoiceEmail";
 import SupportEmail from "@/emails/supportEmail";
 import OrderUpdateEmail from "@/emails/orderUpdateEmail";
+import NewOrderNotificationEmail from "@/emails/orderNotificationEmail";
 
 export async function POST(req: Request) {
   const { type, to, data } = await req.json();
@@ -44,6 +45,11 @@ export async function POST(req: Request) {
       EmailComponent = OrderUpdateEmail;
       subject = `Your order #${data.orderId} is ${data.status}`;
       break;
+    case "order-notification":
+      EmailComponent = NewOrderNotificationEmail;
+      subject = `New Order Received - #${data.orderId}`;
+      break;
+      
     default:
       return NextResponse.json(
         { error: "Invalid email type" },
