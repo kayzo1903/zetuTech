@@ -150,6 +150,32 @@ export async function POST(request: NextRequest) {
           }),
         });
 
+        // ✅ Send admin notification email
+        await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/email/send`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "order-notification",
+              to: process.env.ADMIN_NOTIFICATION_EMAIL,
+              data: {
+                customerName: orderData.address.fullName,
+                orderId: newOrder.orderNumber,
+                orderTotal: `${orderData.pricing.total} TZS`,
+                orderDate: new Date().toLocaleString("en-TZ"),
+                itemsCount: orderData.cartItems.length,
+                shippingAddress: {
+                  street: orderData.address.address,
+                  city: orderData.address.city,
+                  region: orderData.contact.region,
+                  phone: orderData.contact.phone,
+                },
+              },
+            }),
+          }
+        );
+
         return NextResponse.json({
           success: true,
           order: {
