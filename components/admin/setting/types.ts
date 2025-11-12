@@ -38,6 +38,7 @@ export interface SiteSettings {
   siteDescription: string;
   currency: string;
   maintenanceMode: boolean;
+  note?: string;
 }
 
 // Add these type definitions for setter functions

@@ -1,29 +1,31 @@
 import { db } from "@/db";
-import { businessInfo } from "@/db/schema";
-import { getServerSession } from "@/lib/server-session";
+import { businessInfo, maintenanceLogs } from "@/db/schema";
+import { isAuthorizedAdmin } from "@/lib/admin-authorization";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function PUT(
   req: Request,
-  { params }: { params: Promise<{ type : string }>  }
+  { params }: { params: Promise<{ type: string }> }
 ) {
   try {
-     const { type } = await params;
+    const { type } = await params;
+    const { isAllowed, session } = await isAuthorizedAdmin();
 
-    const { session, isAdmin } = await getServerSession();
-
-    if (!session || !isAdmin) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!isAllowed) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
     const data = await req.json();
     const existing = await db.select().from(businessInfo).limit(1);
-
     const id = existing.length ? existing[0].id : undefined;
-    let updateData = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let updateData: Record<string, any> = {};
 
-    // Update based on section type
+    // Handle update types
     switch (type) {
       case "contact":
         updateData = {
@@ -56,6 +58,22 @@ export async function PUT(
           currency: data.currency,
           maintenanceMode: data.maintenanceMode,
         };
+
+        // ✅ Require non-null "note" when changing maintenance mode
+        if (typeof data.maintenanceMode === "boolean") {
+          if (!data.note || data.note.trim() === "") {
+            return NextResponse.json(
+              { success: false, error: "A maintenance note is required." },
+              { status: 400 }
+            );
+          }
+
+          await db.insert(maintenanceLogs).values({
+            adminEmail: session.user?.email || "unknown",
+            newState: data.maintenanceMode,
+            note: data.note.trim(),
+          });
+        }
         break;
 
       default:
@@ -65,6 +83,7 @@ export async function PUT(
         });
     }
 
+    // Update or insert business info
     if (id) {
       await db
         .update(businessInfo)
