@@ -18,16 +18,15 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/images") ||
     pathname.startsWith("/icons") ||
     pathname === "/favicon.ico" ||
-    pathname === "/api/system/maintenance" ||
-    pathname === "api/admin" ||
+    pathname === "/api/admin" ||
     pathname === "/admin-dashboard" ||
     pathname === "/admin-dashboard/settings" ||
     pathname.startsWith("/api/admin/businessInfo") ||
-    pathname === "/auth" ||
-    pathname === "/api/auth" ||
+    pathname.startsWith("/auth") ||
+   pathname.startsWith("/api/auth") ||
     pathname === "/wishlist" ||
-    pathname === "api/wislist"||
-    pathname === "api/cart" ||
+    pathname === "/api/wislist"||
+    pathname === "/api/cart" ||
     pathname === "/cart" ||
     pathname === "/maintenance"
   ) {

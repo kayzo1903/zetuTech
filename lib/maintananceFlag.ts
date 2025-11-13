@@ -1,28 +1,21 @@
-// lib/maintenance-cache.ts
-let cachedValue: boolean | null = null; 
-let lastFetched = 0;
-const CACHE_TTL = 1000 * 60 * 5; // 5 minutes
+// lib/getMaintenanceFlag.ts
+import { db } from "@/db";
+import { businessInfo } from "@/db/schema";
 
+/**
+ * Direct DB check for maintenance flag.
+ * Edge-safe: no fetch() to your own API.
+ */
 export async function getMaintenanceFlag(): Promise<boolean> {
-  const now = Date.now();
-
-  // Use cached value if still valid
-  if (cachedValue !== null && now - lastFetched < CACHE_TTL) {
-    return cachedValue;
-  }
-
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/system/maintenance`, {
-      method: "GET",
-      cache: "no-store",
-    });
-    const data = await res.json();
-    cachedValue = data.maintenance as boolean;
-    lastFetched = now;
-    return cachedValue;
+    const result = await db
+      .select({ maintenance: businessInfo.maintenanceMode })
+      .from(businessInfo)
+      .limit(1);
+
+    return result[0]?.maintenance ?? false;
   } catch (err) {
-    console.error("Maintenance check failed:", err);
-    cachedValue = false;
-    return false;
+    console.error("Maintenance flag check failed:", err);
+    return false; // fail open to avoid locking out users on error
   }
 }
