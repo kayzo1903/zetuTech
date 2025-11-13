@@ -7,7 +7,6 @@ export async function POST(req: Request) {
 
     const apiKey = process.env.BEEM_API_KEY!;
     const secretKey = process.env.BEEM_SECRET_KEY!;
-    const senderId = process.env.BEEM_SENDER_ID || "ZETUTECH";
 
     const auth = Buffer.from(`${apiKey}:${secretKey}`).toString("base64");
 
@@ -18,7 +17,7 @@ export async function POST(req: Request) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        source_addr: senderId,
+        source_addr: "BEEM",
         schedule_time: "",
         encoding: 0,
         message,
