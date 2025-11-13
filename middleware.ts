@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import { RateLimiterMemory } from "rate-limiter-flexible";
 import { getMaintenanceFlag } from "./lib/maintananceFlag";
-import path from "path";
 
 const rateLimiter = new RateLimiterMemory({
   points: 10,
