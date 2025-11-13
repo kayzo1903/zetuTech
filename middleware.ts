@@ -1,70 +1,72 @@
+// middleware.ts
 import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import { RateLimiterMemory } from "rate-limiter-flexible";
+import { getMaintenanceFlag } from "./lib/maintananceFlag";
 
-// --- Rate limiter setup ---
-// 10 requests per 30 seconds per IP address
 const rateLimiter = new RateLimiterMemory({
-  points: 10, // number of requests allowed
-  duration: 30, // per 30 seconds
+  points: 10,
+  duration: 30,
 });
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // --- DETECT LOCALHOST (DEV MODE) ---
-  const host = request.headers.get("host") || "";
-  const isLocal =
-    host.includes("localhost") ||
-    host.includes("127.0.0.1") ||
-    process.env.NODE_ENV !== "production";
+  // Skip static assets & maintenance page
+  if (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/images") ||
+    pathname.startsWith("/icons") ||
+    pathname === "/favicon.ico" ||
+    pathname === "/api/admin" ||
+    pathname === "/admin-dashboard" ||
+    pathname === "/admin-dashboard/settings" ||
+    pathname.startsWith("/api/admin/businessInfo") ||
+    pathname.startsWith("/auth") ||
+   pathname.startsWith("/api/auth") ||
+    pathname === "/wishlist" ||
+    pathname === "/api/wislist"||
+    pathname === "/api/cart" ||
+    pathname === "/cart" ||
+    pathname === "/maintenance"
+  ) {
+    return NextResponse.next();
+  }
 
-  // --- IF NOT LOCALHOST → redirect all to /maintenance ---
-  if (!isLocal) {
-    // Allow the maintenance page itself
-    if (pathname === "/maintenance") {
-      return NextResponse.next();
-    }
+  // --- Maintenance mode (cached for 5 min) ---
+  const maintenance = await getMaintenanceFlag();
 
-    // Redirect all other routes to /maintenance
+  if (maintenance) {
     const maintenanceUrl = new URL("/maintenance", request.url);
     return NextResponse.redirect(maintenanceUrl);
   }
 
-  // --- Continue normal behavior locally ---
+  // --- Normal behavior ---
   const response = NextResponse.next();
 
-  // --- GUEST SESSION HANDLER ---
-  const sessionCookie = request.cookies.get("guest_session_id");
-  if (!sessionCookie) {
-    const sessionId = uuidv4();
+  // Guest session cookie
+  if (!request.cookies.get("guest_session_id")) {
     response.cookies.set({
       name: "guest_session_id",
-      value: sessionId,
+      value: uuidv4(),
       path: "/",
       httpOnly: true,
-      maxAge: 60 * 60 * 24 * 30, // 30 days
+      maxAge: 60 * 60 * 24 * 30,
     });
   }
 
-  // --- RATE LIMITER for sensitive API routes ---
+  // Rate limiting for sensitive routes
   const protectedRoutes = ["/api/auth", "/api/orders", "/api/email"];
-  const isProtected = protectedRoutes.some((route) =>
-    pathname.startsWith(route)
-  );
+  const isProtected = protectedRoutes.some((r) => pathname.startsWith(r));
 
   if (isProtected) {
     const ip = request.headers.get("x-forwarded-for") || "127.0.0.1";
-
     try {
       await rateLimiter.consume(ip);
     } catch {
       return new NextResponse(
         JSON.stringify({ error: "Too many requests. Please slow down." }),
-        {
-          status: 429,
-          headers: { "Content-Type": "application/json" },
-        }
+        { status: 429, headers: { "Content-Type": "application/json" } }
       );
     }
   }
@@ -72,9 +74,6 @@ export async function middleware(request: NextRequest) {
   return response;
 }
 
-// --- Apply middleware globally except for static assets ---
 export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|images|icons).*)",
-  ],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|images|icons).*)"],
 };

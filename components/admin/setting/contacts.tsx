@@ -1,301 +1,156 @@
-// app/admin/components/ContactInfoTab.tsx
-'use client';
-
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { ContactInfo } from './types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Save, Phone, Mail, MapPin, Clock, MessageCircle, AlertCircle } from 'lucide-react';
-import { toast } from 'sonner';
-import { ContactInfo } from './types';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { ContactInfoSchema } from './validation';
 
 interface ContactInfoTabProps {
   contactInfo: ContactInfo;
   setContactInfo: (info: ContactInfo) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onSave: (type: 'contact' | 'support' | 'site_settings', data: any) => Promise<boolean>;
+  onSave: (type: 'contact', data: ContactInfo) => Promise<boolean>;
+  isSaving: boolean;
 }
 
-export default function ContactInfoTab({ contactInfo, setContactInfo, onSave }: ContactInfoTabProps) {
-  const [isSaving, setIsSaving] = useState(false);
+export default function ContactInfoTab({ 
+  contactInfo, 
+  setContactInfo, 
+  onSave,
+  isSaving 
+}: ContactInfoTabProps) {
+  const [isDirty, setIsDirty] = useState(false);
 
-  // Initialize react-hook-form with Zod validation
-  const form = useForm<ContactInfo>({
-    resolver: zodResolver(ContactInfoSchema),
-    defaultValues: contactInfo,
-    mode: 'onChange',
-  });
-
-  // Reset form when contactInfo prop changes
-  useEffect(() => {
-    form.reset(contactInfo);
-  }, [contactInfo, form]);
-
-  const handleSaveContactInfo = async (data: ContactInfo) => {
-    setIsSaving(true);
-    
-    try {
-      const success = await onSave('contact', data);
-      
-      if (success) {
-        setContactInfo(data);
-        form.reset(data); // Reset form state to mark as clean
-        toast.success('Contact information updated successfully');
-      } else {
-        toast.error('Failed to update contact information');
-      }
-    } catch (error) {
-      console.error('Error saving contact info:', error);
-      toast.error('Failed to update contact information');
-    } finally {
-      setIsSaving(false);
+  const handleSave = async () => {
+    const success = await onSave('contact', contactInfo);
+    if (success) {
+      setIsDirty(false);
     }
   };
 
-  // Check if form has errors
-  const hasErrors = Object.keys(form.formState.errors).length > 0;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleChange = (field: keyof ContactInfo, value: any) => {
+    setContactInfo({
+      ...contactInfo,
+      [field]: value
+    });
+    setIsDirty(true);
+  };
+
+  const handleBusinessHoursChange = (field: keyof typeof contactInfo.businessHours, value: string) => {
+    setContactInfo({
+      ...contactInfo,
+      businessHours: {
+        ...contactInfo.businessHours,
+        [field]: value
+      }
+    });
+    setIsDirty(true);
+  };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Phone className="w-5 h-5" />
-          Contact Information
-        </CardTitle>
-        <CardDescription>
-          Update your business contact details and location information
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSaveContactInfo)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Left Column */}
-              <div className="space-y-4">
-                {/* Address Field */}
-                <FormField
-                  control={form.control}
-                  name="address"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4" />
-                        Business Address
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Enter your business address"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Phone Field */}
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        <Phone className="w-4 h-4" />
-                        Phone Number
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Enter your phone number"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Email Field */}
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        <Mail className="w-4 h-4" />
-                        Email Address
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          type="email"
-                          placeholder="Enter your email address"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* Right Column */}
-              <div className="space-y-4">
-                {/* Weekday Hours Field */}
-                <FormField
-                  control={form.control}
-                  name="businessHours.weekdays"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        <Clock className="w-4 h-4" />
-                        Weekday Hours
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="e.g., Mon - Fri: 9:00 AM - 6:00 PM"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Weekend Hours Field */}
-                <FormField
-                  control={form.control}
-                  name="businessHours.weekends"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Weekend Hours</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="e.g., Sat: 10:00 AM - 4:00 PM"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* WhatsApp Number Field */}
-                <FormField
-                  control={form.control}
-                  name="whatsappNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        <MessageCircle className="w-4 h-4" />
-                        WhatsApp Number
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="255712345678 (without +)"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Enter without country code prefix
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
-            {/* Full Width Fields */}
-            <div className="space-y-4">
-              {/* WhatsApp Message Field */}
-              <FormField
-                control={form.control}
-                name="whatsappMessage"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>WhatsApp Default Message</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Default message for WhatsApp chats"
-                        rows={3}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      This message will be pre-filled when customers contact you via WhatsApp
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Map URL Field */}
-              <FormField
-                control={form.control}
-                name="mapEmbedUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Google Maps Embed URL</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Paste your Google Maps embed URL"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Get the embed URL from Google Maps share options
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Contact Information</CardTitle>
+          <CardDescription>
+            Update your business contact details and location information
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="address">Business Address</Label>
+              <Input
+                id="address"
+                value={contactInfo.address}
+                onChange={(e) => handleChange('address', e.target.value)}
+                placeholder="Enter your business address"
               />
             </div>
 
-            {/* Save Button and Status */}
-            <div className="flex flex-col gap-4 pt-4">
-              {/* Save Button */}
-              <div className="flex justify-end">
-                <Button 
-                  type="submit"
-                  disabled={isSaving || hasErrors || !form.formState.isDirty}
-                  className="flex items-center gap-2"
-                >
-                  {isSaving ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4" />
-                      Save Contact Info
-                    </>
-                  )}
-                </Button>
-              </div>
-
-              {/* Form Status Messages */}
-              {hasErrors && (
-                <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 p-3 rounded-lg">
-                  <AlertCircle className="w-4 h-4" />
-                  Please fix all validation errors before saving
-                </div>
-              )}
-
-              {form.formState.isDirty && !hasErrors && (
-                <div className="flex items-center gap-2 text-sm text-blue-600 bg-blue-50 p-3 rounded-lg">
-                  <AlertCircle className="w-4 h-4" />
-                  You have unsaved changes
-                </div>
-              )}
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone Number</Label>
+              <Input
+                id="phone"
+                value={contactInfo.phone}
+                onChange={(e) => handleChange('phone', e.target.value)}
+                placeholder="+255 XXX XXX XXX"
+              />
             </div>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Email Address</Label>
+              <Input
+                id="email"
+                type="email"
+                value={contactInfo.email}
+                onChange={(e) => handleChange('email', e.target.value)}
+                placeholder="contact@business.com"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="whatsappNumber">WhatsApp Number</Label>
+              <Input
+                id="whatsappNumber"
+                value={contactInfo.whatsappNumber}
+                onChange={(e) => handleChange('whatsappNumber', e.target.value)}
+                placeholder="255712345678"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="whatsappMessage">WhatsApp Default Message</Label>
+            <Input
+              id="whatsappMessage"
+              value={contactInfo.whatsappMessage}
+              onChange={(e) => handleChange('whatsappMessage', e.target.value)}
+              placeholder="Default message for WhatsApp chats"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="weekdays">Weekday Hours</Label>
+              <Input
+                id="weekdays"
+                value={contactInfo.businessHours.weekdays}
+                onChange={(e) => handleBusinessHoursChange('weekdays', e.target.value)}
+                placeholder="Mon - Fri: 9:00 AM - 6:00 PM"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="weekends">Weekend Hours</Label>
+              <Input
+                id="weekends"
+                value={contactInfo.businessHours.weekends}
+                onChange={(e) => handleBusinessHoursChange('weekends', e.target.value)}
+                placeholder="Sat: 10:00 AM - 4:00 PM"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="mapEmbedUrl">Google Maps Embed URL</Label>
+            <Input
+              id="mapEmbedUrl"
+              value={contactInfo.mapEmbedUrl}
+              onChange={(e) => handleChange('mapEmbedUrl', e.target.value)}
+              placeholder="https://maps.google.com/embed?..."
+            />
+          </div>
+
+          <Button 
+            onClick={handleSave} 
+            disabled={!isDirty || isSaving}
+            className="w-full md:w-auto"
+          >
+            {isSaving ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

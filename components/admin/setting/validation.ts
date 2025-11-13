@@ -37,6 +37,7 @@ export const SiteSettingsSchema = z.object({
   siteDescription: z.string().min(1, 'Site description is required'),
   currency: z.string().min(1, 'Currency is required'),
   maintenanceMode: z.boolean(),
+   note: z.string().optional(), 
 });
 
 // Infer TypeScript types from Zod schemas

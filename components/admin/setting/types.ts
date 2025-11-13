@@ -1,4 +1,3 @@
-// app/admin/types.ts
 export interface ContactInfo {
   address: string;
   phone: string;
@@ -14,8 +13,14 @@ export interface ContactInfo {
 
 export interface FAQItem {
   id: string;
-  question: string;
-  answer: string;
+  question: {
+    en: string;
+    sw: string;
+  };
+  answer: {
+    en: string;
+    sw: string;
+  };
 }
 
 export interface SupportInfo {
@@ -33,6 +38,7 @@ export interface SiteSettings {
   siteDescription: string;
   currency: string;
   maintenanceMode: boolean;
+  note?: string;
 }
 
 // Add these type definitions for setter functions
