@@ -3,10 +3,10 @@ import { createAuthClient } from "better-auth/react";
 export const authClient = createAuthClient({
   /** The base URL of the server (optional if you're using the same domain) */
   baseURL: process.env.NODE_ENV === "production"
-    ? "https://zetutech.co.tz"
+    ? "https://www.zetutech.co.tz"
     : "http://localhost:3000/api/auth",
 
-  trustedOrigins: ["http://localhost:3000", "https://zetutech.vercel.app", "https://zetutech.co.tz"],
+  trustedOrigins: ["http://localhost:3000", "https://zetutech.vercel.app", "https://www.zetutech.co.tz"],
 });
 
 
