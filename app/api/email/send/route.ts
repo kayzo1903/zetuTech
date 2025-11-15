@@ -31,15 +31,15 @@ export async function POST(req: Request) {
   switch (type) {
     case "welcome":
       EmailComponent = WelcomeEmail;
-      subject = "Welcome to ZetuTech 🎉";
+      subject = "Welcome to zetuTech 🎉";
       break;
     case "invoice":
       EmailComponent = InvoiceEmail;
-      subject = `Your ZetuTech Invoice #${data.invoiceId}`;
+      subject = `Your zetuTech Invoice #${data.invoiceId}`;
       break;
     case "support":
       EmailComponent = SupportEmail;
-      subject = `ZetuTech Support Ticket #${data.ticketId}`;
+      subject = `zetuTech Support Ticket #${data.ticketId}`;
       break;
     case "order-update":
       EmailComponent = OrderUpdateEmail;
