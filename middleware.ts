@@ -23,9 +23,12 @@ export async function middleware(request: NextRequest) {
     pathname === "/admin-dashboard/settings" ||
     pathname.startsWith("/api/admin/businessInfo") ||
     pathname.startsWith("/auth") ||
-   pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/api/auth") ||
     pathname === "/wishlist" ||
-    pathname === "/api/wislist"||
+    pathname === "/api/messages/submit" ||
+    pathname === "/contact" ||
+    pathname === "/support" ||
+    pathname === "/api/wislist" ||
     pathname === "/api/cart" ||
     pathname === "/cart" ||
     pathname === "/maintenance"
@@ -56,7 +59,12 @@ export async function middleware(request: NextRequest) {
   }
 
   // Rate limiting for sensitive routes
-  const protectedRoutes = ["/api/auth", "/api/orders", "/api/email" , "api/messages/"];
+  const protectedRoutes = [
+    "/api/auth",
+    "/api/orders",
+    "/api/email",
+    "api/messages/",
+  ];
   const isProtected = protectedRoutes.some((r) => pathname.startsWith(r));
 
   if (isProtected) {
