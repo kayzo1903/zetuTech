@@ -1,8 +1,46 @@
+import type { Metadata } from "next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Mail, Phone, MessageSquare } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Support Center | zetuTech - Customer Help & Technical Support",
+  description: "Get help from zetuTech support team. Contact us via email, phone, or live chat for technical support, order assistance, and product queries in Tanzania.",
+  keywords: [
+    "customer support",
+    "technical support",
+    "help desk",
+    "contact zetuTech",
+    "Tanzania tech support",
+    "laptop support",
+    "electronics help",
+    "customer service",
+    "product assistance",
+    "order support"
+  ],
+  openGraph: {
+    title: "Support Center | zetuTech - Customer Help & Technical Support",
+    description: "Get immediate assistance from zetuTech support team via email, phone, or live chat for all your technical and order-related queries.",
+    url: "https://zetutech.com/support",
+    siteName: "zetuTech",
+    type: "website",
+    images: [
+      {
+        url: "/og-support.jpg",
+        width: 1200,
+        height: 630,
+        alt: "zetuTech Support Center",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Support Center | zetuTech - Customer Help & Technical Support",
+    description: "Contact zetuTech support for technical assistance, order help, and product queries in Tanzania.",
+  },
+};
 
 export default function SupportPage() {
   return (
@@ -82,7 +120,7 @@ export default function SupportPage() {
             Submit a Support Request
           </h2>
           <p className="text-gray-600 dark:text-gray-300 mb-6">
-            Can’t find the answer you’re looking for? Fill out the form below
+            Can&apos;t find the answer you&apos;re looking for? Fill out the form below
             and our support team will get back to you within 24 hours.
           </p>
 

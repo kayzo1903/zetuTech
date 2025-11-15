@@ -1,4 +1,50 @@
+// app/privacy/page.tsx
 import PrivacyPolicyContent from "@/components/privacy";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy | zetuTech - Data Protection & Privacy Commitment",
+  description: "Read zetuTech's Privacy Policy to understand how we collect, use, and protect your personal information when you use our services in Tanzania.",
+  keywords: [
+    "privacy policy",
+    "data protection Tanzania",
+    "zetuTech privacy",
+    "personal information security",
+    "Tanzania data privacy",
+    "GDPR compliance Tanzania",
+    "customer data protection",
+    "privacy policy Tanzania",
+    "data security",
+    "information collection policy"
+  ],
+  openGraph: {
+    title: "Privacy Policy | zetuTech - Data Protection & Privacy Commitment",
+    description: "Learn how zetuTech protects your personal data and privacy when you shop for laptops and electronics in Tanzania.",
+    url: "https://zetutech.com/privacy",
+    siteName: "zetuTech",
+    type: "website",
+    images: [
+      {
+        url: "/og-privacy.jpg",
+        width: 1200,
+        height: 630,
+        alt: "zetuTech Privacy Policy - Data Protection Commitment",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Privacy Policy | zetuTech - Data Protection & Privacy Commitment",
+    description: "Understand how zetuTech handles your personal information and protects your privacy in Tanzania.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  alternates: {
+    canonical: "https://zetutech.com/privacy",
+  },
+};
 
 export default function PrivacyPage() {
   return (

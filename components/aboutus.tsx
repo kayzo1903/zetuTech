@@ -1,5 +1,6 @@
-'use client'
+"use client";
 import { useState } from "react";
+
 
 export default function AboutUs() {
   const [activeTab, setActiveTab] = useState("mission");
