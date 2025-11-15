@@ -24,6 +24,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 		{ url: `${baseUrl}/support`, lastModified: new Date() },
 		{ url: `${baseUrl}/wishlist`, lastModified: new Date() },
 		{ url: `${baseUrl}/cart`, lastModified: new Date() },
+		{ url: `${baseUrl}/shipping`, lastModified: new Date() },
+		{ url: `${baseUrl}/warranty`, lastModified: new Date() },
 	];
 
 	// Products: use slug + id to match existing links (/products/[...slug])
