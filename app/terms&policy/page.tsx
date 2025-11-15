@@ -1,3 +1,52 @@
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Terms & Conditions | zetuTech",
+  description:
+    "Read zetuTech's Terms & Conditions covering payment methods, delivery, warranty policies, returns, and customer rights for electronics purchases in Tanzania.",
+  keywords: [
+    "Terms and Conditions",
+    "Payment Policy",
+    "Delivery Policy",
+    "Warranty Policy",
+    "Returns and Refunds",
+    "zetuTech Terms",
+    "Tanzania Electronics",
+    "Laptop Warranty",
+    "M-Pesa Payment",
+    "Cash on Delivery",
+  ],
+  openGraph: {
+    title: "Terms & Conditions | zetuTech",
+    description:
+      "Complete terms covering payment, delivery, warranty, and returns for zetuTech electronics purchases in Tanzania.",
+    url: "https://zetutech.com/terms",
+    siteName: "zetuTech",
+    type: "website",
+    images: [
+      {
+        url: "/og-terms.jpg",
+        width: 1200,
+        height: 630,
+        alt: "zetuTech Terms & Conditions",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Terms & Conditions | zetuTech",
+    description:
+      "Learn about zetuTech's payment, delivery, warranty, and return policies for electronics in Tanzania.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  alternates: {
+    canonical: "https://zetutech.com/terms",
+  },
+};
+
 export default function TermsPage() {
   const sections = [
     {
@@ -68,16 +117,20 @@ export default function TermsPage() {
           {/* Payment Notes */}
           <ul className="list-disc pl-6 text-gray-600 dark:text-gray-300 space-y-2">
             <li>
-              For Cash on Delivery, payment is made directly to our delivery team at the time of delivery.
+              For Cash on Delivery, payment is made directly to our delivery
+              team at the time of delivery.
             </li>
             <li>
-              For mobile payments, you will receive payment instructions after order confirmation.
+              For mobile payments, you will receive payment instructions after
+              order confirmation.
             </li>
             <li>
-              Customers are encouraged to inspect their product before completing COD payments.
+              Customers are encouraged to inspect their product before
+              completing COD payments.
             </li>
             <li>
-              Mobile money confirmations may take up to 1 hour to process during business hours.
+              Mobile money confirmations may take up to 1 hour to process during
+              business hours.
             </li>
           </ul>
         </>
@@ -90,11 +143,24 @@ export default function TermsPage() {
         "We manage all deliveries directly to ensure product quality and customer satisfaction.",
       content: (
         <ul className="list-disc pl-6 text-gray-600 dark:text-gray-300 space-y-2">
-          <li>Delivery is available within Dar es Salaam and surrounding areas.</li>
-          <li>Delivery times are scheduled with customers after order confirmation.</li>
-          <li>Delivery fees may apply depending on location and will be communicated before dispatch.</li>
-          <li>Customers must provide accurate delivery details to avoid delays.</li>
-          <li>Same-day delivery is available for orders placed before 2:00 PM on business days.</li>
+          <li>
+            Delivery is available within Dar es Salaam and surrounding areas.
+          </li>
+          <li>
+            Delivery times are scheduled with customers after order
+            confirmation.
+          </li>
+          <li>
+            Delivery fees may apply depending on location and will be
+            communicated before dispatch.
+          </li>
+          <li>
+            Customers must provide accurate delivery details to avoid delays.
+          </li>
+          <li>
+            Same-day delivery is available for orders placed before 2:00 PM on
+            business days.
+          </li>
         </ul>
       ),
     },
@@ -149,7 +215,9 @@ export default function TermsPage() {
               Please Note:
             </h3>
             <p className="text-yellow-700 dark:text-yellow-300">
-              The warranty does not cover physical damage, liquid damage, accidental drops, unauthorized repairs, or software-related issues.
+              The warranty does not cover physical damage, liquid damage,
+              accidental drops, unauthorized repairs, or software-related
+              issues.
             </p>
           </div>
         </>
@@ -162,10 +230,22 @@ export default function TermsPage() {
         "Our returns and refunds policy ensures customer satisfaction while preventing misuse.",
       content: (
         <ul className="list-disc pl-6 text-gray-600 dark:text-gray-300 space-y-2">
-          <li>Customers must inspect the product before completing payment upon delivery.</li>
-          <li>Returns are only accepted for defective products or incorrect orders.</li>
-          <li>Claims must be reported within 48 hours of delivery with proof of purchase.</li>
-          <li>Refunds are processed after inspection and verification of the returned product.</li>
+          <li>
+            Customers must inspect the product before completing payment upon
+            delivery.
+          </li>
+          <li>
+            Returns are only accepted for defective products or incorrect
+            orders.
+          </li>
+          <li>
+            Claims must be reported within 48 hours of delivery with proof of
+            purchase.
+          </li>
+          <li>
+            Refunds are processed after inspection and verification of the
+            returned product.
+          </li>
           <li>Mobile money refunds are processed within 3-5 business days.</li>
           <li>COD refunds are processed via mobile money transfer.</li>
         </ul>

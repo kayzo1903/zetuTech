@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 function getBaseUrl(): string {
 	const fromEnv = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || "";
 	if (fromEnv) return fromEnv.replace(/\/$/, "");
-	return "https://example.com";
+	return "https://zetutech.co.tz";
 }
 
 export default function robots(): MetadataRoute.Robots {
