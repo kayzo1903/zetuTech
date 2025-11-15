@@ -20,7 +20,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 		{ url: `${baseUrl}/about`, lastModified: new Date() },
 		{ url: `${baseUrl}/contact`, lastModified: new Date() },
 		{ url: `${baseUrl}/privacy`, lastModified: new Date() },
-		{ url: `${baseUrl}/terms&policy`, lastModified: new Date() },
+		{ url: `${baseUrl}/terms&amp;policy`, lastModified: new Date() },
 		{ url: `${baseUrl}/support`, lastModified: new Date() },
 		{ url: `${baseUrl}/wishlist`, lastModified: new Date() },
 		{ url: `${baseUrl}/cart`, lastModified: new Date() },
