@@ -56,7 +56,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Rate limiting for sensitive routes
-  const protectedRoutes = ["/api/auth", "/api/orders", "/api/email"];
+  const protectedRoutes = ["/api/auth", "/api/orders", "/api/email" , "api/messages/"];
   const isProtected = protectedRoutes.some((r) => pathname.startsWith(r));
 
   if (isProtected) {

@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Mail, Phone, MessageSquare } from "lucide-react";
+import MessageForm from "@/components/messageForm";
 
 export const metadata: Metadata = {
   title: "Support Center | zetuTech - Customer Help & Technical Support",
@@ -124,57 +122,7 @@ export default function SupportPage() {
             and our support team will get back to you within 24 hours.
           </p>
 
-          <form className="space-y-6 max-w-2xl">
-            <div>
-              <label className="block mb-2 text-gray-700 dark:text-gray-300">
-                Full Name
-              </label>
-              <Input
-                type="text"
-                placeholder="Enter your full name"
-                className="w-full"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block mb-2 text-gray-700 dark:text-gray-300">
-                Email Address
-              </label>
-              <Input
-                type="email"
-                placeholder="Enter your email"
-                className="w-full"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block mb-2 text-gray-700 dark:text-gray-300">
-                Subject
-              </label>
-              <Input
-                type="text"
-                placeholder="Enter the subject of your request"
-                className="w-full"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block mb-2 text-gray-700 dark:text-gray-300">
-                Message
-              </label>
-              <Textarea
-                placeholder="Describe your issue or question in detail..."
-                className="w-full"
-                rows={5}
-                required
-              />
-            </div>
-
-            <Button className="w-full md:w-auto">Submit Request</Button>
-          </form>
+          <MessageForm type="support" />
         </section>
       </div>
     </div>

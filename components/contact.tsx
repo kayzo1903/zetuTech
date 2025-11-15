@@ -1,39 +1,10 @@
 "use client";
-
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { MapPin, Phone, Mail, Clock, Send, MessageCircle } from "lucide-react";
+import { MapPin, Phone, Mail, Clock, MessageCircle } from "lucide-react";
 import AboutUs from "./aboutus";
+import MessageForm from "./messageForm";
 
 export default function Contacts() {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    subject: "",
-    message: "",
-  });
-
-  interface ContactFormData {
-    name: string;
-    email: string;
-    subject: string;
-    message: string;
-  }
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev: ContactFormData) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    console.log("Form submitted:", formData);
-    // TODO: connect to backend or email service
-  };
 
   // WhatsApp direct chat function
   const openWhatsApp = () => {
@@ -174,96 +145,7 @@ export default function Contacts() {
             <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6">
               Send Us a Message
             </h2>
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Name */}
-              <div>
-                <label
-                  htmlFor="name"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  Your Name
-                </label>
-                <Input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="Enter your name"
-                  required
-                  className="mt-2"
-                />
-              </div>
-
-              {/* Email */}
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  Email Address
-                </label>
-                <Input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="Enter your email"
-                  required
-                  className="mt-2"
-                />
-              </div>
-
-              {/* Subject */}
-              <div>
-                <label
-                  htmlFor="subject"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  Subject
-                </label>
-                <Input
-                  type="text"
-                  id="subject"
-                  name="subject"
-                  value={formData.subject}
-                  onChange={handleChange}
-                  placeholder="Subject of your message"
-                  required
-                  className="mt-2"
-                />
-              </div>
-
-              {/* Message */}
-              <div>
-                <label
-                  htmlFor="message"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  Message
-                </label>
-                <Textarea
-                  id="message"
-                  name="message"
-                  value={formData.message}
-                  onChange={handleChange}
-                  placeholder="Write your message here..."
-                  rows={4}
-                  required
-                  className="mt-2"
-                />
-              </div>
-
-              {/* Submit Button */}
-              <Button
-                type="submit"
-                className="w-full flex items-center justify-center gap-2"
-              >
-                <Send className="w-4 h-4" />
-                Send Message
-              </Button>
-            </form>
+            <MessageForm type="contact" />
           </div>
         </div>
 
