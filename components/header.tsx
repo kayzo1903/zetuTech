@@ -126,7 +126,7 @@ export default function Header({ session, isAdmin }: HeaderProps) {
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1">
                 <Phone className="w-3 h-3" />
-                <span>+255 123 456 789</span>
+                <span>+255 653274741</span>
               </div>
               <div className="flex items-center gap-1">
                 <Mail className="w-3 h-3" />
@@ -137,8 +137,8 @@ export default function Header({ session, isAdmin }: HeaderProps) {
             {/* Delivery Info */}
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1">
-                <Truck className="w-3 h-3" />
-                <span>Free Shipping Over 500,000 TZS</span>
+                <Truck className="w-5 h-5" />
+                <span>Free Shipping </span>
               </div>
               <div className="hidden lg:flex items-center gap-1">
                 <Shield className="w-3 h-3" />
