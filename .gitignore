@@ -47,3 +47,15 @@ prisma/dev.db-journal
 
 # Turbo
 .turbo
+
+# Legacy folders
+apps/
+db/
+doc/
+docs/
+drizzle/
+emails/
+migrations/
+project/
+store/
+
