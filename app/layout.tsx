@@ -4,9 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import Footer from "@/components/footer";
 import TanStackProviders from "@/lib/tanStackprovider";
-import WishlistProvider from "./wishlist/provider/wishlistProvider";
 import { Toaster } from "@/components/ui/sonner";
-import { CartProvider } from "@/components/provider/cart-provider";
 import { getServerSession } from "@/lib/server-session";
 import ClientHeader from "@/components/clientHeader";
 
@@ -25,20 +23,19 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://zetutech.co.tz"),
 
   title: {
-    default: "ZetuTech — Tech Gadgets, Laptops & Accessories",
-    template: "%s | ZetuTech",
+    default: "zetuTech — AI Innovation Agency",
+    template: "%s | zetuTech",
   },
 
   description:
-    "ZetuTech is Tanzania’s trusted online store for high-quality laptops, phones, accessories, and tech gadgets.",
+    "zetuTech is Tanzania's premier AI integration and web application development agency.",
 
   keywords: [
-    "ZetuTech",
-    "tech gadgets Tanzania",
-    "laptops Tanzania",
-    "electronics shop",
-    "computer accessories",
-    "online store Tanzania",
+    "zetuTech",
+    "AI agency Tanzania",
+    "web development Dar es Salaam",
+    "software engineering",
+    "tech innovation",
   ],
 
   alternates: {
@@ -46,17 +43,17 @@ export const metadata: Metadata = {
   },
 
   openGraph: {
-    title: "ZetuTech — Tech Gadgets & Laptops",
+    title: "zetuTech — AI Innovation Agency",
     description:
-      "Shop laptops, phones, computer accessories and premium tech gadgets at ZetuTech Tanzania.",
+      "Transforming businesses through intelligent logic and high-performance web platforms.",
     url: "https://zetutech.co.tz",
-    siteName: "ZetuTech",
+    siteName: "zetuTech",
     images: [
       {
-        url: "/https://unsplash.com/photos/black-sony-wireless-headphones-on-black-computer-keyboard-gz9njd0zYbQ",
+        url: "/images/kilimanjaro.jpg",
         width: 1200,
         height: 630,
-        alt: "ZetuTech Online Store",
+        alt: "zetuTech Innovation Agency",
       },
     ],
     locale: "en_US",
@@ -65,16 +62,22 @@ export const metadata: Metadata = {
 
   twitter: {
     card: "summary_large_image",
-    title: "ZetuTech — Tech Gadgets & Laptops",
+    title: "zetuTech — AI Innovation Agency",
     description:
-      "Tanzania's top online store for laptops, phones, and tech gadgets.",
-    images: ["/https://unsplash.com/photos/black-sony-wireless-headphones-on-black-computer-keyboard-gz9njd0zYbQ"],
+      "Tanzania's premier AI integration and web application development agency.",
+    images: ["/images/kilimanjaro.jpg"],
   },
 
   icons: {
     icon: "/favicon.ico",
     apple: "/apple-touch-icon.png",
     shortcut: "/favicon.ico",
+  },
+  
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "zetuTech",
   },
 
   robots: {
@@ -125,17 +128,13 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <WishlistProvider>
-            <TanStackProviders>
-              <CartProvider>
-                {/* Client-side Header */}
-                <ClientHeader session={session} isAdmin={isAdmin} />
+          <TanStackProviders>
+            {/* Client-side Header */}
+            <ClientHeader session={session} isAdmin={isAdmin} />
 
-                {/* ✔ Recommended Semantic Structure */}
-                <main className="min-h-[70vh]">{children}</main>
-              </CartProvider>
-            </TanStackProviders>
-          </WishlistProvider>
+            {/* ✔ Recommended Semantic Structure */}
+            <main className="min-h-[70vh]">{children}</main>
+          </TanStackProviders>
 
           <Footer />
           <Toaster position="top-center" />

@@ -1,7 +1,3 @@
-import { DashboardStats } from "@/components/admin/dashboard-stats";
-import { QuickActions } from "@/components/admin/quickactions";
-import { RecentOrders } from "@/components/admin/recent-orders";
-import { SalesChart } from "@/components/admin/sales-chart";
 import React from "react";
 
 export default function Dashboardpage() {
@@ -14,15 +10,15 @@ export default function Dashboardpage() {
               Admin Dashboard
             </h1>
             <p className="text-sm text-gray-600 dark:text-gray-400 sm:text-base">
-              Welcome back! Here&apos;s what&apos;s happening with your store today.
+              Welcome back! Here's what's happening with Tzdraft today.
             </p>
           </div>
-          
-          <QuickActions />
         </div>
-      <DashboardStats />
-      <RecentOrders />
-      <SalesChart />
+      
+      <div className="p-8 text-center text-gray-500 dark:text-gray-400 border rounded-lg border-dashed">
+        <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">Tzdraft Operations Dashboard</h2>
+        <p>Use the sidebar to manage messages, settings, and business information.</p>
+      </div>
     </main>
   );
 }
