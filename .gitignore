@@ -1,44 +1,61 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Dependencies
+node_modules
+.pnpm
+.pnpm-lock.yaml
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+# Next.js
+.next
+out
+dist
 
-# testing
-/coverage
+# Testing
+coverage
+.nyc_output
 
-# next.js
-/.next/
-/out/
+# Environment variables
+.env
+.env.local
+.env.*.local
 
-# production
-/build
-
-# misc
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*.swc
+*.sublime-workspace
+*.sublime-project
 .DS_Store
-*.pem
 
-# debug
+# Build artifacts
+*.tsbuildinfo
+build/
+
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
+lerna-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# OS
+Thumbs.db
+.DS_Store
 
-# vercel
-.vercel
+# Prisma
+prisma/dev.db
+prisma/dev.db-journal
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# Turbo
+.turbo
 
-# Sentry Config File
-.env.sentry-build-plugin
+# Legacy folders
+apps/
+db/
+doc/
+docs/
+drizzle/
+emails/
+migrations/
+project/
+store/
+
