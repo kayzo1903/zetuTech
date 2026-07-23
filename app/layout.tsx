@@ -93,17 +93,25 @@ export const metadata: Metadata = {
   },
 
   other: {
-    // JSON-LD Structured Data
+    // JSON-LD Structured Data for AI Tech Agency
     "script:ld+json": JSON.stringify({
       "@context": "https://schema.org",
-      "@type": "WebSite",
-      name: "ZetuTech",
+      "@type": "Organization",
+      name: "zetuTech",
       url: "https://zetutech.co.tz",
-      potentialAction: {
-        "@type": "SearchAction",
-        target: "https://zetutech.co.tz/search?query={search_term_string}",
-        "query-input": "required name=search_term_string",
+      logo: "https://zetutech.co.tz/apple-touch-icon.png",
+      description: "Tanzania's premier AI integration and web application development agency.",
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: "Magomeni kanisani",
+        addressLocality: "Dar es Salaam",
+        addressCountry: "TZ"
       },
+      contactPoint: {
+        "@type": "ContactPoint",
+        telephone: "+255797465431",
+        contactType: "customer service"
+      }
     }),
   },
 };
