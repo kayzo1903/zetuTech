@@ -1,6 +1,5 @@
 // middleware.ts
 import { NextRequest, NextResponse } from "next/server";
-import { v4 as uuidv4 } from "uuid";
 import { RateLimiterMemory } from "rate-limiter-flexible";
 import { getMaintenanceFlag } from "./lib/maintananceFlag";
 
@@ -24,13 +23,11 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/api/admin/businessInfo") ||
     pathname.startsWith("/auth") ||
     pathname.startsWith("/api/auth") ||
-    pathname === "/wishlist" ||
     pathname === "/api/messages/submit" ||
     pathname === "/contact" ||
     pathname === "/support" ||
-    pathname === "/api/wislist" ||
-    pathname === "/api/cart" ||
-    pathname === "/cart" ||
+    pathname === "/about" ||
+    pathname === "/services" ||
     pathname === "/maintenance"
   ) {
     return NextResponse.next();
@@ -47,21 +44,9 @@ export async function middleware(request: NextRequest) {
   // --- Normal behavior ---
   const response = NextResponse.next();
 
-  // Guest session cookie
-  if (!request.cookies.get("guest_session_id")) {
-    response.cookies.set({
-      name: "guest_session_id",
-      value: uuidv4(),
-      path: "/",
-      httpOnly: true,
-      maxAge: 60 * 60 * 24 * 30,
-    });
-  }
-
   // Rate limiting for sensitive routes
   const protectedRoutes = [
     "/api/auth",
-    "/api/orders",
     "/api/email",
     "api/messages/",
   ];
