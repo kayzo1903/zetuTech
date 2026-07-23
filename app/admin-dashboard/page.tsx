@@ -10,7 +10,7 @@ export default function Dashboardpage() {
               Admin Dashboard
             </h1>
             <p className="text-sm text-gray-600 dark:text-gray-400 sm:text-base">
-              Welcome back! Here's what's happening with Tzdraft today.
+              Welcome back! Here&apos;s what&apos;s happening with Tzdraft today.
             </p>
           </div>
         </div>

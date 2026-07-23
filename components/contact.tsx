@@ -14,7 +14,7 @@ export default function Contacts() {
         
         <div className="mt-16 text-center px-4 relative z-20">
           <p className="text-sm md:text-base font-light text-white/60 uppercase tracking-widest">
-            Let's build the future together.
+            Let&apos;s build the future together.
           </p>
         </div>
       </section>
