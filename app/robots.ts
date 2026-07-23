@@ -13,12 +13,10 @@ export default function robots(): MetadataRoute.Robots {
 		rules: [
 			{
 				userAgent: "*",
-				allow: ["/", "/products", "/products/", "/search", "/wishlist"],
+				allow: ["/", "/about", "/services", "/contact"],
 				disallow: [
 					"/admin-dashboard",
 					"/api/",
-					"/checkout",
-					"/account",
 				],
 			},
 		],

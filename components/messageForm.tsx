@@ -89,7 +89,7 @@ export default function MessageForm({ type }: MessageFormProps) {
               <FormItem>
                 <FormLabel>Full Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter your full name" {...field} />
+                  <Input className="bg-transparent border-white/20 text-white rounded-none focus-visible:ring-1 focus-visible:ring-white/50" placeholder="Enter your full name" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -106,6 +106,7 @@ export default function MessageForm({ type }: MessageFormProps) {
                 <FormControl>
                   <Input
                     type="email"
+                    className="bg-transparent border-white/20 text-white rounded-none focus-visible:ring-1 focus-visible:ring-white/50"
                     placeholder="Enter your email"
                     {...field}
                   />
@@ -125,6 +126,7 @@ export default function MessageForm({ type }: MessageFormProps) {
                 <FormControl>
                   <Input
                     type="text"
+                    className="bg-transparent border-white/20 text-white rounded-none focus-visible:ring-1 focus-visible:ring-white/50"
                     placeholder={
                       type === "support"
                         ? "Enter the subject of your support request"
@@ -148,6 +150,7 @@ export default function MessageForm({ type }: MessageFormProps) {
                 <FormControl>
                   <Textarea
                     rows={5}
+                    className="bg-transparent border-white/20 text-white rounded-none focus-visible:ring-1 focus-visible:ring-white/50"
                     placeholder={
                       type === "support"
                         ? "Describe your issue in detail..."
@@ -164,7 +167,7 @@ export default function MessageForm({ type }: MessageFormProps) {
           {/* Submit Button */}
           <Button
             type="submit"
-            className="w-full flex items-center justify-center gap-2"
+            className="w-full flex items-center justify-center gap-2 bg-white text-black hover:bg-white/80 rounded-none uppercase tracking-widest text-xs py-6"
             disabled={form.formState.isSubmitting}
           >
             <Send className="w-4 h-4" />
